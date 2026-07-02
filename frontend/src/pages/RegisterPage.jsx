@@ -4,15 +4,17 @@ import { UserPlus, ArrowRight, Lock, Mail } from "lucide-react";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // NEW FIELD
+  const [confirmPassword, setConfirmPassword] = useState(""); 
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // 🔴 PRO-GRADE FIX: Hardcoded Live Backend URL
+  const API_URL = "https://funeral-home-backend.onrender.com";
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setAuthError("");
 
-    // 1. Validate Passwords Match
     if (password !== confirmPassword) {
       setAuthError("Passwords do not match. Please try again.");
       return;
@@ -21,8 +23,8 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 2. Create the user in the database
-      const registerResponse = await fetch("http://localhost:5000/api/auth/register", {
+      // 🔴 FIX 1: Pointing to live API URL
+      const registerResponse = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -31,18 +33,15 @@ export default function RegisterPage() {
       const registerData = await registerResponse.json();
 
       if (registerResponse.ok) {
-        // 3. Automatically trigger the OTP email
-        const otpResponse = await fetch("http://localhost:5000/api/auth/send-otp", {
+        // 🔴 FIX 2: Pointing OTP to live API URL
+        const otpResponse = await fetch(`${API_URL}/api/auth/send-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         });
 
         if (otpResponse.ok) {
-          // 4. Save email so the Verify page knows who we are verifying
           localStorage.setItem("userEmail", email);
-          
-          // 5. Force the browser to open the Verify Email screen
           window.location.hash = "#verify";
         } else {
           setAuthError("Account created, but failed to send the verification email. Your email provider may be blocking it.");
@@ -109,7 +108,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* NEW FIELD: Confirm Password */}
           <div>
             <label className="block text-sm font-semibold text-[#1F2E27] mb-2 uppercase tracking-wider">Confirm Password</label>
             <div className="relative">
