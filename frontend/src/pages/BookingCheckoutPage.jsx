@@ -25,12 +25,13 @@ export default function BookingCheckoutPage({ serviceBookings }) {
       }
 
       setIsProcessing(true);
-      
-      // PRO-GRADE ADDITION: Target user email for automated transport confirmation
       const currentUserEmail = localStorage.getItem("userEmail") || "";
+      
+      // PRO-GRADE FIX: Dynamic API URL for Render deployment
+      const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/payments/stkpush", {
+        const response = await fetch(`${API_URL}/api/payments/stkpush`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
@@ -78,8 +79,6 @@ export default function BookingCheckoutPage({ serviceBookings }) {
       </div>
 
       <div className="site-container max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-5 gap-8">
-        
-        {/* Left Column: Scheduled Fleet Logistics */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           <h2 className="text-xl md:text-2xl font-serif text-[#1F2E27] border-b border-[#E8DFD1] pb-4">Fleet Logistics Summary</h2>
           
@@ -121,7 +120,6 @@ export default function BookingCheckoutPage({ serviceBookings }) {
           </div>
         </div>
 
-        {/* Right Column: Payment & Summary */}
         <div className="lg:col-span-2">
           <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm sticky top-24">
             <h2 className="text-xl font-serif text-[#1F2E27] mb-6">Payment Authorization</h2>
@@ -137,9 +135,7 @@ export default function BookingCheckoutPage({ serviceBookings }) {
             </div>
 
             <div className="mb-8">
-              // BEFORE (Has both block and flex)
-// AFTER
-<label className="text-sm font-medium text-[#3D3530] mb-3 flex items-center gap-2">
+              <label className="text-sm font-medium text-[#3D3530] mb-3 flex items-center gap-2">
                 <Phone size={16} className="text-[#A8895C]"/> Mobile Money Number
               </label>
               <input 

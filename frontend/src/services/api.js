@@ -2,7 +2,8 @@
  * API Service Layer
  */
 
-const API_BASE_URL = "http://127.0.0.1:5000";
+// PRO-GRADE FIX: Dynamically switch between Render and Localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
 class ApiService {
   constructor(baseUrl = API_BASE_URL) {
@@ -67,16 +68,19 @@ class ApiService {
   async healthCheck() { return this.request("/api/health"); }
   async getServices() { return this.request("/api/services"); }
   async getTributes() { return this.request("/api/tributes"); }
+  
   async createTribute(name, message) {
     return this.request("/api/tributes", {
       method: "POST",
       body: JSON.stringify({ name, message }),
     });
   }
-  async initiateStkPush(amount, phone) {
+  
+  // PRO-GRADE FIX: Included email payload for automated receipts
+  async initiateStkPush(amount, phone, email) {
     return this.request("/api/payments/stkpush", {
       method: "POST",
-      body: JSON.stringify({ amount, phone }),
+      body: JSON.stringify({ amount, phone, email }),
     });
   }
 }

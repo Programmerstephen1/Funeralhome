@@ -37,14 +37,12 @@ export default function CheckoutPage({ cart }) {
     setPaymentError("");
     setPaymentMessage("");
 
-    // PRO-GRADE ADDITION: Strict Validation
     if (!formData.contactName || !formData.venueName || !formData.burialDate) {
       setPaymentError("Please fill in all service details before proceeding.");
       return;
     }
     
     if (paymentMethod === "mpesa") {
-      // Basic Safaricom phone format validation
       const sanitizedPhone = formData.phone.replace(/\D/g, "");
       if (sanitizedPhone.length < 10) {
         setPaymentError("Please enter a valid Kenyan M-Pesa phone number.");
@@ -52,18 +50,19 @@ export default function CheckoutPage({ cart }) {
       }
 
       setIsProcessing(true);
-
-      // PRO-GRADE ADDITION: Retrieve email for automated receipt engine
       const currentUserEmail = localStorage.getItem("userEmail") || "";
+      
+      // PRO-GRADE FIX: Dynamic API URL for Render deployment
+      const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/payments/stkpush", {
+        const response = await fetch(`${API_URL}/api/payments/stkpush`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: totalAmount,
             phone: sanitizedPhone,
-            email: currentUserEmail // Injects email into the callback flow
+            email: currentUserEmail
           }),
         });
 
@@ -71,7 +70,6 @@ export default function CheckoutPage({ cart }) {
 
         if (response.ok) {
           setPaymentMessage("Prompt sent! Please check your phone and enter your M-Pesa PIN.");
-          
           setTimeout(() => {
             window.location.hash = "#thankyou";
           }, 10000);
@@ -111,8 +109,6 @@ export default function CheckoutPage({ cart }) {
 
       <div className="site-container max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 flex flex-col gap-6">
-          
-          {/* Service Details Form */}
           <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm">
             <h2 className="text-xl font-serif text-[#1F2E27] mb-6 flex items-center gap-2">
               <Building2 className="text-[#A8895C]" size={20} /> Service & Logistics Details
@@ -144,7 +140,6 @@ export default function CheckoutPage({ cart }) {
             </div>
           </div>
 
-          {/* Payment Selection */}
           <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm">
             <h2 className="text-xl font-serif text-[#1F2E27] mb-6">Select Payment Method</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -181,7 +176,6 @@ export default function CheckoutPage({ cart }) {
           </div>
         </div>
 
-        {/* Booking Summary */}
         <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 h-fit sticky top-24 rounded-sm">
           <h2 className="text-lg font-serif text-[#1F2E27] mb-6 border-b border-[#E8DFD1] pb-4">Booking Summary</h2>
           <div className="flex flex-col gap-4 mb-6">
