@@ -36,9 +36,8 @@ def generate_stk_push_payload(amount, phone, email=None):
     business_short_code = os.getenv("MPESA_SHORTCODE", "174379") 
     passkey = os.getenv("MPESA_PASSKEY")
     
-    # 🔴 PRO-GRADE FIX: Replace YOUR_PYTHON_BACKEND_URL_HERE with your live backend address
-    # Example: "https://funeral-home-backend-xyz.onrender.com/api/payments/callback"
-    base_callback_url = os.getenv("MPESA_CALLBACK_URL", "https://YOUR_PYTHON_BACKEND_URL_HERE/api/payments/callback")
+    # 🔴 PRO-GRADE FIX: Perfectly indented with your live Render URL
+    base_callback_url = os.getenv("MPESA_CALLBACK_URL", "https://startup-simulator-v2.onrender.com/api/payments/callback")
     
     if email:
         callback_url = f"{base_callback_url}?email={urllib.parse.quote(email)}"

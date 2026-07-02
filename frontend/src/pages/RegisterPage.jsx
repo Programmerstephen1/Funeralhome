@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UserPlus, ArrowRight, Lock, Mail } from "lucide-react";
+import { UserPlus, Lock, Mail } from "lucide-react";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -8,8 +8,8 @@ export default function RegisterPage() {
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🔴 PRO-GRADE FIX: Hardcoded Live Backend URL
-  const API_URL = "https://funeral-home-backend.onrender.comhttps://startup-simulator-v2.onrender.com";
+  // 🔴 FIXED: Your actual live Render Backend URL
+  const API_URL = "https://startup-simulator-v2.onrender.com";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -23,7 +23,6 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 🔴 FIX 1: Pointing to live API URL
       const registerResponse = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -33,7 +32,6 @@ export default function RegisterPage() {
       const registerData = await registerResponse.json();
 
       if (registerResponse.ok) {
-        // 🔴 FIX 2: Pointing OTP to live API URL
         const otpResponse = await fetch(`${API_URL}/api/auth/send-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
