@@ -100,7 +100,7 @@ def send_otp():
     try:
         msg = Message(
             subject="Your Hollow Pine Verification Code",
-            sender=("Hollow Pine Security", "itwikastephen1@gmail.com"),
+            sender=("Hollow Pine Security", "stephenitwika178@gmail.com"),
             recipients=[email]
         )
 
@@ -297,7 +297,7 @@ def mpesa_callback():
                 try:
                     msg = Message(
                         subject="Your Payment Receipt - Hollow Pine Hub",
-                        sender=("Hollow Pine Billing", "itwikastephen1@gmail.com"), 
+                        sender=("Hollow Pine Billing", "stephenitwika178@gmail.com"), 
                         recipients=[customer_email]
                     )
                     
@@ -367,8 +367,8 @@ def request_consultation():
     try:
         msg = Message(
             subject=f"New Consultation Request: {name}",
-            sender=(f"{name} via Hollow Pine", "itwikastephen1@gmail.com"), 
-            recipients=["itwikastephen1@gmail.com"], 
+            sender=(f"{name} via Hollow Pine", "stephenitwika178@gmail.com"), 
+            recipients=["stephenitwika178@gmail.com"], 
             reply_to=(name, user_email) 
         )
 
