@@ -1,10 +1,15 @@
 import jwt
 import datetime
-import random # Added for OTP generation
+import random
+import logging
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
 from .models import db, FuneralService, Tribute, User, Eulogy
 from .mpesa import generate_stk_push_payload
+
+# --- INITIALIZE PRO-GRADE LOGGER ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 api = Blueprint("api", __name__)
 
@@ -13,10 +18,9 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        if "Authorization" in request.headers:
-            auth_header = request.headers["Authorization"]
-            if auth_header.startswith("Bearer "):
-                token = auth_header.split(" ")[1]
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
 
         if not token:
             return jsonify({"message": "Security token is missing!"}), 401
@@ -28,6 +32,7 @@ def token_required(f):
             if not current_user:
                 raise Exception("User not found")
         except Exception as e:
+            logger.error(f"Token error: {e}")
             return jsonify({"message": "Token is invalid or expired!"}), 401
 
         return f(current_user, *args, **kwargs)
@@ -49,7 +54,7 @@ def register():
 
     new_user = User(email=email)
     new_user.set_password(password)
-    new_user.is_verified = False # PRO-GRADE: Force them through the OTP screen
+    new_user.is_verified = False # Force them through the OTP screen
     
     db.session.add(new_user)
     db.session.commit()
@@ -128,8 +133,9 @@ def send_otp():
         return jsonify({"message": "OTP sent successfully"}), 200
 
     except Exception as e:
-        print(f"Failed to send OTP email: {e}")
-        return jsonify({"error": "Failed to send email. Please try again."}), 500
+        logger.exception(f"CRITICAL: Failed to send OTP email to {email}")
+        # Returns the exact stringified error to your browser's Network tab for instant debugging
+        return jsonify({"message": "Failed to send email. Please try again.", "error": str(e)}), 500
 
 @api.route("/api/auth/verify-otp", methods=["POST"])
 def verify_otp():
@@ -221,6 +227,7 @@ def create_eulogy(current_user):
         }), 201
         
     except Exception as e:
+        logger.error(f"Eulogy creation failed: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
@@ -255,15 +262,15 @@ def stk_push():
     payload = request.get_json() or {}
     amount = payload.get("amount")
     phone = payload.get("phone")
-    email = payload.get("email") # Captures email from React client checkout layout
+    email = payload.get("email")
     
     if not amount or not phone:
         return jsonify({"error": "Amount and phone number are required."}), 400
         
-    # Passes the user's email into our updated payload utility
     result = generate_stk_push_payload(amount, phone, email)
     
     if "error" in result:
+        logger.error(f"STK Push Error: {result['error']}")
         return jsonify(result), 500
         
     return jsonify(result), 200
@@ -275,24 +282,18 @@ def mpesa_callback():
     
     try:
         data = request.get_json()
-        
-        # Extracts custom email metadata embedded into the URL parameter string
         customer_email = request.args.get("email") 
         
         callback_data = data.get("Body", {}).get("stkCallback", {})
         result_code = callback_data.get("ResultCode")
         
         if result_code == 0:
-            # Payment Successful
-            print("\n--- M-PESA SUCCESS ---")
-            print("Callback Data:", callback_data)
+            logger.info(f"--- M-PESA SUCCESS --- Callback Data: {callback_data}")
             
-            # Parses Safaricom's nested metadata container array safely
             metadata = callback_data.get("CallbackMetadata", {}).get("Item", [])
             receipt_no = next((item["Value"] for item in metadata if item["Name"] == "MpesaReceiptNumber"), "N/A")
             amount_paid = next((item["Value"] for item in metadata if item["Name"] == "Amount"), "N/A")
             
-            # AUTOMATED TRANSACTION EMAIL ENGINERING
             if customer_email:
                 try:
                     msg = Message(
@@ -335,13 +336,11 @@ def mpesa_callback():
                     </div>
                     """
                     mail.send(msg)
-                    print(f"[MAIL SYSTEM] Secure confirmation receipt sent straight to: {customer_email}")
+                    logger.info(f"[MAIL SYSTEM] Secure confirmation receipt sent straight to: {customer_email}")
                 except Exception as mail_err:
-                    print(f"[MAIL ERROR] Callback succeeded, but automated receipt transmission faulted: {mail_err}")
+                    logger.error(f"[MAIL ERROR] Callback succeeded, but automated receipt transmission faulted: {mail_err}")
         else:
-            # Payment Failed, Cancelled, or Timed Out
-            print("\n--- M-PESA FAILED ---")
-            print(f"Reason: {callback_data.get('ResultDesc')}")
+            logger.error(f"--- M-PESA FAILED --- Reason: {callback_data.get('ResultDesc')}")
             
         return jsonify({
             "ResultCode": 0, 
@@ -349,8 +348,8 @@ def mpesa_callback():
         }), 200
 
     except Exception as e:
-        print(f"Error handling M-Pesa callback: {e}")
-        return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed"}), 500
+        logger.exception("Error handling M-Pesa callback")
+        return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed", "error": str(e)}), 500
 
 # --- CONSULTATION EMAIL ROUTE ---
 @api.route('/api/consultations', methods=['POST'])
@@ -371,17 +370,6 @@ def request_consultation():
             recipients=["stephenitwika178@gmail.com"], 
             reply_to=(name, user_email) 
         )
-
-        msg.body = f"""
-        New Consultation Request from Hollow Pine Funeral Home:
-
-        Name: {name}
-        Email: {user_email}
-        Phone: {phone}
-        
-        Questions/Notes:
-        {questions}
-        """
 
         msg.html = f"""
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -421,13 +409,13 @@ def request_consultation():
         return jsonify({"message": "Consultation request sent successfully!"}), 200
 
     except Exception as e:
-        print(f"Failed to send email: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.exception(f"Failed to send consultation email")
+        return jsonify({"error": str(e), "message": "Failed to send consultation"}), 500
 
 def register_routes(app):
     from flask_cors import CORS
     
-    # 🔴 PRO-GRADE FIX: This allows your specific Render frontend to talk to this backend
+    # 🔴 Verified frontend CORS target
     CORS(app, origins=["https://funeralhome-5inb.onrender.com"])
     
     app.register_blueprint(api)
