@@ -5,11 +5,10 @@ from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 
-# Load variables from .env file
+# Load variables from local .env file (Render will use actual OS environment variables)
 load_dotenv()
 
 db = SQLAlchemy()
-# 1. Initialize Mail globally just like the DB
 mail = Mail() 
 
 def create_app():
@@ -26,15 +25,19 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'super-secret-funeral-key')
 
-    # 2. Email Configuration (Flask-Mail)
-    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
+    # 2. Email Configuration (Flask-Mail with Render compatibility)
+    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
-    app.config['MAIL_DEBUG'] = True  # This prints the raw email communication
+    
+    # Fallback to MAIL_USERNAME if MAIL_DEFAULT_SENDER isn't explicitly set
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
+    
+    app.config['MAIL_DEBUG'] = True  # Prints raw email communication to Render/local logs
     app.config['MAIL_SUPPRESS_SEND'] = False
+
     # Initialize extensions with the app
     db.init_app(app)
     mail.init_app(app)
