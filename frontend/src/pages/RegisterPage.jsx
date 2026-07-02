@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // 🔴 PRO-GRADE FIX: Hardcoded Live Backend URL
-  const API_URL = "https://funeral-home-backend.onrender.com";
+  const API_URL = "https://funeral-home-backend.onrender.comhttps://startup-simulator-v2.onrender.com";
 
   const handleRegister = async (e) => {
     e.preventDefault();
