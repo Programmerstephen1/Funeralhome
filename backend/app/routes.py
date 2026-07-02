@@ -425,4 +425,9 @@ def request_consultation():
         return jsonify({"error": str(e)}), 500
 
 def register_routes(app):
+    from flask_cors import CORS
+    
+    # 🔴 PRO-GRADE FIX: This allows your specific Render frontend to talk to this backend
+    CORS(app, origins=["https://funeralhome-5inb.onrender.com"])
+    
     app.register_blueprint(api)
