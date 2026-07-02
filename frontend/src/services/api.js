@@ -2,8 +2,9 @@
  * API Service Layer
  */
 
-// PRO-GRADE FIX: Dynamically switch between Render and Localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+// ⚠️ CRITICAL STEP: Replace this string with your ACTUAL Python backend URL from Render.
+// Make sure it starts with https:// and has NO slash (/) at the very end.
+const API_BASE_URL = "https://funeral-home-backend.onrender.com"; 
 
 class ApiService {
   constructor(baseUrl = API_BASE_URL) {
@@ -51,7 +52,6 @@ class ApiService {
     return data;
   }
 
-  // --- NEW: Registration method ---
   async register(email, password) {
     return this.request("/api/auth/register", {
       method: "POST",
@@ -64,7 +64,6 @@ class ApiService {
     window.location.href = "#login"; 
   }
 
-  // Existing methods...
   async healthCheck() { return this.request("/api/health"); }
   async getServices() { return this.request("/api/services"); }
   async getTributes() { return this.request("/api/tributes"); }
@@ -76,7 +75,6 @@ class ApiService {
     });
   }
   
-  // PRO-GRADE FIX: Included email payload for automated receipts
   async initiateStkPush(amount, phone, email) {
     return this.request("/api/payments/stkpush", {
       method: "POST",
