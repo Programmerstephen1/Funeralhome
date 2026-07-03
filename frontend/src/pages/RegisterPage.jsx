@@ -67,7 +67,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
             <UserPlus className="text-[#A8895C]" size={28} />
           </div>
           <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Create Account</h2>
-          <p className="text-[#3D3530] text-sm">Join Hollow Pine Memorial Hub.</p>
+          <p className="text-[#3D3530] text-sm">Join last planner julz Hub.</p>
         </div>
 
         {authError && (
