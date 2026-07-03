@@ -68,7 +68,7 @@ def generate_stk_push_payload(amount, phone, email=None):
         "PartyB": business_short_code,
         "PhoneNumber": phone_str,
         "CallBackURL": callback_url,
-        "AccountReference": "Hollow Pine",
+        "AccountReference": "LastPlannerJulz",
         "TransactionDesc": "Funeral Services Payment"
     }
 

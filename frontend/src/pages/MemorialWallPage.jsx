@@ -13,15 +13,15 @@ export default function MemorialWallPage({ dynamicId }) {
   useEffect(() => {
     if (dynamicId) {
       // 1. Fetch Profile
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) setMemorialData(allMemorials[dynamicId]);
 
       // 2. Aggregate Stats
-      const flowers = JSON.parse(localStorage.getItem(`hollowPineFlowers_${dynamicId}`) || "[]");
-      const candles = JSON.parse(localStorage.getItem(`hollowPineCandles_${dynamicId}`) || "[]"); // Assuming you added persistent storage to candles too
-      const memories = JSON.parse(localStorage.getItem(`hollowPineMemories_${dynamicId}`) || "[]");
-      const photos = JSON.parse(localStorage.getItem(`hollowPineGallery_${dynamicId}`) || "[]");
-      const journal = JSON.parse(localStorage.getItem(`hollowPineJournal_${dynamicId}`) || "[]");
+      const flowers = JSON.parse(localStorage.getItem(`LastPlannerJulz_Flowers_${dynamicId}`) || "[]");
+      const candles = JSON.parse(localStorage.getItem(`LastPlannerJulz_Candles_${dynamicId}`) || "[]"); // Assuming you added persistent storage to candles too
+      const memories = JSON.parse(localStorage.getItem(`LastPlannerJulz_Memories_${dynamicId}`) || "[]");
+      const photos = JSON.parse(localStorage.getItem(`LastPlannerJulz_Gallery_${dynamicId}`) || "[]");
+      const journal = JSON.parse(localStorage.getItem(`LastPlannerJulz_Journal_${dynamicId}`) || "[]");
 
       setStats({
         flowers: flowers.length,

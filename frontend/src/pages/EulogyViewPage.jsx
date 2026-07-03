@@ -52,7 +52,7 @@ export default function EulogyViewPage({ dynamicId }) {
         <h2 className="text-2xl font-serif text-[#1F2E27] mb-2">Something went wrong</h2>
         <p className="text-[#3D3530] mb-6">{error}</p>
         <a href="#home" className="text-[#A8895C] hover:underline font-semibold">
-          Return to Hollow Pine Home
+          Return to Last planner Julz Hub
         </a>
       </div>
     );
@@ -112,7 +112,8 @@ export default function EulogyViewPage({ dynamicId }) {
 
           <div className="mt-16 pt-8 border-t border-[#EFEAE0] text-center no-print">
             <p className="text-sm text-[#8F744D] uppercase tracking-widest font-semibold">
-              Hollow Pine Funeral Home
+              Thank you for celebrating the life of {eulogy.deceased_name} with us.
+              last planner Julz Hub is honored to have been part of this tribute.
             </p>
           </div>
 

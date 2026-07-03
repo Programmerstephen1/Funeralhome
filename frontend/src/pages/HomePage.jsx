@@ -11,7 +11,7 @@ export default function HomePage() {
           A steady place to turn
         </h1>
         <p className="text-xl text-[#3D3530] max-w-2xl mx-auto mb-8">
-          Hollow Pine has helped families honor the people they love for over 60 years. 
+          Last Planner julz has helped families honor the people they love for over 60 years. 
           Whatever brought you here, we're here to help.
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
@@ -121,7 +121,7 @@ export default function HomePage() {
             variant="primary" 
             size="lg" 
             className="mt-8"
-            onClick={() => window.location.href = 'mailto:info@hollowpine.com'}
+            onClick={() => window.location.href = 'mailto:info@lastplannerjulzhub.com'}
           >
             Schedule a Consultation
           </Button>
@@ -131,7 +131,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[#D8CFBC] bg-[#F8F6F0] py-12">
         <div className="site-container text-center text-[#3D3530] text-sm">
-          <p>&copy; 2026 Hollow Pine Funeral Home. All rights reserved.</p>
+          <p>&copy; 2026 Last Planner julz Hub. All rights reserved.</p>
           <p className="mt-2">Serving families with dignity and compassion since 1958.</p>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-# Hollow Pine Funeral Home
+# last palnner julz
 
 A professional funeral home website with a React frontend and a Python Flask backend.
 

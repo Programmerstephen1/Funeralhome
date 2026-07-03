@@ -9,7 +9,7 @@ export default function ThankYouPage() {
       </div>
       <h2 className="text-3xl font-serif text-[#1F2E27] mb-4">Arrangements Confirmed</h2>
       <p className="text-[#3D3530] max-w-md mb-8 leading-relaxed">
-        Thank you for trusting Hollow Pine Funeral Home. Our logistics team has received your details and will coordinate with the funeral home to ensure everything is prepared with care and precision.
+        Thank you for trusting Last Planner Julz. Our logistics team has received your details and will coordinate with the funeral home to ensure everything is prepared with care and precision.
       </p>
       <a 
         href="#home" 

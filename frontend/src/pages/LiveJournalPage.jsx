@@ -8,7 +8,7 @@ export default function LiveJournalPage({ dynamicId }) {
   // Persistent Journal Storage
   const [entries, setEntries] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineJournal_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_Journal_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -21,7 +21,7 @@ export default function LiveJournalPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }
@@ -30,7 +30,7 @@ export default function LiveJournalPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      localStorage.setItem(`hollowPineJournal_${dynamicId}`, JSON.stringify(entries));
+      localStorage.setItem(`LastPlannerJulz_Journal_${dynamicId}`, JSON.stringify(entries));
     }
   }, [entries, dynamicId]);
 

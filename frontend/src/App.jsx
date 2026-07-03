@@ -181,7 +181,7 @@ export default function App() {
       <nav className="sticky top-0 z-50 border-b border-[#D8CFBC] bg-[#F8F6F0]/95 backdrop-blur-sm shadow-[0_1px_0_rgba(31,46,39,0.1)] no-print">
         <div className="site-container flex flex-wrap items-center justify-between gap-3 py-4">
           <a href="#home" className="flex items-baseline gap-3">
-            <span className="text-[0.95rem] font-serif font-semibold tracking-[0.18em] text-[#1F2E27]">Hollow Pine</span>
+            <span className="text-[0.95rem] font-serif font-semibold tracking-[0.18em] text-[#1F2E27]">Last Planner julz</span>
             <span className="text-[0.7rem] tracking-[0.28em] uppercase text-[#A8895C]">Funeral Home</span>
           </a>
 

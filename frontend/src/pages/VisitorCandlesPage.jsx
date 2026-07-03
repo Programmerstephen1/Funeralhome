@@ -13,7 +13,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
   // Fetch the global profile data for this specific family
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }

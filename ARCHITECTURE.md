@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-hollow-pine-funeral-home/
+last planner julz -home/
 ├── frontend/                    # React + Vite frontend
 │   ├── src/
 │   │   ├── components/         # Reusable UI components

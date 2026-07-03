@@ -8,7 +8,7 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
   // Load persistent family and friends data
   const [family, setFamily] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineFamily_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -17,7 +17,7 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
 
   const [friends, setFriends] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineFriends_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_Friends_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -34,7 +34,7 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }
@@ -43,8 +43,8 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      localStorage.setItem(`hollowPineFamily_${dynamicId}`, JSON.stringify(family));
-      localStorage.setItem(`hollowPineFriends_${dynamicId}`, JSON.stringify(friends));
+      localStorage.setItem(`LastPlannerJulz_${dynamicId}`, JSON.stringify(family));
+      localStorage.setItem(`LastPlannerJulz_Friends_${dynamicId}`, JSON.stringify(friends));
     }
   }, [family, friends, dynamicId]);
 

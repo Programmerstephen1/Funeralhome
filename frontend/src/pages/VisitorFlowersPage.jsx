@@ -8,7 +8,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
   // Load persistent flowers for this specific memorial
   const [flowers, setFlowers] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineFlowers_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_Flowers_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -30,7 +30,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
   // Fetch the global profile data
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }
@@ -40,7 +40,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
   // Auto-save flowers when updated
   useEffect(() => {
     if (dynamicId) {
-      localStorage.setItem(`hollowPineFlowers_${dynamicId}`, JSON.stringify(flowers));
+      localStorage.setItem(`LastPlannerJulz_Flowers_${dynamicId}`, JSON.stringify(flowers));
     }
   }, [flowers, dynamicId]);
 

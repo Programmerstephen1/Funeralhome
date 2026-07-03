@@ -8,7 +8,7 @@ export default function MemorialPagesPage({ dynamicId }) {
   // Load persistent memories for this specific memorial
   const [memories, setMemories] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineMemories_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_Memories_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -20,7 +20,7 @@ export default function MemorialPagesPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }
@@ -29,7 +29,7 @@ export default function MemorialPagesPage({ dynamicId }) {
 
   useEffect(() => {
     if (dynamicId) {
-      localStorage.setItem(`hollowPineMemories_${dynamicId}`, JSON.stringify(memories));
+      localStorage.setItem(`LastPlannerJulz_Memories_${dynamicId}`, JSON.stringify(memories));
     }
   }, [memories, dynamicId]);
 

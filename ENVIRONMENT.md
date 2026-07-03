@@ -217,7 +217,7 @@ docker-compose up
 ### Frontend
 
 1. Open `http://localhost:5173` in your browser
-2. You should see the Hollow Pine Funeral Home website
+2. You should see the last planner julz Funeral Home website
 
 ### Backend
 

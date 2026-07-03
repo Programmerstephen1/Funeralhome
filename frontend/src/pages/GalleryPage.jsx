@@ -8,7 +8,7 @@ export default function GalleryPage({ dynamicId }) {
   // Load persistent gallery photos for this specific memorial
   const [photos, setPhotos] = useState(() => {
     try {
-      const saved = localStorage.getItem(`hollowPineGallery_${dynamicId}`);
+      const saved = localStorage.getItem(`LastPlannerJulz_Gallery_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -21,7 +21,7 @@ export default function GalleryPage({ dynamicId }) {
   // Fetch the deceased's name
   useEffect(() => {
     if (dynamicId) {
-      const allMemorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+      const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
       if (allMemorials[dynamicId]) {
         setMemorialData(allMemorials[dynamicId]);
       }
@@ -31,7 +31,7 @@ export default function GalleryPage({ dynamicId }) {
   // Save photos automatically whenever the array changes
   useEffect(() => {
     if (dynamicId) {
-      localStorage.setItem(`hollowPineGallery_${dynamicId}`, JSON.stringify(photos));
+      localStorage.setItem(`LastPlannerJulz_Gallery_${dynamicId}`, JSON.stringify(photos));
     }
   }, [photos, dynamicId]);
 

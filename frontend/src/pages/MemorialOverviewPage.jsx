@@ -58,7 +58,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
     if (!createName || !createId || !createPin) return setError("Please fill out all required fields.");
     
     const cleanId = createId.toLowerCase().replace(/\s+/g, '-');
-    const memorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+    const memorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     
     if (memorials[cleanId]) {
       return setError("This Memorial ID is already taken. Please choose another.");
@@ -70,7 +70,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
       pin: createPin,
       portrait: createPortrait 
     };
-    localStorage.setItem("hollowPineMemorials", JSON.stringify(memorials));
+    localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(memorials));
     
     triggerToastAndRedirect("Secure memorial space generated successfully!", `#memorial/${cleanId}`);
   };
@@ -78,7 +78,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
   const handleAccessMemorial = (e) => {
     e.preventDefault();
     const cleanAccessId = accessId.toLowerCase().replace(/\s+/g, '-');
-    const memorials = JSON.parse(localStorage.getItem("hollowPineMemorials") || "{}");
+    const memorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     
     if (memorials[cleanAccessId] && memorials[cleanAccessId].pin === accessPin) {
       triggerToastAndRedirect("Access granted. Unlocking dashboard...", `#memorial/${cleanAccessId}`);
