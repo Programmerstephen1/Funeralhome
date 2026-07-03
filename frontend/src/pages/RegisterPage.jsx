@@ -10,7 +10,8 @@ export default function RegisterPage() {
 
   // 🔴 FIXED: Your actual live Render Backend URL
   const API_URL = "https://startup-simulator-v2.onrender.com";
-
+  // 🟢 FIXED: Dynamically falls back to localhost if the .env variable isn't set yet
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const handleRegister = async (e) => {
     e.preventDefault();
     setAuthError("");
