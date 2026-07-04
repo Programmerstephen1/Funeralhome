@@ -2,9 +2,8 @@
  * API Service Layer
  */
 
-// ⚠️ CRITICAL STEP: Replace this string with your ACTUAL Python backend URL from Render.
-// Make sure it starts with https:// and has NO slash (/) at the very end.
-const API_BASE_URL = "https://funeral-home-backend.onrender.com"; 
+// 🟢 PRO-GRADE FIX: Dynamically falls back to localhost if not on Render
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"; 
 
 class ApiService {
   constructor(baseUrl = API_BASE_URL) {
@@ -61,7 +60,7 @@ class ApiService {
 
   logout() {
     localStorage.removeItem("token");
-    window.location.href = "#login"; 
+    window.location.hash = "#login"; 
   }
 
   async healthCheck() { return this.request("/api/health"); }

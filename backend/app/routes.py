@@ -104,8 +104,8 @@ def send_otp():
 
     try:
         msg = Message(
-            subject="Your Hollow Pine Verification Code",
-            sender=("Hollow Pine Security", "stephenitwika178@gmail.com"),
+            subject="Your last planner julz Hub Verification Code",
+            sender=("last planner julz Hub Security", "stephenitwika178@gmail.com"),
             recipients=[email]
         )
 
@@ -117,7 +117,7 @@ def send_otp():
             </div>
             <div style="padding: 40px 30px; text-align: center;">
               <p style="color: #3D3530; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
-                Welcome to Hollow Pine Memorial Hub. Please use the verification code below to securely access your account.
+                Welcome to last planner julz Hub. Please use the verification code below to securely access your account.
               </p>
               <div style="background-color: #F8F6F0; border: 1px solid #E8DFD1; border-radius: 8px; padding: 20px; display: inline-block; margin-bottom: 30px;">
                 <span style="color: #A8895C; font-size: 36px; font-weight: bold; letter-spacing: 12px;">{otp_code}</span>
@@ -297,15 +297,15 @@ def mpesa_callback():
             if customer_email:
                 try:
                     msg = Message(
-                        subject="Your Payment Receipt - Hollow Pine Hub",
-                        sender=("Hollow Pine Billing", "stephenitwika178@gmail.com"), 
+                        subject="Your Payment Receipt - last planner julz Hub",
+                        sender=("Last planner julz Hub", "stephenitwika178@gmail.com"), 
                         recipients=[customer_email]
                     )
                     
                     msg.html = f"""
                     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
                         <div style="background-color: #1F2E27; padding: 25px; text-align: center;">
-                            <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 24px; letter-spacing: 1px;">Hollow Pine</h1>
+                            <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 24px; letter-spacing: 1px;">last planner julz Hub</h1>
                             <p style="color: #F8F6F0; margin: 4px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px;">Order Confirmed</p>
                         </div>
                         <div style="padding: 35px 25px; background-color: #FFFFFF; color: #3D3530;">
@@ -331,7 +331,7 @@ def mpesa_callback():
                             <p style="font-size: 13px; color: #8F847C; margin-bottom: 0;">Our administrative operators will reach out to organize coordination arrangements shortly.</p>
                         </div>
                         <div style="background-color: #EFEAE0; padding: 15px; text-align: center; font-size: 11px; color: #8F744D;">
-                            <p style="margin: 0;">Hollow Pine Funeral Home & Memorials • Kenya</p>
+                            <p style="margin: 0;">last planner julz Hub • Kenya</p>
                         </div>
                     </div>
                     """
@@ -366,7 +366,7 @@ def request_consultation():
     try:
         msg = Message(
             subject=f"New Consultation Request: {name}",
-            sender=(f"{name} via Hollow Pine", "stephenitwika178@gmail.com"), 
+            sender=(f"{name} via last planner julz Hub", "stephenitwika178@gmail.com"), 
             recipients=["stephenitwika178@gmail.com"], 
             reply_to=(name, user_email) 
         )
@@ -374,7 +374,7 @@ def request_consultation():
         msg.html = f"""
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="background-color: #1F2E27; padding: 30px 20px; text-align: center;">
-                <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">Hollow Pine</h1>
+                <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">last planner julz Hub</h1>
                 <p style="color: #F8F6F0; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Funeral Home & Memorials</p>
             </div>
             <div style="padding: 40px 30px; background-color: #FFFFFF; color: #3D3530;">
@@ -399,7 +399,7 @@ def request_consultation():
                 </div>
             </div>
             <div style="background-color: #EFEAE0; padding: 20px; text-align: center; font-size: 12px; color: #8F744D;">
-                <p style="margin: 0;">This is an automated notification from the Hollow Pine website.</p>
+                <p style="margin: 0;">This is an automated notification from the last planner julz Hub website.</p>
                 <p style="margin: 5px 0 0 0;">Reply directly to this email to contact the family.</p>
             </div>
         </div>
@@ -415,7 +415,12 @@ def request_consultation():
 def register_routes(app):
     from flask_cors import CORS
     
-    # 🔴 Verified frontend CORS target
-    CORS(app, origins=["https://funeralhome-5inb.onrender.com"])
+    # 🟢 PRO-GRADE FIX: Safely allows both local testing and live deployment
+    CORS(app, origins=[
+        "http://localhost:5173", 
+        "http://localhost:4173", 
+        "http://127.0.0.1:5173",
+        "https://funeralhome-5inb.onrender.com"
+    ])
     
     app.register_blueprint(api)
