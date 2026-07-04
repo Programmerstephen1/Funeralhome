@@ -126,7 +126,7 @@ export default function HomePage() {
                       24/7 Support Line
                     </h4>
                     <p className="text-lg font-serif font-semibold text-[#1F2E27] hover:text-[#A8895C] transition-colors cursor-pointer">
-                      +254 7XX XXX XXX
+                      +254 799 847 727
                     </p>
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default function HomePage() {
                       Visit Our Office
                     </h4>
                     <p className="text-[#3D3530] text-sm leading-relaxed font-medium">
-                      Hollow Pine Complex, Ground Floor <br />
+                      LAST PLANNER JULZ,<br />
                       <span className="text-[#1F2E27] font-semibold">Ruiru, Kiambu County, Kenya</span>
                     </p>
                   </div>
