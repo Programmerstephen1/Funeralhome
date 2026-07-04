@@ -58,6 +58,14 @@ class ApiService {
     });
   }
 
+  // 🟢 NEW: Added OTP handler so RegisterPage doesn't have to use raw fetch()
+  async sendOtp(email) {
+    return this.request("/api/auth/send-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
   logout() {
     localStorage.removeItem("token");
     window.location.hash = "#login"; 

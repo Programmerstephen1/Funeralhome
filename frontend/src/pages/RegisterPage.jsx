@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { UserPlus, Lock, Mail } from "lucide-react";
+import api from "../services/api"; // 🟢 Import the unified API service
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -7,12 +8,6 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState(""); 
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // 🔴 FIXED: Your actual live Render Backend URL
-// Dynamically use environment variable if set, otherwise fall back to deployed URL or localhost
-const API_URL = import.meta.env.VITE_API_URL 
-  || "https://startup-simulator-v2.onrender.com" 
-  || "http://localhost:5000";
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -26,33 +21,20 @@ const API_URL = import.meta.env.VITE_API_URL
     setIsLoading(true);
 
     try {
-      const registerResponse = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      // 1. Register the user via our API service
+      await api.register(email, password);
+      
+      // 2. Trigger the verification email OTP
+      await api.sendOtp(email);
+      
+      // 3. Success! Save email and route to verify screen
+      localStorage.setItem("userEmail", email);
+      window.location.hash = "#verify";
 
-      const registerData = await registerResponse.json();
-
-      if (registerResponse.ok) {
-        const otpResponse = await fetch(`${API_URL}/api/auth/send-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-
-        if (otpResponse.ok) {
-          localStorage.setItem("userEmail", email);
-          window.location.hash = "#verify";
-        } else {
-          setAuthError("Account created, but failed to send the verification email. Your email provider may be blocking it.");
-        }
-      } else {
-        setAuthError(registerData.message || "Registration failed.");
-      }
     } catch (error) {
-      console.error("Network error:", error);
-      setAuthError("Could not connect to the server. Is your Python backend running?");
+      console.error("Registration error:", error);
+      // Automatically displays the exact error from the Python backend
+      setAuthError(error.message || "Registration failed. Is the backend running?");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +51,7 @@ const API_URL = import.meta.env.VITE_API_URL
             <UserPlus className="text-[#A8895C]" size={28} />
           </div>
           <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Create Account</h2>
-          <p className="text-[#3D3530] text-sm">Join last planner julz Hub.</p>
+          <p className="text-[#3D3530] text-sm">Join Last Planner Julz Hub.</p>
         </div>
 
         {authError && (
