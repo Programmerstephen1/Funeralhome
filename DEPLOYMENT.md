@@ -42,6 +42,15 @@ Notes
 
 If you want, I can prepare the exact value to set for `VITE_API_URL` if you share the backend's public URL, or I can attempt to discover it if you host the backend on Render and can give me the Render service name.
 
+Fallback / Mock payments
+------------------------
+If M-Pesa processing is not available in your deployment, you can enable a mock payment provider during the frontend build so users can complete bookings for testing:
+
+- Frontend environment variable: `VITE_PAYMENT_PROVIDER=mock`
+- Backend: no change required; a lightweight `/api/payments/mock` endpoint has been added to accept mock payments.
+
+Set `VITE_PAYMENT_PROVIDER=mock` in your frontend host environment and redeploy the frontend (Vite injects the value at build time). This will route M-Pesa payment attempts to the mock endpoint which returns an immediate success.
+
 Quick test scripts
 ------------------
 Two tiny scripts are included in the repository to help validate a deployed backend. They take the backend origin as the first argument.

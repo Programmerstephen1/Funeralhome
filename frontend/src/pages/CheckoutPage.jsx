@@ -50,7 +50,10 @@ export default function CheckoutPage({ cart }) {
     if (!formData.contactName.trim()) errors.contactName = "Please add the contact person's name.";
     if (!formData.venueName.trim()) errors.venueName = "Please choose a funeral home or venue location.";
     if (!formData.burialDate) errors.burialDate = "Please choose a burial date.";
-    if (paymentMethod === "mpesa") {
+    // Determine payment provider (mpesa | mock | stripe future)
+    const PAYMENT_PROVIDER = import.meta.env.VITE_PAYMENT_PROVIDER || "mpesa";
+
+    if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mpesa") {
       const sanitizedPhone = (formData.phone || "").replace(/\D/g, "");
       if (sanitizedPhone.length < 10) errors.phone = "Please enter a valid Kenyan M-Pesa phone number.";
     }
@@ -94,6 +97,28 @@ export default function CheckoutPage({ cart }) {
         }
       } catch (err) {
         setPaymentError("Network error. Please check your connection to the server.");
+        setIsProcessing(false);
+      }
+    } else if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mock") {
+      // Call mock payment endpoint for deployments without M-Pesa
+      setIsProcessing(true);
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+        const resp = await fetch(`${API_URL}/api/payments/mock`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: totalAmount, phone: (formData.phone || '').replace(/\D/g, ''), email: localStorage.getItem('userEmail') || '' })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok) {
+          setPaymentMessage("Payment simulated successfully. Thank you.");
+          setTimeout(() => { window.location.hash = "#thankyou"; }, 1500);
+        } else {
+          setPaymentError(data.error || data.message || "Mock payment failed.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        setPaymentError("Network error during mock payment.");
         setIsProcessing(false);
       }
     } else {

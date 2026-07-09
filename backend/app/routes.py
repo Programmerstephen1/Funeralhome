@@ -275,6 +275,23 @@ def stk_push():
         
     return jsonify(result), 200
 
+
+@api.route("/api/payments/mock", methods=["POST"])
+def mock_payment():
+    """A simple mock payment endpoint for deployments where M-Pesa is unavailable.
+    Records the request in logs and returns a fake success payload.
+    """
+    payload = request.get_json() or {}
+    amount = payload.get("amount")
+    phone = payload.get("phone")
+    email = payload.get("email")
+
+    logger.info(f"[MOCK PAYMENT] amount={amount} phone={phone} email={email}")
+
+    # Return a deterministic fake transaction id
+    tx_id = f"MOCK-{int(datetime.datetime.utcnow().timestamp())}"
+    return jsonify({"message": "Mock payment processed", "transaction_id": tx_id}), 200
+
 @api.route("/api/payments/callback", methods=["POST"])
 def mpesa_callback():
     from flask_mail import Message

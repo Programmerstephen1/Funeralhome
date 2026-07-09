@@ -23,7 +23,10 @@ export default function BookingCheckoutPage({ serviceBookings }) {
     setPaymentError("");
     setPaymentMessage("");
 
-    if (paymentMethod === "mpesa") {
+    // Allow swapping payment provider at build-time with VITE_PAYMENT_PROVIDER
+    const PAYMENT_PROVIDER = import.meta.env.VITE_PAYMENT_PROVIDER || "mpesa";
+
+    if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mpesa") {
       const sanitizedPhone = phone.replace(/\D/g, "");
       if (sanitizedPhone.length < 10) {
         setPaymentError("Please enter a valid Kenyan M-Pesa phone number to secure the booking.");
@@ -58,6 +61,27 @@ export default function BookingCheckoutPage({ serviceBookings }) {
         }
       } catch (err) {
         setPaymentError("Network error. Please check your connection to the server.");
+        setIsProcessing(false);
+      }
+    } else if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mock") {
+      setIsProcessing(true);
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+        const resp = await fetch(`${API_URL}/api/payments/mock`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: totalAmount, phone: phone.replace(/\D/g, ''), email: localStorage.getItem('userEmail') || '' })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok) {
+          setPaymentMessage("Mock payment processed successfully.");
+          setTimeout(() => { window.location.hash = "#thankyou"; }, 1500);
+        } else {
+          setPaymentError(data.error || data.message || "Mock payment failed.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        setPaymentError("Network error during mock payment.");
         setIsProcessing(false);
       }
     } else {
