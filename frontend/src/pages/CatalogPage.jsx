@@ -61,7 +61,7 @@ const categories = [
   { 
     id: "catering", 
     title: "Catering Services", 
-    desc: "Premium plated and buffet services with dedicated waitstaff.", 
+    desc: "Premium plated and buffet services with dedicated waitstaff; serving all major cities and towns in Kenya.", 
     images: ["/images/catering.jpg"] 
   },
   { 
@@ -316,9 +316,10 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
         </div>
       </div>
       <div className="flex flex-grow flex-col p-6 text-center">
-        <h3 className="mx-4 mb-3 border-b border-[#E8DFD1] pb-3 text-xl font-serif text-[#1F2E27]">
+        <h3 className="mx-4 mb-1 border-b border-[#E8DFD1] pb-1 text-xl font-serif text-[#1F2E27]">
           {item.title}
         </h3>
+        <div className="mb-3 text-xs text-[#8F847C]">Code: #{item.id}</div>
         <p className="mb-6 px-2 text-sm leading-relaxed text-[#3D3530]">
           {item.desc}
         </p>
@@ -754,14 +755,8 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     </div>
 
                     <div>
-                      <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Serving Regions</h4>
-                      <ul className="space-y-3 text-sm text-[#D8CFBC] opacity-90">
-                        <li>Ruiru & Environs</li>
-                        <li>Kiambu County</li>
-                        <li>Nairobi CBD</li>
-                        <li>Westlands & Lavington</li>
-                        <li>Thika Road Corridor</li>
-                      </ul>
+                                    <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Serving Regions</h4>
+                                    <p className="text-sm text-[#D8CFBC] opacity-90">All major cities and towns across Kenya — including Nairobi, Mombasa, Kisumu, Nakuru, Eldoret, and surrounding counties. If your location is remote, contact us for a custom quote.</p>
                     </div>
                   </div>
                 </div>

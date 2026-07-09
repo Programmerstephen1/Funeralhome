@@ -44,7 +44,7 @@ export default function PlanAheadPage() {
 
   const processSteps = [
     { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences.", icon: HeartHandshake },
-    { title: "Review Options", desc: "Explore service packages, merchandise, and memorial options.", icon: Sparkles },
+    { title: "Review Options", desc: "Explore our thoughtfully designed packages — from essential to comprehensive. Each package clearly lists what’s included (service coordination, selected merchandise, floral options, media coverage, and catering levels), with transparent pricing and optional add-ons so you can easily compare value and choose what fits your family’s needs.", icon: Sparkles },
     { title: "Document Preferences", desc: "Provide personal details, family information, and specific requests.", icon: FileText },
     { title: "Finalize Plan", desc: "Review your complete plan and make any adjustments.", icon: ShieldCheck },
     { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and respected.", icon: Clock3 },

@@ -165,7 +165,7 @@ export default function HomePage() {
             },
             {
               title: "Elegant presentation",
-              text: "Every detail is styled to feel dignified, warm, and beautifully considered."
+              text: "Every detail is thoughtfully styled to feel dignified, warm, and beautifully considered."
             },
             {
               title: "Flexible planning",
