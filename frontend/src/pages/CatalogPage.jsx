@@ -748,7 +748,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     <div>
                       <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Contact Us</h4>
                       <ul className="space-y-4 text-sm text-[#D8CFBC] opacity-90">
-                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Phone size={16} className="text-[#A8895C]"/> +254 7XX XXX XXX</li>
+                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Phone size={16} className="text-[#A8895C]"/> +254 799 847727</li>
                         <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Mail size={16} className="text-[#A8895C]"/> catering@lastplannerjulz.co.ke</li>
                         <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><MapPin size={16} className="text-[#A8895C]"/> Ruiru, Kiambu County, Kenya</li>
                       </ul>
@@ -845,6 +845,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                       <h3 className="text-3xl lg:text-4xl font-serif mb-6 text-[#A8895C]">Require Custom Media Coverage?</h3>
                       <p className="text-lg text-[#E8DFD1] opacity-90 mb-10 leading-relaxed">
                         We can arrange drone coverage, multi-location streaming, and extended editorial photography. Speak with our media director today to craft your perfect tribute.
+                                        to contact us you can kindly reach out via the phone number +254 799 847727 or  request a call back via the form below and we will get back to you promptly.
                       </p>
                       
                       {/* FormSubmit HTML Form */}
