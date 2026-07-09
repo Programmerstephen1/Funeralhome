@@ -75,12 +75,11 @@ export default function PlanAheadPage() {
     }
 
     setIsSubmitting(true);
-    
-    // Create a loading toast
     const toastId = toast.loading("Sending your request...");
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/consultations", {
+      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+      const response = await fetch(`${apiBase}/api/consultations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,21 +87,18 @@ export default function PlanAheadPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        // Success!
-        toast.success("Request sent successfully! Check your email.", { id: toastId });
+        toast.success(data.message || "Request received successfully. We will follow up with you shortly.", { id: toastId });
         setIsModalOpen(false);
         setFormData({ name: "", email: "", phone: "", questions: "" });
       } else {
-        // Backend returned an error
-        toast.error(`Error: ${data.error || "Failed to send"}`, { id: toastId });
+        toast.error(data.message || data.error || "Unable to send your request right now.", { id: toastId });
       }
     } catch (error) {
-      // Network crash
       console.error("Submission Error:", error);
-      toast.error("Network error. Is your backend running?", { id: toastId });
+      toast.error("We could not reach the server right now. Please try again in a moment.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }

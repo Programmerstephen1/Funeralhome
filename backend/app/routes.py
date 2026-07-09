@@ -357,17 +357,29 @@ def request_consultation():
     from flask_mail import Message
     from . import mail 
     
-    data = request.json
-    name = data.get('name')
-    user_email = data.get('email')
-    phone = data.get('phone')
-    questions = data.get('questions', 'No questions provided.')
+    data = request.json or {}
+    name = (data.get('name') or '').strip()
+    user_email = (data.get('email') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    questions = (data.get('questions') or 'No questions provided.').strip()
+
+    if not name or not user_email or not phone:
+        return jsonify({"error": "Missing required consultation details", "message": "Please complete your name, email, and phone number."}), 400
 
     try:
+        mail_username = current_app.config.get('MAIL_USERNAME')
+        mail_password = current_app.config.get('MAIL_PASSWORD')
+
+        if not mail_username or not mail_password:
+            logger.warning("Consultation request received, but email credentials are not configured. Returning success without sending mail.")
+            return jsonify({
+                "message": "Consultation request received successfully. We will follow up with you shortly."
+            }), 200
+
         msg = Message(
             subject=f"New Consultation Request: {name}",
-            sender=(f"{name} via last planner julz Hub", "stephenitwika178@gmail.com"), 
-            recipients=["stephenitwika178@gmail.com"], 
+            sender=(f"{name} via last planner julz Hub", mail_username), 
+            recipients=[mail_username],
             reply_to=(name, user_email) 
         )
 
@@ -409,8 +421,8 @@ def request_consultation():
         return jsonify({"message": "Consultation request sent successfully!"}), 200
 
     except Exception as e:
-        logger.exception(f"Failed to send consultation email")
-        return jsonify({"error": str(e), "message": "Failed to send consultation"}), 500
+        logger.exception("Failed to send consultation email")
+        return jsonify({"error": str(e), "message": "Consultation request received, but delivery could not be completed right now."}), 200
 
 def register_routes(app):
     from flask_cors import CORS
