@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ShoppingCart, CalendarDays } from "lucide-react"; 
+import { ShoppingCart, CalendarDays, MessageCircle } from "lucide-react"; 
 import HomePage from "./pages/HomePage";
 import MemorialOverviewPage from "./pages/MemorialOverviewPage";
 import PlanAheadPage from "./pages/PlanAheadPage";
@@ -95,11 +95,21 @@ export default function App() {
 
   const [cart, setCart] = useState(() => getSavedCart(userEmail));
   const [serviceBookings, setServiceBookings] = useState(() => getSavedBookings(userEmail));
+  const [toast, setToast] = useState("");
+
+  const cartCount = useMemo(() => cart.reduce((total, item) => total + item.quantity, 0), [cart]);
+  const bookingCount = useMemo(() => serviceBookings.length, [serviceBookings]);
 
   useEffect(() => {
     const key = userEmail ? `cart_${userEmail}` : "cart_guest";
     localStorage.setItem(key, JSON.stringify(cart));
   }, [cart, userEmail]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 2200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     const key = userEmail ? `bookings_${userEmail}` : "bookings_guest";
@@ -125,6 +135,7 @@ export default function App() {
     setUserEmail(null);
     setCart([]);
     setServiceBookings([]);
+    setToast("You have been signed out.");
     window.location.hash = "#home";
   };
 
@@ -134,11 +145,12 @@ export default function App() {
       if (existing) return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       return [...prevCart, { ...product, quantity: 1 }];
     });
+    setToast(`${product.title} added to your booking cart.`);
   };
 
   const bookRental = (service) => {
     setServiceBookings((prev) => [...prev, { ...service, quantity: 1, bookedAt: new Date().toISOString() }]);
-    alert(`Service "${service.title}" added to your booking requests.`);
+    setToast(`${service.title} added to your booking requests.`);
   };
 
   const removeRental = (indexToRemove) => {
@@ -160,7 +172,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    const handleHashChange = () => setCurrentHash(normalizeHash(window.location.hash));
+    const handleHashChange = () => {
+      setCurrentHash(normalizeHash(window.location.hash));
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
@@ -173,19 +188,32 @@ export default function App() {
     return HomePage;
   }, [currentPage]);
 
+  useEffect(() => {
+    const pageLabel = pages.find((page) => page.id === currentPage)?.label || "Home";
+    document.title = `${pageLabel} • Last Planner Julz`;
+  }, [currentPage]);
+
   return (
     <div className="site-shell">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap');
       `}</style>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-[#1F2E27] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+        Skip to content
+      </a>
+      {toast && (
+        <div className="fixed left-1/2 top-4 z-[80] w-[min(92vw,24rem)] -translate-x-1/2 rounded-full border border-[#E8DFD1] bg-[#1F2E27] px-4 py-3 text-center text-sm font-medium text-white shadow-lg" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
       <nav className="sticky top-0 z-50 border-b border-[#D8CFBC] bg-[#F8F6F0]/95 backdrop-blur-sm shadow-[0_1px_0_rgba(31,46,39,0.1)] no-print">
-        <div className="site-container flex flex-wrap items-center justify-between gap-3 py-4">
+        <div className="site-container flex flex-col items-start gap-3 py-4 md:flex-row md:items-center md:justify-between">
           <a href="#home" className="flex items-baseline gap-3">
             <span className="text-[0.95rem] font-serif font-semibold tracking-[0.18em] text-[#1F2E27]">Last Planner julz</span>
             <span className="text-[0.7rem] tracking-[0.28em] uppercase text-[#A8895C]">Funeral Home</span>
           </a>
 
-          <div className="flex flex-wrap items-center gap-3 text-[0.95rem] text-[#3D3530]">
+          <div className="flex flex-wrap items-center gap-2 text-[0.95rem] text-[#3D3530] md:gap-3">
             {pages.map((page) => {
               if (isLoggedIn && (page.id === "login" || page.id === "register")) return null;
               
@@ -196,6 +224,7 @@ export default function App() {
                 <a
                   key={page.id}
                   href={`#${page.id}`}
+                  aria-current={currentPage === page.id ? "page" : undefined}
                   className={`transition-opacity ${currentPage === page.id ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}
                 >
                   {page.label}
@@ -203,21 +232,21 @@ export default function App() {
               );
             })}
             
-            <div className="flex items-center gap-4 border-l border-[#D8CFBC] pl-4 ml-2">
-              <a href="#cart" className="relative text-[#A8895C] hover:text-[#1F2E27] transition-colors">
+            <div className="ml-0 flex items-center gap-4 border-l border-[#D8CFBC] pl-4 md:ml-2">
+              <a href="#cart" aria-label="Shopping cart" className="relative text-[#A8895C] hover:text-[#1F2E27] transition-colors">
                 <ShoppingCart size={20} />
-                {cart.reduce((total, item) => total + item.quantity, 0) > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-[#1F2E27] text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {cart.reduce((total, item) => total + item.quantity, 0)}
+                    {cartCount}
                   </span>
                 )}
               </a>
 
-              <a href="#bookings" className="relative text-[#A8895C] hover:text-[#1F2E27] transition-colors">
+              <a href="#bookings" aria-label="Service bookings" className="relative text-[#A8895C] hover:text-[#1F2E27] transition-colors">
                 <CalendarDays size={20} />
-                {serviceBookings.length > 0 && (
+                {bookingCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-[#A8895C] text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {serviceBookings.length}
+                    {bookingCount}
                   </span>
                 )}
               </a>
@@ -237,7 +266,15 @@ export default function App() {
         </div>
       </nav>
 
-      <main>
+      <main id="main-content" tabIndex="-1">
+        <a
+          href="tel:+254799847727"
+          aria-label="Call Last Planner Julz"
+          className="fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full bg-[#1F2E27] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_16px_40px_rgba(31,46,39,0.25)] transition-transform hover:-translate-y-1"
+        >
+          <MessageCircle size={18} />
+          <span>Contact Us</span>
+        </a>
         <ActivePage 
           dynamicId={currentDynamicId}
           userEmail={userEmail} // EXTREMELY IMPORTANT: Passes the email to the OTP screen

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Calendar, Building2, CheckCircle2, Phone, Loader2 } from "lucide-react";
+import { Calendar, Building2, CheckCircle2, Phone, Loader2, ShieldCheck } from "lucide-react";
+import ProgressSteps from "../components/ProgressSteps";
 import mpesaIcon from "../assets/mpesa.png";
 import airtelIcon from "../assets/airtel.png";
 import debitIcon from "../assets/debit.png";
@@ -18,13 +19,21 @@ export default function CheckoutPage({ cart }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
   const [paymentError, setPaymentError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
 
   const subtotal = cart?.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0) || 0;
   const serviceFee = 2500;
   const totalAmount = subtotal + serviceFee;
+  const progressSteps = [
+    { id: "selection", label: "Select arrangements", description: "curated choices" },
+    { id: "payment", label: "Confirm details", description: "secure payment" },
+    { id: "complete", label: "Complete booking", description: "confirmation" },
+  ];
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const paymentOptions = [
@@ -37,17 +46,23 @@ export default function CheckoutPage({ cart }) {
     setPaymentError("");
     setPaymentMessage("");
 
-    if (!formData.contactName || !formData.venueName || !formData.burialDate) {
-      setPaymentError("Please fill in all service details before proceeding.");
+    const errors = {};
+    if (!formData.contactName.trim()) errors.contactName = "Please add the contact person's name.";
+    if (!formData.venueName.trim()) errors.venueName = "Please choose a funeral home or venue location.";
+    if (!formData.burialDate) errors.burialDate = "Please choose a burial date.";
+    if (paymentMethod === "mpesa") {
+      const sanitizedPhone = (formData.phone || "").replace(/\D/g, "");
+      if (sanitizedPhone.length < 10) errors.phone = "Please enter a valid Kenyan M-Pesa phone number.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setPaymentError("Please fix the highlighted details before continuing.");
       return;
     }
     
     if (paymentMethod === "mpesa") {
       const sanitizedPhone = formData.phone.replace(/\D/g, "");
-      if (sanitizedPhone.length < 10) {
-        setPaymentError("Please enter a valid Kenyan M-Pesa phone number.");
-        return;
-      }
 
       setIsProcessing(true);
       const currentUserEmail = localStorage.getItem("userEmail") || "";
@@ -97,37 +112,49 @@ export default function CheckoutPage({ cart }) {
 
   return (
     <div className="min-h-screen bg-[#F4F1EA] pb-32">
-      <div className="bg-white border-b border-[#E8DFD1] py-6 mb-8">
-        <div className="site-container max-w-4xl mx-auto px-4 flex items-center justify-between text-[10px] md:text-xs uppercase tracking-widest font-semibold">
-          <div className="text-[#A8895C] flex items-center gap-1 md:gap-2"><span>01</span> Cart</div>
-          <div className="h-px bg-[#E8DFD1] flex-grow mx-2 md:mx-4"></div>
-          <div className="text-[#A8895C] flex items-center gap-1 md:gap-2"><span>02</span> Orchestration & Payment</div>
-          <div className="h-px bg-[#E8DFD1] flex-grow mx-2 md:mx-4"></div>
-          <div className="text-[#1F2E27] opacity-50 flex items-center gap-1 md:gap-2"><span>03</span> Complete</div>
+      <div className="mb-8 border-b border-[#E8DFD1] bg-white py-6">
+        <div className="site-container mx-auto max-w-4xl px-4">
+          <ProgressSteps
+            steps={progressSteps}
+            currentStep="payment"
+            title="Arrange and confirm your booking"
+            subtitle="A calm, guided path to secure your selections"
+          />
         </div>
       </div>
 
-      <div className="site-container max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 flex flex-col gap-6">
-          <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm">
-            <h2 className="text-xl font-serif text-[#1F2E27] mb-6 flex items-center gap-2">
-              <Building2 className="text-[#A8895C]" size={20} /> Service & Logistics Details
-            </h2>
+      <div className="site-container mx-auto grid max-w-4xl grid-cols-1 gap-8 px-4 md:grid-cols-3">
+        <div className="flex flex-col gap-6 md:col-span-2">
+          <div className="rounded-[1.25rem] border border-[#E8DFD1] bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="section-eyebrow">Arrangement details</p>
+                <h2 className="mt-2 flex items-center gap-2 text-xl font-serif text-[#1F2E27]">
+                  <Building2 className="text-[#A8895C]" size={20} /> Service & Logistics Details
+                </h2>
+              </div>
+              <div className="rounded-full border border-[#E8DFD1] bg-[#F8F6F0] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#A8895C]">
+                Secure booking
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-6">
               <div>
                 <label className="block text-sm font-medium text-[#3D3530] mb-2">Contact Person Name</label>
-                <input name="contactName" onChange={handleInputChange} className="w-full p-3 border border-[#E8DFD1] bg-[#F8F6F0] focus:outline-none focus:border-[#A8895C] transition-colors rounded-sm" placeholder="Who should we contact?" />
+                <input name="contactName" onChange={handleInputChange} value={formData.contactName} className="w-full p-3 border border-[#E8DFD1] bg-[#F8F6F0] focus:outline-none focus:border-[#A8895C] transition-colors rounded-sm" placeholder="Who should we contact?" aria-invalid={!!formErrors.contactName} />
+                {formErrors.contactName && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.contactName}</p>}
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-[#3D3530] mb-2">Funeral Home / Venue Location</label>
-                <LocationPicker onLocationSelect={(address) => setFormData({ ...formData, venueName: address })} />
+                <LocationPicker onLocationSelect={(address) => { setFormData({ ...formData, venueName: address }); setFormErrors((prev) => ({ ...prev, venueName: "" })); }} />
+                {formErrors.venueName && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.venueName}</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-[#3D3530] mb-2">Burial Date</label>
-                  <input type="date" name="burialDate" onChange={handleInputChange} className="w-full p-3 border border-[#E8DFD1] bg-[#F8F6F0] focus:outline-none focus:border-[#A8895C] transition-colors rounded-sm" />
+                  <input type="date" name="burialDate" onChange={handleInputChange} value={formData.burialDate} className="w-full p-3 border border-[#E8DFD1] bg-[#F8F6F0] focus:outline-none focus:border-[#A8895C] transition-colors rounded-sm" aria-invalid={!!formErrors.burialDate} />
+                  {formErrors.burialDate && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.burialDate}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#3D3530] mb-2">Arrival Preference</label>
@@ -140,8 +167,8 @@ export default function CheckoutPage({ cart }) {
             </div>
           </div>
 
-          <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm">
-            <h2 className="text-xl font-serif text-[#1F2E27] mb-6">Select Payment Method</h2>
+          <div className="rounded-[1.25rem] border border-[#E8DFD1] bg-white p-6 shadow-sm md:p-8">
+            <h2 className="mb-6 text-xl font-serif text-[#1F2E27]">Select Payment Method</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {paymentOptions.map((option) => (
                 <div 
@@ -167,17 +194,20 @@ export default function CheckoutPage({ cart }) {
                   type="tel" 
                   name="phone" 
                   onChange={handleInputChange} 
+                  value={formData.phone}
                   placeholder="e.g. 0712345678 or 254712345678" 
+                  aria-invalid={!!formErrors.phone}
                   className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-sm focus:outline-none focus:border-[#A8895C] transition-colors" 
                 />
+                {formErrors.phone && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.phone}</p>}
                 <p className="text-xs text-[#8F744D] mt-3 tracking-wide">A secure payment prompt will be sent directly to this number.</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 h-fit sticky top-24 rounded-sm">
-          <h2 className="text-lg font-serif text-[#1F2E27] mb-6 border-b border-[#E8DFD1] pb-4">Booking Summary</h2>
+        <div className="sticky top-24 h-fit rounded-[1.25rem] border border-[#E8DFD1] bg-white p-6 shadow-sm md:p-8">
+          <h2 className="mb-6 border-b border-[#E8DFD1] pb-4 text-lg font-serif text-[#1F2E27]">Booking Summary</h2>
           <div className="flex flex-col gap-4 mb-6">
             {cart.map((item, i) => (
               <div key={i} className="flex justify-between text-sm">
@@ -197,8 +227,11 @@ export default function CheckoutPage({ cart }) {
             </div>
           </div>
 
-          {paymentError && <div className="mt-6 p-4 bg-red-50 text-red-700 text-sm rounded-sm border border-red-200 leading-relaxed">{paymentError}</div>}
-          {paymentMessage && <div className="mt-6 p-4 bg-green-50 text-green-800 text-sm rounded-sm border border-green-200 leading-relaxed">{paymentMessage}</div>}
+          {paymentError && <div className="mt-6 rounded-sm border border-red-200 bg-red-50 p-4 text-sm leading-relaxed text-red-700" role="alert">{paymentError}</div>}
+          {paymentMessage && <div className="mt-6 rounded-sm border border-green-200 bg-green-50 p-4 text-sm leading-relaxed text-green-800" role="status">{paymentMessage}</div>}
+          {!paymentError && !paymentMessage && (
+            <p className="mt-6 text-sm leading-relaxed text-[#3D3530]">Once confirmed, you will receive a payment prompt and a brief confirmation summary for your records.</p>
+          )}
 
           <button 
             onClick={handlePayment}

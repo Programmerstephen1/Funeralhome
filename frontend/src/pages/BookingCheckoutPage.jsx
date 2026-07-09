@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Clock, MapPin, Calendar, CheckCircle2, Phone, Loader2, Car } from "lucide-react";
+import { Clock, MapPin, Calendar, CheckCircle2, Phone, Loader2, Car, ShieldCheck } from "lucide-react";
+import ProgressSteps from "../components/ProgressSteps";
 import mpesaIcon from "../assets/mpesa.png";
 
 export default function BookingCheckoutPage({ serviceBookings }) {
@@ -12,6 +13,11 @@ export default function BookingCheckoutPage({ serviceBookings }) {
   const subtotal = serviceBookings?.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0) || 0;
   const bookingFee = 1500;
   const totalAmount = subtotal + bookingFee;
+  const progressSteps = [
+    { id: "selection", label: "Select services", description: "your requests" },
+    { id: "payment", label: "Secure transport", description: "payment review" },
+    { id: "complete", label: "Complete booking", description: "confirmation" },
+  ];
 
   const handlePayment = async () => {
     setPaymentError("");
@@ -74,8 +80,12 @@ export default function BookingCheckoutPage({ serviceBookings }) {
   return (
     <div className="min-h-screen bg-[#F4F1EA] pb-32">
       <div className="bg-[#1F2E27] py-10 md:py-12 mb-8 text-center border-b-4 border-[#A8895C] px-4">
-        <h1 className="text-3xl md:text-4xl font-serif text-white tracking-wide mb-2">Secure Transport Booking</h1>
-        <p className="text-[#E8DFD1] text-xs md:text-sm uppercase tracking-widest opacity-80">Fleet Orchestration & Payment Verification</p>
+        <h1 className="text-3xl md:text-4xl font-serif text-white tracking-wide mb-2">Secure transport booking</h1>
+        <p className="text-[#E8DFD1] text-xs md:text-sm uppercase tracking-widest opacity-80">Fleet orchestration & payment verification</p>
+      </div>
+
+      <div className="site-container mx-auto mb-8 max-w-6xl px-4">
+        <ProgressSteps steps={progressSteps} currentStep="payment" title="Finalize your transport request" subtitle="A calm and organized booking path" />
       </div>
 
       <div className="site-container max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -124,6 +134,11 @@ export default function BookingCheckoutPage({ serviceBookings }) {
           <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm sticky top-24">
             <h2 className="text-xl font-serif text-[#1F2E27] mb-6">Payment Authorization</h2>
             
+            <div className="mb-4 flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+              <ShieldCheck size={16} />
+              <span>Protected payment experience with instant guidance</span>
+            </div>
+
             <div className="border-2 border-[#A8895C] bg-[#F8F6F0] p-4 flex items-center justify-between mb-8 cursor-pointer rounded-sm">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-9 flex items-center justify-center bg-white rounded border border-[#E8DFD1]">
@@ -165,6 +180,9 @@ export default function BookingCheckoutPage({ serviceBookings }) {
 
             {paymentError && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm border border-red-200 rounded-sm leading-relaxed">{paymentError}</div>}
             {paymentMessage && <div className="mb-6 p-4 bg-green-50 text-green-800 text-sm border border-green-200 rounded-sm leading-relaxed">{paymentMessage}</div>}
+            {!paymentError && !paymentMessage && (
+              <p className="mb-6 text-sm leading-relaxed text-[#3D3530]">A secure prompt will be sent to your phone after you confirm the booking.</p>
+            )}
 
             <button 
               onClick={handlePayment}

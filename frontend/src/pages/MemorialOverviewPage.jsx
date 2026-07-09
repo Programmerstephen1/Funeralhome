@@ -29,6 +29,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
   
   const [error, setError] = useState("");
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [helpText, setHelpText] = useState("Choose an option to open a private memorial space.");
 
   useEffect(() => {
     // Falls back to userEmail if token isn't used in your auth flow yet
@@ -107,19 +108,20 @@ export default function MemorialOverviewPage({ dynamicId }) {
             <div className="flex border-b border-[#E8DFD1] mb-8">
               <button 
                 className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "access" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`}
-                onClick={() => { setView("access"); setError(""); }}
+                onClick={() => { setView("access"); setError(""); setHelpText("Enter the memorial ID and PIN shared with your family."); }}
               >
                 Access Space
               </button>
               <button 
                 className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`}
-                onClick={() => { setView("create"); setError(""); }}
+                onClick={() => { setView("create"); setError(""); setHelpText("Create a secure memorial space and choose a memorable access ID."); }}
               >
                 Create Space
               </button>
             </div>
 
             {error && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
+            <div className="mb-6 rounded-lg border border-[#E8DFD1] bg-[#F8F6F0] px-4 py-3 text-sm text-[#3D3530]">{helpText}</div>
 
             {view === "access" && (
               <form onSubmit={handleAccessMemorial} className="space-y-6">
@@ -179,7 +181,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
           <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#A8895C] mb-4">Private Memorial Hub</p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-[#1F2E27] mb-6 leading-tight">A quiet place for <br className="hidden md:block"/> collective remembrance</h1>
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto leading-relaxed">
-            You are securely managing the memorial space for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Each space below is personalized to support thoughtful tribute and shared memory.
+            You are securely managing the memorial space for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Each space below is designed to support thoughtful tribute, shared memory, and calm family connection.
           </p>
         </section>
 
@@ -224,7 +226,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
           })}
         </div>
 
-        <section className="mt-20 rounded-2xl bg-white border border-[#E8DFD1] p-8 md:p-12 shadow-sm relative overflow-hidden">
+        <section className="mt-20 rounded-[1.5rem] border border-[#E8DFD1] bg-white p-8 shadow-sm ring-1 ring-[#F2EBDD] md:p-12 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-2 h-full bg-[#A8895C]"></div>
           <div className="flex flex-col lg:flex-row gap-8 items-center justify-between pl-4">
             <div>

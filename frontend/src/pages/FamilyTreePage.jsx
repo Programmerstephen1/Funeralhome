@@ -8,6 +8,7 @@ export default function FamilyTreePage({ dynamicId }) {
 
   // 2. Dynamic Family Members State (Starts Empty!)
   const [familyMembers, setFamilyMembers] = useState([]);
+  const [announcement, setAnnouncement] = useState("");
   
   // 3. Modal State for adding a new relative
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,7 +59,8 @@ export default function FamilyTreePage({ dynamicId }) {
     };
 
     // Update the UI instantly
-    setFamilyMembers([...familyMembers, newConnection]);
+    setFamilyMembers((prev) => [...prev, newConnection]);
+    setAnnouncement("Your tribute has been added to the family tree.");
     
     // --- DATABASE INTEGRATION POINT ---
     // Here is where you will send the data to your Flask/Neon backend so it sticks for everyone
@@ -126,6 +128,12 @@ export default function FamilyTreePage({ dynamicId }) {
             </div>
           )}
         </div>
+
+        {announcement && (
+          <div className="mx-auto mb-8 flex max-w-2xl items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+            {announcement}
+          </div>
+        )}
 
         {/* --- ADD CONNECTION BUTTON --- */}
         <div className="flex justify-center mb-12">

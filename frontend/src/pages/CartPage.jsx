@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Trash2, Plus, Minus, ShieldCheck, ArrowLeft, ShoppingBag } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Trash2, Plus, Minus, ShieldCheck, ArrowLeft, ShoppingBag, Sparkles } from "lucide-react";
 
 export default function CartPage({ cart, updateQuantity, removeFromCart }) {
   // State to track which items are checked/selected for checkout
@@ -30,19 +30,24 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
   };
 
   // Calculate the total only for checked items
-  const subtotal = cart
+  const subtotal = useMemo(() => cart
     .filter(item => selectedItems.includes(item.id))
-    .reduce((total, item) => total + (item.price * item.quantity), 0);
+    .reduce((total, item) => total + (item.price * item.quantity), 0), [cart, selectedItems]);
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-[70vh] bg-[#F8F6F0] flex flex-col items-center justify-center text-center px-4">
-        <ShoppingBag size={64} className="text-[#D8CFBC] mb-6" />
-        <h2 className="text-3xl font-serif text-[#1F2E27] mb-4">Your Booking Cart is Empty</h2>
-        <p className="text-[#3D3530] mb-8 max-w-md">Browse our curated memorial catalog to add caskets, wreaths, and service setups to your arrangement.</p>
-        <a href="#catalog" className="bg-[#1F2E27] text-white px-8 py-3 tracking-widest text-sm uppercase hover:bg-[#A8895C] transition-colors">
-          Return to Catalog
-        </a>
+      <div className="min-h-[70vh] bg-[#F8F6F0] px-4 py-16">
+        <div className="site-container mx-auto flex max-w-3xl flex-col items-center justify-center rounded-[1.75rem] border border-[#E8DFD1] bg-white px-6 py-16 text-center shadow-sm md:px-12">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#E8DFD1] bg-[#F8F6F0] shadow-sm">
+            <ShoppingBag size={64} className="text-[#A8895C]" />
+          </div>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#A8895C]">Your planning cart</p>
+          <h2 className="mb-4 text-3xl font-serif text-[#1F2E27]">Your booking cart is ready for your next selection</h2>
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-[#3D3530]">Browse our curated memorial catalog to add caskets, wreaths, transport, and service setups to your arrangement with clarity and confidence.</p>
+          <a href="#catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">
+            Return to Catalog
+          </a>
+        </div>
       </div>
     );
   }
@@ -58,8 +63,20 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
           </a>
         </div>
 
+        <div className="mb-6 rounded-[1.25rem] border border-[#E8DFD1] bg-white p-5 shadow-sm md:p-6">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="rounded-full bg-[#F8F6F0] p-2 text-[#A8895C]">
+              <Sparkles size={16} />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#A8895C]">Planning support</p>
+              <p className="text-sm text-[#3D3530]">Select the arrangements you want to move forward and continue with confidence.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Bulk Action Header */}
-        <div className="bg-white border border-[#E8DFD1] p-4 flex items-center justify-between mb-4 shadow-sm">
+        <div className="mb-4 flex items-center justify-between border border-[#E8DFD1] bg-white p-4 shadow-sm">
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <input 
               type="checkbox" 
@@ -98,6 +115,7 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
                 <img 
                   src={item.images?.[0] || item.image_url} 
                   alt={item.title} 
+                  loading="lazy"
                   onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=No+Image" }}
                   className="w-full h-full object-cover"
                 />
@@ -145,10 +163,10 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
         </div>
 
         {/* Checkout Summary Footer */}
-        <div className="bg-white border border-[#E8DFD1] p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-6 sticky bottom-4">
-          <div className="flex items-center gap-3 text-sm text-emerald-700 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
-            <ShieldCheck size={18} />
-            <span>Secure <b>M-Pesa API</b> Integration</span>
+        <div className="sticky bottom-4 flex flex-col items-center justify-between gap-6 border border-[#E8DFD1] bg-white p-6 shadow-md md:flex-row">
+<div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+              <ShieldCheck size={18} />
+              <span>Secure <b>M-Pesa</b> payment support</span>
           </div>
           
           <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">

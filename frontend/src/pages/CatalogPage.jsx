@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route, Phone, Mail, CheckCircle, Camera, Video, PlayCircle } from "lucide-react";
 
 // --- 1. The Categories & Sub-Categories ---
@@ -244,6 +244,7 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
       <img 
         src={images[imgIndex]} 
         alt={altText}
+        loading="lazy"
         onError={(e) => { e.target.src = "https://via.placeholder.com/400x400?text=Photo+Pending" }} 
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
       />
@@ -277,77 +278,92 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
 };
 
 // --- COMPONENT: Category / Sub-Category Card (No Prices) ---
-const CategoryCard = ({ item, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="bg-white border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-xl transition-all duration-300 flex flex-col text-left group overflow-hidden w-full"
-  >
-    <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-[4/3]" />
-    <div className="p-6 flex-grow flex flex-col w-full">
-      <h3 className="text-xl font-serif text-[#1F2E27] mb-3 group-hover:text-[#A8895C] transition-colors">
-        {item.title}
-      </h3>
-      <p className="text-sm text-[#3D3530] leading-relaxed mb-6">
-        {item.desc}
-      </p>
-      <span className="mt-auto text-xs uppercase tracking-widest text-[#1F2E27] font-semibold border-b border-[#1F2E27] pb-1 w-fit group-hover:border-[#A8895C] group-hover:text-[#A8895C] transition-colors">
-        View Collection
-      </span>
-    </div>
-  </button>
-);
+const CategoryCard = React.memo(function CategoryCard({ item, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      className="group flex w-full flex-col overflow-hidden border border-[#E8DFD1] bg-white text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-[0_18px_50px_rgba(31,46,39,0.08)]"
+    >
+      <div className="relative">
+        <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-[4/3]" />
+        <div className="absolute left-4 top-4 rounded-full border border-white/60 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#1F2E27] backdrop-blur">
+          Collection
+        </div>
+      </div>
+      <div className="flex w-full flex-grow flex-col p-6">
+        <h3 className="mb-3 text-xl font-serif text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
+          {item.title}
+        </h3>
+        <p className="mb-6 text-sm leading-relaxed text-[#3D3530]">
+          {item.desc}
+        </p>
+        <span className="mt-auto w-fit border-b border-[#1F2E27] pb-1 text-xs font-semibold uppercase tracking-widest text-[#1F2E27] transition-colors group-hover:border-[#A8895C] group-hover:text-[#A8895C]">
+          View Collection
+        </span>
+      </div>
+    </button>
+  );
+});
 
 // --- COMPONENT: Product Card (Shows Prices and Add to Cart) ---
-const ProductCard = ({ item, recentlyAdded, onAddToCart, onOpenRentalModal }) => (
-  <div className="bg-white border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-xl transition-all duration-300 flex flex-col group overflow-hidden">
-    <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-square" />
-    <div className="p-6 flex-grow flex flex-col text-center">
-      <h3 className="text-xl font-serif text-[#1F2E27] mb-3 border-b border-[#E8DFD1] pb-3 mx-4">
-        {item.title}
-      </h3>
-      <p className="text-sm text-[#3D3530] leading-relaxed mb-6 px-2">
-        {item.desc}
-      </p>
-      <div className="mt-auto flex flex-col items-center gap-4">
-        <span className="text-lg font-semibold text-[#1F2E27]">
-          KSh {item.price.toLocaleString()}
-          {item.categoryId === "hearses" && <span className="text-xs text-[#8F847C] block mt-1 font-normal">+ Dynamic Mileage</span>}
-        </span>
-        <button 
-          onClick={() => {
-            if (item.categoryId === "hearses") {
-              onOpenRentalModal(item);
-            } else {
-              onAddToCart(item);
-            }
-          }}
-          disabled={recentlyAdded === item.id}
-          className={`w-full py-3 text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-all duration-300 ${
-            recentlyAdded === item.id 
-              ? "bg-emerald-700 text-white" 
-              : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
-          }`}
-        >
-          {recentlyAdded === item.id ? (
-            <><Check size={16} /> Added</>
-          ) : (
-            item.categoryId === "hearses" ? (
-              "Schedule Hearse"
+const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAddToCart, onOpenRentalModal }) {
+  return (
+    <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-[0_18px_50px_rgba(31,46,39,0.08)]">
+      <div className="relative">
+        <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-square" />
+        <div className="absolute left-4 top-4 rounded-full bg-[#1F2E27]/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F8F6F0] backdrop-blur">
+          {item.categoryId?.replace(/_/g, " ")}
+        </div>
+      </div>
+      <div className="flex flex-grow flex-col p-6 text-center">
+        <h3 className="mx-4 mb-3 border-b border-[#E8DFD1] pb-3 text-xl font-serif text-[#1F2E27]">
+          {item.title}
+        </h3>
+        <p className="mb-6 px-2 text-sm leading-relaxed text-[#3D3530]">
+          {item.desc}
+        </p>
+        <div className="mt-auto flex flex-col items-center gap-4">
+          <span className="rounded-full border border-[#E8DFD1] bg-[#F8F6F0] px-4 py-2 text-lg font-semibold text-[#1F2E27]">
+            KSh {item.price.toLocaleString()}
+            {item.categoryId === "hearses" && <span className="mt-1 block text-xs font-normal text-[#8F847C]">+ Dynamic Mileage</span>}
+          </span>
+          <button 
+            onClick={() => {
+              if (item.categoryId === "hearses") {
+                onOpenRentalModal(item);
+              } else {
+                onAddToCart(item);
+              }
+            }}
+            disabled={recentlyAdded === item.id}
+            className={`flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm uppercase tracking-wider transition-all duration-300 ${
+              recentlyAdded === item.id 
+                ? "bg-emerald-700 text-white" 
+                : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
+            }`}
+          >
+            {recentlyAdded === item.id ? (
+              <><Check size={16} /> Added</>
             ) : (
-              <><ShoppingCart size={16} /> Add to Booking</>
-            )
-          )}
-        </button>
+              item.categoryId === "hearses" ? (
+                "Schedule Hearse"
+              ) : (
+                <><ShoppingCart size={16} /> Add to Booking</>
+              )
+            )}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+});
 
 // --- MAIN PAGE ---
 export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSubCategory, setActiveSubCategory] = useState(null);
   const [recentlyAdded, setRecentlyAdded] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [selectedHearse, setSelectedHearse] = useState(null);
@@ -395,19 +411,19 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
   }, [dynamicId]);
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = useCallback((product) => {
     addToCart(product);
     setRecentlyAdded(product.id);
     setTimeout(() => setRecentlyAdded(null), 2000);
-  };
+  }, [addToCart]);
 
-  const handleOpenRentalModal = (hearse) => {
+  const handleOpenRentalModal = useCallback((hearse) => {
     setSelectedHearse(hearse);
     setShowRentalModal(true);
-  };
+  }, []);
 
   // --- DYNAMIC PRICING ENGINE ---
-  const calculateTotal = () => {
+  const calculateTotal = useCallback(() => {
     if (!selectedHearse) return 0;
     
     const baseDailyRate = selectedHearse.price;
@@ -440,9 +456,9 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
 
     return totalBasePrice + distanceCharge + fuelCharge;
-  };
+  }, [rentalDetails, selectedHearse]);
 
-  const handleConfirmRental = () => {
+  const handleConfirmRental = useCallback(() => {
     const finalCalculatedPrice = calculateTotal();
     
     const customizedHearse = {
@@ -463,7 +479,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     
     setShowRentalModal(false);
     setRentalDetails({ pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" });
-  };
+  }, [addToCart, bookRental, calculateTotal, selectedHearse]);
 
   const handleBackClick = () => {
     if (activeCategory?.subcategories && activeSubCategory) {
@@ -474,6 +490,14 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   };
 
   const isFormValid = rentalDetails.pickup.trim() && rentalDetails.dropoff.trim() && rentalDetails.pickupDate && rentalDetails.returnDate && rentalDetails.estimatedDistance > 0;
+
+  const filteredProducts = useMemo(() => products.filter((product) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return true;
+    return [product.title, product.desc, product.categoryId].some((value) => value?.toLowerCase().includes(query));
+  }), [searchTerm]);
+
+  const visibleProducts = useMemo(() => filteredProducts.filter((p) => p.categoryId === (activeSubCategory ? activeSubCategory.id : activeCategory?.id)), [filteredProducts, activeCategory, activeSubCategory]);
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] flex flex-col relative">
@@ -486,16 +510,38 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
           <section className="site-container px-4 mx-auto max-w-6xl animate-fadeIn">
             
             {/* Page Header */}
-            <div className="text-center mb-12">
-              <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">
+            <div className="mb-12 text-center">
+              <p className="mb-3 text-sm uppercase tracking-[0.28em] text-[#A8895C]">
                 Classic Provisions
               </p>
-              <h2 className="text-4xl font-serif font-semibold text-[#1F2E27] mb-4">
+              <h2 className="mb-4 text-4xl font-serif font-semibold text-[#1F2E27]">
                 Curated Memorial Catalog
               </h2>
-              <div className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 w-fit mx-auto px-4 py-2 rounded-full border border-emerald-100 mb-8">
-                <ShieldCheck size={16} />
-                <span>100% Secure Checkout via M-Pesa API</span>
+              <p className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-[#3D3530]">
+                Discover thoughtful memorial selections presented with clarity, dignity, and refined detail for every part of the journey.
+              </p>
+              <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+                <div className="rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                  <span className="mr-2 inline-flex items-center"><ShieldCheck size={16} /></span>
+                  Secure checkout via M-Pesa
+                </div>
+                <div className="rounded-full border border-[#E8DFD1] bg-white px-4 py-2 text-sm text-[#3D3530]">
+                  Thoughtful arrangement options
+                </div>
+                <div className="rounded-full border border-[#E8DFD1] bg-white px-4 py-2 text-sm text-[#3D3530]">
+                  Flexible scheduling support
+                </div>
+              </div>
+
+              <div className="mx-auto mb-8 flex max-w-xl items-center gap-3 rounded-full border border-[#E8DFD1] bg-white px-4 py-3 shadow-sm">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search offerings, categories, or services"
+                  className="w-full border-none bg-transparent text-sm outline-none placeholder:text-[#8F847C]"
+                />
+                <span className="text-xs uppercase tracking-[0.25em] text-[#A8895C]">Find</span>
               </div>
             </div>
 
@@ -546,9 +592,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 </button>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {products
-                    .filter((p) => p.categoryId === (activeSubCategory ? activeSubCategory.id : activeCategory.id))
-                    .map((item) => (
+                  {visibleProducts.length === 0 ? (
+                    <div className="col-span-full rounded-2xl border border-dashed border-[#E8DFD1] bg-white p-8 text-center text-sm text-[#3D3530]">
+                      No offerings matched your search yet. Try a broader term or return to the full directory.
+                    </div>
+                  ) : visibleProducts.map((item) => (
                       <ProductCard 
                         key={item.id} 
                         item={item} 

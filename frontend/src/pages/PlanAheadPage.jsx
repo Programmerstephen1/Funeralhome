@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ShieldCheck, HeartHandshake, Sparkles, FileText, Clock3 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import { Button, Card, CardBody } from "../components"; // Note: CardBody is imported but not used, leaving it as is from your code
+import { Button, Card } from "../components";
 
 export default function PlanAheadPage() {
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   
   // Track the form inputs
   const [formData, setFormData] = useState({
@@ -40,22 +41,39 @@ export default function PlanAheadPage() {
   ];
 
   const processSteps = [
-    { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences." },
-    { title: "Review Options", desc: "Explore service packages, merchandise, and memorial options." },
-    { title: "Document Preferences", desc: "Provide personal details, family information, and specific requests." },
-    { title: "Finalize Plan", desc: "Review your complete plan and make any adjustments." },
-    { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and respected." },
+    { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences.", icon: HeartHandshake },
+    { title: "Review Options", desc: "Explore service packages, merchandise, and memorial options.", icon: Sparkles },
+    { title: "Document Preferences", desc: "Provide personal details, family information, and specific requests.", icon: FileText },
+    { title: "Finalize Plan", desc: "Review your complete plan and make any adjustments.", icon: ShieldCheck },
+    { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and respected.", icon: Clock3 },
   ];
 
   // Update state when user types
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) errors.name = "Please share your full name.";
+    if (!formData.email.trim()) errors.email = "Please add an email address.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = "Please use a valid email address.";
+    if (!formData.phone.trim()) errors.phone = "Please add a phone number.";
+    if (!formData.questions.trim()) errors.questions = "Please tell us what you would like help with.";
+    return errors;
   };
 
   // Submit to Flask API
   const handleConsultationSubmit = async (e) => {
     e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
     setIsSubmitting(true);
     
     // Create a loading toast
@@ -97,76 +115,71 @@ export default function PlanAheadPage() {
 
       {/* --- HIGHLIGHTED BACKGROUND SECTION --- */}
       <section 
-        className="relative bg-cover bg-center bg-no-repeat pt-20 pb-16 border-b border-[#E8DFD1]"
+        className="relative border-b border-[#E8DFD1] bg-cover bg-center bg-no-repeat pb-16 pt-20"
         style={{ backgroundImage: "url('/images/background().jpg')" }}
       >
-        {/* Soft overlay to ensure text remains readable over the image */}
         <div className="absolute inset-0 bg-[#F8F6F0]/85 backdrop-blur-[1px]"></div>
         
         <div className="site-container relative z-10">
-          
-          {/* Hero */}
-          <div className="mb-20 text-center">
-            <h1 className="text-4xl md:text-5xl font-serif font-semibold text-[#1F2E27] mb-6">
-              Plan Ahead with Confidence
-            </h1>
-            <p className="text-lg text-[#3D3530] max-w-2xl mx-auto leading-relaxed">
-              Take control of your legacy and ease the burden on your loved ones.
-              Pre-planning gives you profound peace of mind.
-            </p>
-          </div>
+          <div className="mb-12 rounded-[2rem] border border-[#E8DFD1] bg-white/90 p-8 shadow-[0_20px_70px_rgba(31,46,39,0.08)] md:p-10">
+            <div className="mb-16 text-center">
+              <p className="section-eyebrow">Pre-planning</p>
+              <h1 className="mb-6 text-4xl font-serif font-semibold text-[#1F2E27] md:text-5xl">
+                Plan Ahead with Confidence
+              </h1>
+              <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#3D3530]">
+                Take control of your legacy and ease the burden on your loved ones. Pre-planning gives you profound peace of mind and a calm path forward.
+              </p>
+            </div>
 
-          {/* Process Steps */}
-          <div>
-            <h2 className="text-2xl font-serif font-semibold text-[#1F2E27] mb-10 text-center md:text-left">
-              Our Planning Process
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              {processSteps.map((step, i) => (
-                <div key={i} className="text-center flex flex-col items-center group cursor-pointer">
-                  {/* The Wobble Circle */}
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center font-serif text-xl font-bold text-white shadow-lg mb-5 hover-wobble"
-                    style={{ backgroundColor: "#A8895C" }}
-                  >
-                    {i + 1}
-                  </div>
-                  <h3 className="font-bold text-[#1F2E27] text-sm mb-3 group-hover:text-[#A8895C] transition-colors">
-                    {step.title}
-                  </h3>
-                  <p className="text-xs text-[#3D3530] leading-relaxed px-2">
-                    {step.desc}
-                  </p>
-                </div>
-              ))}
+            <div>
+              <h2 className="mb-8 text-center text-2xl font-serif font-semibold text-[#1F2E27] md:text-left">
+                Our Planning Process
+              </h2>
+              <div className="grid gap-6 md:grid-cols-5">
+                {processSteps.map((step, i) => {
+                  const Icon = step.icon;
+                  return (
+                    <div key={i} className="group flex cursor-pointer flex-col items-center rounded-[1.25rem] border border-[#E8DFD1] bg-[#F8F6F0] p-5 text-center transition-all hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-md">
+                      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#A8895C] text-xl font-bold text-white shadow-lg hover-wobble">
+                        {i + 1}
+                      </div>
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#A8895C] shadow-sm">
+                        <Icon size={18} />
+                      </div>
+                      <h3 className="mb-3 text-sm font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
+                        {step.title}
+                      </h3>
+                      <p className="px-2 text-xs leading-relaxed text-[#3D3530]">
+                        {step.desc}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-
         </div>
       </section>
       {/* --- END HIGHLIGHTED SECTION --- */}
 
       <div className="site-container py-16">
         {/* Benefits */}
-        <section 
-          className="rounded-lg p-8 md:p-12 mb-16 shadow-sm border border-[#D8CFBC]"
-          style={{ backgroundColor: "#EFEAE0" }}
-        >
-          <h2 className="text-3xl font-serif font-semibold text-[#1F2E27] mb-8">
+        <section className="mb-16 rounded-[1.5rem] border border-[#D8CFBC] bg-[#EFEAE0] p-8 shadow-sm md:p-12">
+          <h2 className="mb-8 text-3xl font-serif font-semibold text-[#1F2E27]">
             Benefits of Pre-Planning
           </h2>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
             {[
-              "✓ Ensures your exact wishes are honored",
-              "✓ Reduces emotional burden on your family",
-              "✓ Potential long-term cost savings",
-              "✓ Detailed personal information preserved securely",
-              "✓ Flexible options tailored to suit your values",
-              "✓ Deep peace of mind for you and loved ones",
+              { title: "Your wishes are honored", text: "Every preference is documented clearly so your family never has to guess." },
+              { title: "Less emotional pressure", text: "Your loved ones can focus on comfort and remembrance instead of difficult decisions." },
+              { title: "Long-term value", text: "Pre-funding can help secure today’s pricing and reduce future financial uncertainty." },
+              { title: "Secure personal guidance", text: "Private, thoughtful planning support that respects your pace and preferences." },
             ].map((benefit, i) => (
-              <p key={i} className="text-[#3D3530] flex items-center font-medium">
-                {benefit}
-              </p>
+              <div key={i} className="rounded-[1.1rem] border border-[#E8DFD1] bg-white/80 p-5">
+                <h3 className="mb-2 text-lg font-semibold text-[#1F2E27]">{benefit.title}</h3>
+                <p className="text-sm leading-relaxed text-[#3D3530]">{benefit.text}</p>
+              </div>
             ))}
           </div>
         </section>
@@ -203,15 +216,16 @@ export default function PlanAheadPage() {
         </section>
 
         {/* CTA */}
-        <section className="text-center bg-white border border-[#E8DFD1] rounded-lg p-12 shadow-sm">
-          <h2 className="text-3xl font-serif font-semibold text-[#1F2E27] mb-4">
+        <section className="rounded-[1.5rem] border border-[#E8DFD1] bg-white p-10 text-center shadow-sm md:p-12">
+          <p className="section-eyebrow">Personalized support</p>
+          <h2 className="mb-4 text-3xl font-serif font-semibold text-[#1F2E27]">
             Ready to Plan Ahead?
           </h2>
-          <p className="text-[#3D3530] mb-8 text-lg">
-            Our specialized team is ready to assist and guide you at your own pace.
+          <p className="mb-8 text-lg text-[#3D3530]">
+            Our specialized team is ready to assist and guide you at your own pace with dignified care and clear options.
           </p>
           <div onClick={() => setIsModalOpen(true)} className="inline-block">
-            <Button variant="primary" size="lg" className="px-8 py-4 text-lg shadow-md hover:shadow-lg transition-all">
+            <Button variant="primary" size="lg" className="px-8 py-4 text-lg shadow-md transition-all hover:shadow-lg">
               Schedule Your Consultation
             </Button>
           </div>
@@ -229,7 +243,7 @@ export default function PlanAheadPage() {
               Please provide your details and we will contact you to arrange a time.
             </p>
             
-            <form onSubmit={handleConsultationSubmit} className="space-y-5">
+            <form onSubmit={handleConsultationSubmit} className="space-y-5" noValidate>
               <div>
                 <input 
                   type="text" 
@@ -237,9 +251,10 @@ export default function PlanAheadPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Your Full Name" 
-                  required 
+                  aria-invalid={!!formErrors.name}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
+                {formErrors.name && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.name}</p>}
               </div>
               <div>
                 <input 
@@ -248,9 +263,10 @@ export default function PlanAheadPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Email Address" 
-                  required 
+                  aria-invalid={!!formErrors.email}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
+                {formErrors.email && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.email}</p>}
               </div>
               <div>
                 <input 
@@ -259,9 +275,10 @@ export default function PlanAheadPage() {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="Phone Number" 
-                  required 
+                  aria-invalid={!!formErrors.phone}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
+                {formErrors.phone && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.phone}</p>}
               </div>
               <div>
                 <textarea 
