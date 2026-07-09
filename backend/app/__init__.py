@@ -20,12 +20,25 @@ def create_app():
     # Enable CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # Database and Security Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    # --- 🟢 PRO-GRADE DATABASE ROUTER ---
+    # Checks if a live cloud database URL is provided via Render Environment Variables.
+    # If not, it safely falls back to local SQLite for development.
+    raw_db_url = os.environ.get('DATABASE_URL')
+    
+    if raw_db_url:
+        # SQLAlchemy requires 'postgresql://', but many cloud providers give 'postgres://'
+        if raw_db_url.startswith("postgres://"):
+            raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
+        print("🟢 CONNECTED: Live Cloud PostgreSQL Database")
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+        print("💻 CONNECTED: Local SQLite Database")
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'super-secret-funeral-key')
 
-    # 2. Email Configuration (Forced SSL on Port 465 to bypass Render firewall)
+    # --- Email Configuration (Forced SSL on Port 465 to bypass Render firewall) ---
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 465))
     app.config['MAIL_USE_TLS'] = False
