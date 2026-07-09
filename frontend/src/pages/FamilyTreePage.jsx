@@ -85,25 +85,25 @@ export default function FamilyTreePage({ dynamicId }) {
         </section>
 
         {/* --- SYNCHRONIZED "IN LOVING MEMORY" HERO FRAME --- */}
-        <div className="relative w-full max-w-3xl mx-auto mb-16 rounded-2xl overflow-hidden shadow-2xl bg-[#0B0B0A] aspect-[4/3] sm:aspect-video flex items-center justify-center border border-[#2A2A2A]">
+        <div className="relative w-full max-w-3xl mx-auto mb-16 rounded-2xl overflow-hidden shadow-2xl bg-[#0B0B0A] border border-[#2A2A2A]">
           
-          {/* Layer 1: The Custom Graphic Frame (Sits in the background) */}
+          {/* Layer 1: The Custom Graphic Frame (Set to natural height so percentages hold true) */}
           <img 
             src="/images/family tree background.png" 
             alt="In Loving Memory Frame" 
-            className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none" 
+            className="relative w-full h-auto z-0 pointer-events-none block" 
             onError={(e) => e.target.style.display = 'none'} 
           />
 
-          {/* Layer 2: The Main Deceased Photo (Nudged UP to 8.2% to cover the top checkerboard gap) */}
+          {/* Layer 2: The Main Deceased Photo (Measured perfectly to the hole) */}
           {deceasedPhoto ? (
             <div 
               className="absolute z-10 overflow-hidden rounded-full shadow-inner"
               style={{
-                top: '8.2%',          // Decreased from 9.5% to slide the circle HIGHER
+                top: '11.3%',         // Mathematically measured from the top edge
                 left: '50%', 
                 transform: 'translateX(-50%)',
-                width: '43.5%',       // Keeps your perfectly refined width diameter
+                width: '40.4%',       // Mathematically measured circle diameter
                 aspectRatio: '1/1'
               }}
             >
@@ -117,10 +117,10 @@ export default function FamilyTreePage({ dynamicId }) {
             <div 
               className="absolute z-10 flex items-center justify-center overflow-hidden rounded-full bg-[#1A1A18]"
               style={{ 
-                top: '8.2%',          // Decreased from 9.5% to slide the circle HIGHER
+                top: '11.3%',
                 left: '50%', 
                 transform: 'translateX(-50%)', 
-                width: '43.5%', 
+                width: '40.4%', 
                 aspectRatio: '1/1' 
               }}
             >

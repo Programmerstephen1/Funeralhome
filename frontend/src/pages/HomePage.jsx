@@ -34,6 +34,7 @@ const faqs = [
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="bg-[#F8F6F0]">
@@ -252,7 +253,7 @@ export default function HomePage() {
               </p>
 
               <button 
-                onClick={() => window.location.hash = '#plan'}
+                onClick={() => setIsModalOpen(true)}
                 className="group flex items-center gap-3 bg-[#A8895C] text-white font-semibold tracking-widest text-xs uppercase px-8 py-4 rounded hover:bg-[#1F2E27] transition-all duration-300 shadow-md hover:shadow-lg"
               >
                 <Calendar size={16} className="group-hover:rotate-12 transition-transform" />
@@ -329,6 +330,82 @@ export default function HomePage() {
           <p className="mt-2 text-[#A8895C] italic">Serving families with dignity, clarity, and compassion.</p>
         </div>
       </footer>
+
+      {/* Consultation Modal Overlay (FormSubmit Version) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-[#F8F6F0] rounded-lg p-8 max-w-md w-full shadow-2xl border border-[#D8CFBC]">
+            <h3 className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2 border-b-2 border-[#A8895C] pb-2 inline-block">
+              Schedule a Consultation
+            </h3>
+            <p className="text-[#3D3530] mb-6 text-sm mt-4">
+              Please provide your details and we will contact you to arrange a time.
+            </p>
+            
+            <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="space-y-5">
+              
+              {/* FormSubmit Configuration */}
+              <input type="hidden" name="_subject" value="New Pre-Planning Consultation Request" />
+              <input type="hidden" name="_captcha" value="false" />
+
+              <div>
+                <input 
+                  type="text" 
+                  name="Full_Name"
+                  placeholder="Your Full Name" 
+                  required
+                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                />
+              </div>
+              
+              <div>
+                <input 
+                  type="email" 
+                  name="Email"
+                  placeholder="Email Address" 
+                  required
+                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                />
+              </div>
+              
+              <div>
+                <input 
+                  type="tel" 
+                  name="Phone_Number"
+                  placeholder="Phone Number" 
+                  required
+                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                />
+              </div>
+              
+              <div>
+                <textarea 
+                  name="Questions_or_Preferences"
+                  placeholder="Any specific questions? (Optional)" 
+                  rows="3"
+                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors resize-none"
+                ></textarea>
+              </div>
+              
+              <div className="flex gap-4 pt-4 border-t border-[#E8DFD1]">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-full py-3 px-4 rounded border-2 border-[#A8895C] text-[#A8895C] font-bold tracking-wide uppercase hover:bg-[#EFEAE0] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="w-full py-3 px-4 rounded bg-[#A8895C] text-white font-bold tracking-wide uppercase hover:bg-[#8F744D] shadow-md hover:shadow-lg transition-all"
+                >
+                  Submit Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
