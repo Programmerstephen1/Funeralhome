@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, MapPin, Clock, Calendar, ChevronDown } from "lucide-react";
+import { Phone, MapPin, Clock, Calendar, ChevronDown, Loader2, CheckCircle2 } from "lucide-react";
 import { Button, Card, CardBody } from "../components";
 
 const testimonials = [
@@ -35,6 +35,41 @@ const faqs = [
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [consultationForm, setConsultationForm] = useState({ name: "", email: "", phone: "", questions: "" });
+  const [consultationStatus, setConsultationStatus] = useState({ type: "", message: "" });
+  const [isSubmittingConsultation, setIsSubmittingConsultation] = useState(false);
+
+  const handleConsultationSubmit = async (event) => {
+    event.preventDefault();
+    setConsultationStatus({ type: "", message: "" });
+    setIsSubmittingConsultation(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"}/api/consultations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: consultationForm.name,
+          email: consultationForm.email,
+          phone: consultationForm.phone,
+          questions: consultationForm.questions,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        setConsultationStatus({ type: "success", message: data.message || "Your consultation request was received. We will follow up shortly." });
+        setConsultationForm({ name: "", email: "", phone: "", questions: "" });
+      } else {
+        setConsultationStatus({ type: "error", message: data.message || "We could not submit your request right now." });
+      }
+    } catch (error) {
+      setConsultationStatus({ type: "error", message: "Network issue. Please try again shortly." });
+    } finally {
+      setIsSubmittingConsultation(false);
+    }
+  };
 
   return (
     <div className="bg-[#F8F6F0]">
@@ -252,13 +287,22 @@ export default function HomePage() {
                 Arranging a beautiful tribute requires careful thought and absolute peace of mind. Our compassionate specialists are available around the clock to guide your family.
               </p>
 
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="group flex items-center gap-3 bg-[#A8895C] text-white font-semibold tracking-widest text-xs uppercase px-8 py-4 rounded hover:bg-[#1F2E27] transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                <Calendar size={16} className="group-hover:rotate-12 transition-transform" />
-                Schedule a Consultation
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="group flex items-center gap-3 bg-[#A8895C] text-white font-semibold tracking-widest text-xs uppercase px-8 py-4 rounded hover:bg-[#1F2E27] transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Calendar size={16} className="group-hover:rotate-12 transition-transform" />
+                  Schedule a Consultation
+                </button>
+                <a
+                  href="tel:+254799847727"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#D8CFBC] bg-white px-5 py-3 text-sm font-semibold text-[#1F2E27] transition-colors hover:border-[#A8895C] hover:text-[#A8895C]"
+                >
+                  <Phone size={16} />
+                  Call now
+                </a>
+              </div>
             </div>
 
             {/* Right Column: Structured, Bright Contact Card Grid */}
@@ -333,73 +377,82 @@ export default function HomePage() {
 
       {/* Consultation Modal Overlay (FormSubmit Version) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-[#F8F6F0] rounded-lg p-8 max-w-md w-full shadow-2xl border border-[#D8CFBC]">
-            <h3 className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2 border-b-2 border-[#A8895C] pb-2 inline-block">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="consultation-title">
+          <div className="w-full max-w-md rounded-lg border border-[#D8CFBC] bg-[#F8F6F0] p-8 shadow-2xl">
+            <h3 id="consultation-title" className="mb-2 inline-block border-b-2 border-[#A8895C] pb-2 font-serif text-2xl font-semibold text-[#1F2E27]">
               Schedule a Consultation
             </h3>
             <p className="text-[#3D3530] mb-6 text-sm mt-4">
               Please provide your details and we will contact you to arrange a time.
             </p>
             
-            <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="space-y-5">
-              
-              {/* FormSubmit Configuration */}
-              <input type="hidden" name="_subject" value="New Pre-Planning Consultation Request" />
-              <input type="hidden" name="_captcha" value="false" />
+            <form onSubmit={handleConsultationSubmit} className="space-y-5">
+              {consultationStatus.message && (
+                <div className={`rounded border px-3 py-3 text-sm ${consultationStatus.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                  <div className="flex items-start gap-2">
+                    {consultationStatus.type === "success" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0" /> : <Phone size={16} className="mt-0.5 shrink-0" />}
+                    <span>{consultationStatus.message}</span>
+                  </div>
+                </div>
+              )}
 
               <div>
-                <input 
-                  type="text" 
-                  name="Full_Name"
-                  placeholder="Your Full Name" 
+                <input
+                  type="text"
+                  value={consultationForm.name}
+                  onChange={(event) => setConsultationForm((prev) => ({ ...prev, name: event.target.value }))}
+                  placeholder="Your Full Name"
                   required
-                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                  className="w-full rounded border border-[#E8DFD1] bg-white p-3.5 text-[#3D3530] transition-colors focus:border-[#A8895C] focus:outline-none"
                 />
               </div>
-              
+
               <div>
-                <input 
-                  type="email" 
-                  name="Email"
-                  placeholder="Email Address" 
+                <input
+                  type="email"
+                  value={consultationForm.email}
+                  onChange={(event) => setConsultationForm((prev) => ({ ...prev, email: event.target.value }))}
+                  placeholder="Email Address"
                   required
-                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                  className="w-full rounded border border-[#E8DFD1] bg-white p-3.5 text-[#3D3530] transition-colors focus:border-[#A8895C] focus:outline-none"
                 />
               </div>
-              
+
               <div>
-                <input 
-                  type="tel" 
-                  name="Phone_Number"
-                  placeholder="Phone Number" 
+                <input
+                  type="tel"
+                  value={consultationForm.phone}
+                  onChange={(event) => setConsultationForm((prev) => ({ ...prev, phone: event.target.value }))}
+                  placeholder="Phone Number"
                   required
-                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
+                  className="w-full rounded border border-[#E8DFD1] bg-white p-3.5 text-[#3D3530] transition-colors focus:border-[#A8895C] focus:outline-none"
                 />
               </div>
-              
+
               <div>
-                <textarea 
-                  name="Questions_or_Preferences"
-                  placeholder="Any specific questions? (Optional)" 
+                <textarea
+                  value={consultationForm.questions}
+                  onChange={(event) => setConsultationForm((prev) => ({ ...prev, questions: event.target.value }))}
+                  placeholder="Any specific questions? (Optional)"
                   rows="3"
-                  className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors resize-none"
+                  className="w-full resize-none rounded border border-[#E8DFD1] bg-white p-3.5 text-[#3D3530] transition-colors focus:border-[#A8895C] focus:outline-none"
                 ></textarea>
               </div>
-              
-              <div className="flex gap-4 pt-4 border-t border-[#E8DFD1]">
-                <button 
-                  type="button" 
+
+              <div className="flex gap-4 border-t border-[#E8DFD1] pt-4">
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="w-full py-3 px-4 rounded border-2 border-[#A8895C] text-[#A8895C] font-bold tracking-wide uppercase hover:bg-[#EFEAE0] transition-colors"
+                  className="w-full rounded border-2 border-[#A8895C] px-4 py-3 font-bold uppercase tracking-wide text-[#A8895C] transition-colors hover:bg-[#EFEAE0]"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
-                  className="w-full py-3 px-4 rounded bg-[#A8895C] text-white font-bold tracking-wide uppercase hover:bg-[#8F744D] shadow-md hover:shadow-lg transition-all"
+                  disabled={isSubmittingConsultation}
+                  className="flex w-full items-center justify-center gap-2 rounded bg-[#A8895C] px-4 py-3 font-bold uppercase tracking-wide text-white shadow-md transition-all hover:bg-[#8F744D] hover:shadow-lg disabled:cursor-not-allowed disabled:bg-[#3D3530]"
                 >
-                  Submit Request
+                  {isSubmittingConsultation ? <><Loader2 size={16} className="animate-spin" /> Sending...</> : "Submit Request"}
                 </button>
               </div>
             </form>

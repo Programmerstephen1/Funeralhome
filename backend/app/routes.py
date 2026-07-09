@@ -2,6 +2,8 @@ import jwt
 import datetime
 import random
 import logging
+import re
+import os
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
 from .models import db, FuneralService, Tribute, User, Eulogy, Consultation
@@ -43,29 +45,32 @@ def token_required(f):
 @api.route("/api/auth/register", methods=["POST"])
 def register():
     payload = request.get_json() or {}
-    email = payload.get("email")
-    password = payload.get("password")
+    email = (payload.get("email") or "").strip().lower()
+    password = payload.get("password") or ""
 
-    if not email or not password:
-        return jsonify({"message": "Email and password are required"}), 400
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"message": "Please provide a valid email address."}), 400
+
+    if len(password) < 6:
+        return jsonify({"message": "Password must be at least 6 characters long."}), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify({"message": "User already exists"}), 400
 
     new_user = User(email=email)
     new_user.set_password(password)
-    new_user.is_verified = False # Force them through the OTP screen
-    
+    new_user.is_verified = False
+
     db.session.add(new_user)
     db.session.commit()
-    
+
     return jsonify({"message": "User created successfully"}), 201
 
 @api.route("/api/auth/login", methods=["POST"])
 def login():
     payload = request.get_json() or {}
-    email = payload.get("email")
-    password = payload.get("password")
+    email = (payload.get("email") or "").strip().lower()
+    password = payload.get("password") or ""
 
     user = User.query.filter_by(email=email).first()
 
@@ -91,8 +96,11 @@ def send_otp():
     from . import mail
 
     payload = request.get_json() or {}
-    email = payload.get("email")
-    
+    email = (payload.get("email") or "").strip().lower()
+
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"message": "Please provide a valid email address."}), 400
+
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({"message": "User not found"}), 404
@@ -140,8 +148,8 @@ def send_otp():
 @api.route("/api/auth/verify-otp", methods=["POST"])
 def verify_otp():
     payload = request.get_json() or {}
-    email = payload.get("email")
-    code = payload.get("code")
+    email = (payload.get("email") or "").strip().lower()
+    code = (payload.get("code") or "").strip()
 
     user = User.query.filter_by(email=email).first()
     if not user:
@@ -159,9 +167,12 @@ def verify_otp():
 @api.route("/api/auth/reset-password", methods=["POST"])
 def reset_password():
     payload = request.get_json() or {}
-    email = payload.get("email")
-    code = payload.get("code")
-    new_password = payload.get("new_password")
+    email = (payload.get("email") or "").strip().lower()
+    code = (payload.get("code") or "").strip()
+    new_password = payload.get("new_password") or ""
+
+    if len(new_password) < 6:
+        return jsonify({"message": "Password must be at least 6 characters long."}), 400
 
     user = User.query.filter_by(email=email).first()
     if not user:
@@ -261,18 +272,43 @@ def list_services():
 def stk_push():
     payload = request.get_json() or {}
     amount = payload.get("amount")
-    phone = payload.get("phone")
-    email = payload.get("email")
-    
+    phone = (payload.get("phone") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+
     if not amount or not phone:
         return jsonify({"error": "Amount and phone number are required."}), 400
-        
+
+    if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
+        return jsonify({"error": "Enter a valid phone number for M-Pesa."}), 400
+
+    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+
     result = generate_stk_push_payload(amount, phone, email)
     
     if "error" in result:
         logger.error(f"STK Push Error: {result['error']}")
         return jsonify(result), 500
-        
+
+    # Persist a lightweight transaction record so callbacks can be correlated
+    try:
+        from .models import PaymentTransaction
+        checkout_id = result.get("checkout_request_id")
+        merchant_id = result.get("merchant_request_id")
+        tx = PaymentTransaction(
+            checkout_request_id=checkout_id,
+            merchant_request_id=merchant_id,
+            phone=phone,
+            email=email,
+            amount=float(amount) if amount else None,
+            status="initiated"
+        )
+        db.session.add(tx)
+        db.session.commit()
+        logger.info(f"STK Push persisted: checkout={checkout_id} email={email}")
+    except Exception as e:
+        logger.exception(f"Failed to persist MPESA transaction: {e}")
+
     return jsonify(result), 200
 
 
@@ -283,8 +319,17 @@ def mock_payment():
     """
     payload = request.get_json() or {}
     amount = payload.get("amount")
-    phone = payload.get("phone")
-    email = payload.get("email")
+    phone = (payload.get("phone") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+
+    if not amount or not phone:
+        return jsonify({"error": "Amount and phone number are required."}), 400
+
+    if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
+        return jsonify({"error": "Enter a valid phone number for the mock payment flow."}), 400
+
+    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"error": "Enter a valid email address."}), 400
 
     logger.info(f"[MOCK PAYMENT] amount={amount} phone={phone} email={email}")
 
@@ -299,11 +344,27 @@ def mpesa_callback():
     
     try:
         data = request.get_json()
+        # First try to get the email from the query string (if callback URL contained it)
         customer_email = request.args.get("email") 
-        
+
         callback_data = data.get("Body", {}).get("stkCallback", {})
         result_code = callback_data.get("ResultCode")
         
+        # Attempt to correlate callback with an initiated transaction if email missing
+        if not customer_email:
+            try:
+                from .models import PaymentTransaction
+                # Many callbacks include CheckoutRequestID
+                checkout_id = callback_data.get("CheckoutRequestID") or data.get("Body", {}).get("stkCallback", {}).get("CheckoutRequestID")
+                if checkout_id:
+                    tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
+                    if tx and tx.email:
+                        customer_email = tx.email
+                        tx.status = 'completed'
+                        db.session.commit()
+            except Exception:
+                logger.debug("No transaction mapping found for callback or DB error")
+
         if result_code == 0:
             logger.info(f"--- M-PESA SUCCESS --- Callback Data: {callback_data}")
             
@@ -376,12 +437,18 @@ def request_consultation():
     
     data = request.json or {}
     name = (data.get('name') or '').strip()
-    user_email = (data.get('email') or '').strip()
+    user_email = (data.get('email') or '').strip().lower()
     phone = (data.get('phone') or '').strip()
     questions = (data.get('questions') or 'No questions provided.').strip()
 
     if not name or not user_email or not phone:
         return jsonify({"error": "Missing required consultation details", "message": "Please complete your name, email, and phone number."}), 400
+
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", user_email):
+        return jsonify({"error": "Invalid email", "message": "Please provide a valid email address."}), 400
+
+    if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
+        return jsonify({"error": "Invalid phone", "message": "Please provide a valid phone number."}), 400
 
     try:
         # Persist the consultation so requests are not lost even if email fails
@@ -455,3 +522,22 @@ def register_routes(app):
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     app.register_blueprint(api)
+
+
+@api.route('/api/debug/payment-transactions', methods=['GET'])
+def debug_payment_transactions():
+    """Return recent PaymentTransaction records for debugging.
+    Enabled only when `DEBUG` is True or when ALLOW_DEBUG_ENDPOINTS is set in environment.
+    """
+    try:
+        from .models import PaymentTransaction
+
+        allow = current_app.config.get('DEBUG') or os.environ.get('ALLOW_DEBUG_ENDPOINTS', '').lower() in ('1', 'true')
+        if not allow:
+            return jsonify({'message': 'Debug endpoints are disabled on this instance.'}), 403
+
+        txs = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(50).all()
+        return jsonify([t.to_dict() for t in txs]), 200
+    except Exception as e:
+        logger.exception('Failed to fetch payment transactions')
+        return jsonify({'error': str(e)}), 500

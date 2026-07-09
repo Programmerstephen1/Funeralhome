@@ -124,3 +124,29 @@ class Consultation(db.Model):
             "questions": self.questions,
             "created_at": self.created_at.isoformat()
         }
+
+
+# --- Payment transaction tracking so callbacks can be correlated with emails ---
+class PaymentTransaction(db.Model):
+    __tablename__ = "payment_transactions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    checkout_request_id = db.Column(db.String(128), unique=True, nullable=True)
+    merchant_request_id = db.Column(db.String(128), unique=False, nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
+    email = db.Column(db.String(150), nullable=True)
+    amount = db.Column(db.Float, nullable=True)
+    status = db.Column(db.String(50), default="pending")
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "checkout_request_id": self.checkout_request_id,
+            "merchant_request_id": self.merchant_request_id,
+            "phone": self.phone,
+            "email": self.email,
+            "amount": self.amount,
+            "status": self.status,
+            "created_at": self.created_at.isoformat()
+        }

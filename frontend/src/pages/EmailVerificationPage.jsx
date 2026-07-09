@@ -32,7 +32,7 @@ export default function EmailVerificationPage({ userEmail }) {
     if (finalCode.length === 6) {
       setIsVerifying(true);
       try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
         const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -62,19 +62,24 @@ export default function EmailVerificationPage({ userEmail }) {
   };
 
   const handleResend = async () => {
-    if (!userEmail) return alert("No email found. Please register again.");
-    
+    const emailToUse = userEmail || localStorage.getItem("userEmail");
+    if (!emailToUse) return alert("No email found. Please register again.");
+
+    const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+
     try {
-      const response = await fetch("http://localhost:5000/api/auth/send-otp", {
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail }),
+        body: JSON.stringify({ email: emailToUse }),
       });
-      
+
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
-        alert("A new code has been sent to your email!");
+        alert(data.message || "A new code has been sent to your email!");
       } else {
-        alert("Failed to resend code. Please try again.");
+        alert(data.message || "Failed to resend code. Please try again.");
       }
     } catch (error) {
       alert("Could not connect to the server to resend the code.");

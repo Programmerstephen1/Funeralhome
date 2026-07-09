@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyRound, Mail, ArrowRight } from "lucide-react";
+import { KeyRound, Mail, ArrowRight, Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -12,22 +12,23 @@ export default function ForgotPasswordPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      // Re-using our send-otp route because the logic is exactly the same!
-      const response = await fetch("http://localhost:5000/api/auth/send-otp", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
         localStorage.setItem("resetEmail", email);
+        setStatus({ type: "success", message: data.message || "Reset code sent. Please check your inbox." });
         window.location.hash = "#reset-password";
       } else {
-        const data = await response.json();
         setStatus({ type: "error", message: data.message || "Failed to send reset code." });
       }
     } catch (error) {
-      setStatus({ type: "error", message: "Network error. Is the server running?" });
+      setStatus({ type: "error", message: "Network error. Please try again shortly." });
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +76,7 @@ export default function ForgotPasswordPage() {
               isLoading ? "bg-[#3D3530] text-white cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
             }`}
           >
-            {isLoading ? "Sending Code..." : <>Send Reset Code <ArrowRight size={18} /></>}
+            {isLoading ? <><Loader2 size={18} className="animate-spin" /> Sending Code...</> : <>Send Reset Code <ArrowRight size={18} /></>}
           </button>
         </form>
         

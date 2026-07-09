@@ -41,8 +41,13 @@ def create_app():
     # --- Email Configuration (Forced SSL on Port 465 to bypass Render firewall) ---
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 465))
-    app.config['MAIL_USE_TLS'] = False
-    app.config['MAIL_USE_SSL'] = True
+
+    # Respect the Render env vars for SSL/TLS rather than hard-coding port behavior.
+    mail_use_tls = str(os.environ.get('MAIL_USE_TLS', 'False')).strip().lower() in ('1', 'true', 'yes')
+    mail_use_ssl = str(os.environ.get('MAIL_USE_SSL', 'False')).strip().lower() in ('1', 'true', 'yes')
+    app.config['MAIL_USE_TLS'] = mail_use_tls
+    app.config['MAIL_USE_SSL'] = mail_use_ssl
+
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     
@@ -52,10 +57,7 @@ def create_app():
     app.config['MAIL_DEBUG'] = True  # Prints raw email communication to Render/local logs
     # Allow disabling outbound email via environment variable in Render
     mss = os.environ.get('MAIL_SUPPRESS_SEND', '')
-    if str(mss).lower() in ('1', 'true', 'yes'):
-        app.config['MAIL_SUPPRESS_SEND'] = True
-    else:
-        app.config['MAIL_SUPPRESS_SEND'] = False
+    app.config['MAIL_SUPPRESS_SEND'] = str(mss).strip().lower() in ('1', 'true', 'yes')
 
     # Initialize extensions with the app
     db.init_app(app)

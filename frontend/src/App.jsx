@@ -190,7 +190,15 @@ export default function App() {
 
   useEffect(() => {
     const pageLabel = pages.find((page) => page.id === currentPage)?.label || "Home";
-    document.title = `${pageLabel} • Last Planner Julz`;
+    const title = `${pageLabel} • Last Planner Julz`;
+    document.title = title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        "Last Planner Julz offers compassionate funeral planning, memorial tributes, and elegant care support for families."
+      );
+    }
   }, [currentPage]);
 
   return (

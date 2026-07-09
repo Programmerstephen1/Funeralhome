@@ -71,7 +71,7 @@ export default function CheckoutPage({ cart }) {
       const currentUserEmail = localStorage.getItem("userEmail") || "";
       
       // PRO-GRADE FIX: Dynamic API URL for Render deployment
-      const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
       try {
         const response = await fetch(`${API_URL}/api/payments/stkpush`, {
@@ -103,7 +103,7 @@ export default function CheckoutPage({ cart }) {
       // Call mock payment endpoint for deployments without M-Pesa
       setIsProcessing(true);
       try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+        const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
         const resp = await fetch(`${API_URL}/api/payments/mock`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -257,7 +257,14 @@ export default function CheckoutPage({ cart }) {
           {!paymentError && !paymentMessage && (
             <p className="mt-6 text-sm leading-relaxed text-[#3D3530]">Once confirmed, you will receive a payment prompt and a brief confirmation summary for your records.</p>
           )}
-
+          <button
+            type="button"
+            disabled={isProcessing}
+            onClick={handlePayment}
+            className={`mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-[#1F2E27] px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-[#A8895C] disabled:cursor-not-allowed disabled:bg-[#3D3530]`}
+          >
+            {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : "Proceed to payment"}
+          </button>
           <button 
             onClick={handlePayment}
             disabled={isProcessing}

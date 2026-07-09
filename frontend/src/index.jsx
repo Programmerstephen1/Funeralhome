@@ -2,6 +2,7 @@ import "./styles.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // This file serves as the entry point for your React application.
 // It finds the 'root' div in your public/index.html file and 
@@ -12,6 +13,8 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );

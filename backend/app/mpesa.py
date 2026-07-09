@@ -4,23 +4,48 @@ import datetime
 import requests
 import urllib.parse 
 from requests.auth import HTTPBasicAuth
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_mpesa_access_token():
     consumer_key = os.getenv("MPESA_CONSUMER_KEY")
     consumer_secret = os.getenv("MPESA_CONSUMER_SECRET")
     
+    if not consumer_key or not consumer_secret:
+        error = "Missing MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET environment variable."
+        logger.error(error)
+        return {"token": None, "error": error}
+
     api_url = os.getenv(
         "MPESA_OAUTH_URL", 
         "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
     )
 
     try:
-        r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+        r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret), timeout=15)
         r.raise_for_status()
-        return r.json().get("access_token")
+        token = r.json().get("access_token")
+        if not token:
+            error = "M-Pesa OAuth succeeded but no access token was returned."
+            logger.error(error)
+            return {"token": None, "error": error}
+
+        logger.debug("M-Pesa OAuth token fetched successfully (masked).")
+        return {"token": token, "error": None}
     except requests.exceptions.RequestException as e:
-        print(f"Failed to get M-Pesa access token: {e}")
-        return None
+        error = f"Failed to get M-Pesa access token: {e}"
+        logger.error(error)
+        detail = None
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                detail_json = e.response.json()
+                detail = detail_json.get("errorMessage") or detail_json.get("error") or str(detail_json)
+            except ValueError:
+                detail = e.response.text
+            logger.error(f"M-Pesa OAuth response: {e.response.status_code} {detail}")
+        return {"token": None, "error": error, "detail": detail}
+
 
 def generate_stk_push_payload(amount, phone, email=None):
     phone_str = str(phone).strip()
@@ -29,9 +54,15 @@ def generate_stk_push_payload(amount, phone, email=None):
     elif phone_str.startswith("+"):
         phone_str = phone_str[1:]
         
-    access_token = get_mpesa_access_token()
+    auth_result = get_mpesa_access_token()
+    access_token = auth_result.get("token")
     if not access_token:
-        return {"error": "Failed to authenticate with Safaricom Daraja API."}
+        error_response = {"error": "Failed to authenticate with Safaricom Daraja API."}
+        if auth_result.get("detail"):
+            error_response["detail"] = auth_result["detail"]
+        else:
+            error_response["detail"] = auth_result.get("error")
+        return error_response
 
     business_short_code = os.getenv("MPESA_SHORTCODE", "174379") 
     passkey = os.getenv("MPESA_PASSKEY")
@@ -84,7 +115,7 @@ def generate_stk_push_payload(amount, phone, email=None):
             "message": data.get("CustomerMessage", "STK Push sent to customer's phone.")
         }
     except requests.exceptions.RequestException as e:
-        print(f"STK Push Request Failed: {e}")
-        if e.response is not None:
-            print(f"Safaricom Error Details: {e.response.text}")
+        logger.error(f"STK Push Request Failed: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            logger.error(f"Safaricom Error Details: {e.response.status_code} {e.response.text}")
         return {"error": "Failed to initiate M-Pesa payment. Please try again."}

@@ -1,17 +1,22 @@
 import React, { useState } from "react";
-import { UserPlus, Lock, Mail } from "lucide-react";
-import api from "../services/api"; // 🟢 Import the unified API service
+import { UserPlus, Lock, Mail, Loader2 } from "lucide-react";
+import api from "../services/api";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); 
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setAuthError("");
+
+    if (!email.trim() || password.length < 6) {
+      setAuthError("Please enter a valid email and a password with at least 6 characters.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setAuthError("Passwords do not match. Please try again.");
@@ -21,19 +26,11 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 1. Register the user via our API service
       await api.register(email, password);
-      
-      // 2. Trigger the verification email OTP
       await api.sendOtp(email);
-      
-      // 3. Success! Save email and route to verify screen
       localStorage.setItem("userEmail", email);
       window.location.hash = "#verify";
-
     } catch (error) {
-      console.error("Registration error:", error);
-      // Automatically displays the exact error from the Python backend
       setAuthError(error.message || "Registration failed. Is the backend running?");
     } finally {
       setIsLoading(false);
@@ -113,7 +110,7 @@ export default function RegisterPage() {
               isLoading ? "bg-[#3D3530] text-white cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
             }`}
           >
-            {isLoading ? "Creating Account..." : <><UserPlus size={18} /> Register</>}
+            {isLoading ? <><Loader2 size={18} className="animate-spin" /> Creating Account...</> : <><UserPlus size={18} /> Register</>}
           </button>
         </form>
 
