@@ -50,7 +50,12 @@ def create_app():
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
     
     app.config['MAIL_DEBUG'] = True  # Prints raw email communication to Render/local logs
-    app.config['MAIL_SUPPRESS_SEND'] = False
+    # Allow disabling outbound email via environment variable in Render
+    mss = os.environ.get('MAIL_SUPPRESS_SEND', '')
+    if str(mss).lower() in ('1', 'true', 'yes'):
+        app.config['MAIL_SUPPRESS_SEND'] = True
+    else:
+        app.config['MAIL_SUPPRESS_SEND'] = False
 
     # Initialize extensions with the app
     db.init_app(app)
