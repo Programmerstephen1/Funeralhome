@@ -4,7 +4,7 @@ import random
 import logging
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
-from .models import db, FuneralService, Tribute, User, Eulogy
+from .models import db, FuneralService, Tribute, User, Eulogy, Consultation
 from .mpesa import generate_stk_push_payload
 
 # --- INITIALIZE PRO-GRADE LOGGER ---
@@ -367,11 +367,16 @@ def request_consultation():
         return jsonify({"error": "Missing required consultation details", "message": "Please complete your name, email, and phone number."}), 400
 
     try:
+        # Persist the consultation so requests are not lost even if email fails
+        consult = Consultation(name=name, email=user_email, phone=phone, questions=questions)
+        db.session.add(consult)
+        db.session.commit()
+
         mail_username = current_app.config.get('MAIL_USERNAME')
         mail_password = current_app.config.get('MAIL_PASSWORD')
 
         if not mail_username or not mail_password:
-            logger.warning("Consultation request received, but email credentials are not configured. Returning success without sending mail.")
+            logger.warning("Consultation request received, email credentials not configured. Saved request and returning success.")
             return jsonify({
                 "message": "Consultation request received successfully. We will follow up with you shortly."
             }), 200

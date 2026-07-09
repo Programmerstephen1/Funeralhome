@@ -75,7 +75,14 @@ def create_app():
 
     # Initialize tables
     with app.app_context():
-        from . import models 
-        db.create_all()
+        from . import models
+        try:
+            db.create_all()
+        except Exception as e:
+            # Avoid hard crash if a table already exists or migrations ran separately
+            # Log and continue so the app can start; the deployed DB should already have schema.
+            import logging, traceback
+            logging.getLogger(__name__).warning(f"db.create_all() raised an exception: {e}")
+            logging.getLogger(__name__).debug(traceback.format_exc())
 
     return app
