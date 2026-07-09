@@ -59,6 +59,15 @@ def create_app():
     mss = os.environ.get('MAIL_SUPPRESS_SEND', '')
     app.config['MAIL_SUPPRESS_SEND'] = str(mss).strip().lower() in ('1', 'true', 'yes')
 
+    if app.config['MAIL_SUPPRESS_SEND']:
+        print("WARNING: MAIL_SUPPRESS_SEND is enabled. OTP and receipt emails will not be sent.")
+    if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
+        print("WARNING: MAIL_USERNAME or MAIL_PASSWORD is missing. Email delivery will fail.")
+    if app.config['MAIL_USE_SSL'] and app.config['MAIL_PORT'] != 465:
+        print("WARNING: MAIL_USE_SSL is enabled but MAIL_PORT is not 465. Verify SMTP settings.")
+    if app.config['MAIL_USE_TLS'] and app.config['MAIL_PORT'] != 587:
+        print("WARNING: MAIL_USE_TLS is enabled but MAIL_PORT is not 587. Verify SMTP settings.")
+
     # Initialize extensions with the app
     db.init_app(app)
     mail.init_app(app)

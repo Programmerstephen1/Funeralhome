@@ -541,3 +541,40 @@ def debug_payment_transactions():
     except Exception as e:
         logger.exception('Failed to fetch payment transactions')
         return jsonify({'error': str(e)}), 500
+
+
+@api.route('/api/debug/status', methods=['GET'])
+def debug_status():
+    """Return machine status for M-Pesa and mail environment configuration."""
+    allow = current_app.config.get('DEBUG') or os.environ.get('ALLOW_DEBUG_ENDPOINTS', '').strip().lower() in ('1', 'true', 'yes')
+    if not allow:
+        return jsonify({'message': 'Debug endpoints are disabled on this instance.'}), 403
+
+    mail_configured = bool(current_app.config.get('MAIL_USERNAME') and current_app.config.get('MAIL_PASSWORD'))
+    mpesa_configured = bool(
+        os.environ.get('MPESA_CONSUMER_KEY') and
+        os.environ.get('MPESA_CONSUMER_SECRET') and
+        os.environ.get('MPESA_PASSKEY') and
+        os.environ.get('MPESA_SHORTCODE')
+    )
+    callback_url = os.environ.get('MPESA_CALLBACK_URL')
+
+    return jsonify({
+        'debug_enabled': True,
+        'debug_mode': bool(current_app.config.get('DEBUG')),
+        'allow_debug_endpoints': True,
+        'mail': {
+            'configured': mail_configured,
+            'suppress_send': current_app.config.get('MAIL_SUPPRESS_SEND', False),
+            'server': current_app.config.get('MAIL_SERVER'),
+            'port': current_app.config.get('MAIL_PORT'),
+            'use_tls': current_app.config.get('MAIL_USE_TLS'),
+            'use_ssl': current_app.config.get('MAIL_USE_SSL')
+        },
+        'mpesa': {
+            'configured': mpesa_configured,
+            'callback_url': callback_url,
+            'oauth_url': os.environ.get('MPESA_OAUTH_URL', 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'),
+            'stk_push_url': os.environ.get('MPESA_STK_PUSH_URL', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest')
+        }
+    }), 200

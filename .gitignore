@@ -13,8 +13,8 @@ frontend/.vite/
 # Backend
 backend/venv/
 backend/.venv/
-backend/__pycache__/
-backend/*.pyc
+**/__pycache__/
+**/*.pyc
 backend/*.pyo
 backend/*.egg-info/
 backend/.env
