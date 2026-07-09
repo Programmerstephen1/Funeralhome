@@ -48,6 +48,15 @@ def create_app():
     app.config['MAIL_USE_TLS'] = mail_use_tls
     app.config['MAIL_USE_SSL'] = mail_use_ssl
 
+    # Infer security transport from the SMTP port when TLS/SSL flags are omitted.
+    if not mail_use_tls and not mail_use_ssl:
+        if app.config['MAIL_PORT'] == 587:
+            app.config['MAIL_USE_TLS'] = True
+            print("INFO: MAIL_USE_TLS was inferred from port 587.")
+        elif app.config['MAIL_PORT'] == 465:
+            app.config['MAIL_USE_SSL'] = True
+            print("INFO: MAIL_USE_SSL was inferred from port 465.")
+
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     

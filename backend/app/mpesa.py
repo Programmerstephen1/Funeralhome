@@ -20,7 +20,7 @@ def get_mpesa_access_token():
     api_url = os.getenv(
         "MPESA_OAUTH_URL", 
         "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-    )
+    ).strip()
 
     try:
         r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret), timeout=15)
@@ -53,7 +53,9 @@ def generate_stk_push_payload(amount, phone, email=None):
         phone_str = "254" + phone_str[1:]
     elif phone_str.startswith("+"):
         phone_str = phone_str[1:]
-        
+    elif phone_str.isdigit() and len(phone_str) == 9:
+        phone_str = "254" + phone_str
+
     auth_result = get_mpesa_access_token()
     access_token = auth_result.get("token")
     if not access_token:
@@ -64,12 +66,20 @@ def generate_stk_push_payload(amount, phone, email=None):
             error_response["detail"] = auth_result.get("error")
         return error_response
 
-    business_short_code = os.getenv("MPESA_SHORTCODE", "174379") 
+    business_short_code = os.getenv("MPESA_SHORTCODE", "174379").strip()
     passkey = os.getenv("MPESA_PASSKEY")
-    
-    # 🔴 PRO-GRADE FIX: Perfectly indented with your live Render URL
-    base_callback_url = os.getenv("MPESA_CALLBACK_URL", "https://startup-simulator-v2.onrender.com/api/payments/callback")
-    
+    if not passkey:
+        error = "Missing MPESA_PASSKEY environment variable."
+        logger.error(error)
+        return {"error": error, "detail": error}
+
+    # 🔴 PRO-GRADE FIX: Strip stray whitespace/newlines from callback URL
+    base_callback_url = os.getenv(
+        "MPESA_CALLBACK_URL",
+        "https://startup-simulator-v2.onrender.com/api/payments/callback"
+    )
+    base_callback_url = base_callback_url.strip()
+
     if email:
         callback_url = f"{base_callback_url}?email={urllib.parse.quote(email)}"
     else:
@@ -78,7 +88,7 @@ def generate_stk_push_payload(amount, phone, email=None):
     stk_push_url = os.getenv(
         "MPESA_STK_PUSH_URL", 
         "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-    )
+    ).strip()
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     password_str = business_short_code + passkey + timestamp

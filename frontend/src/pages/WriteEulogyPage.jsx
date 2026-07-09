@@ -60,7 +60,8 @@ ${formData.legacy}
       };
 
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/eulogies", {
+      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+      const response = await fetch(`${API_URL}/api/eulogies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

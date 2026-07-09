@@ -66,7 +66,7 @@ export default function BookingCheckoutPage({ serviceBookings }) {
     } else if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mock") {
       setIsProcessing(true);
       try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+        const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
         const resp = await fetch(`${API_URL}/api/payments/mock`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

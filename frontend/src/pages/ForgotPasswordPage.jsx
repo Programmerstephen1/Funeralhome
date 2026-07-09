@@ -12,7 +12,8 @@ export default function ForgotPasswordPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:5000"}/api/auth/send-otp`, {
+      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+      const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

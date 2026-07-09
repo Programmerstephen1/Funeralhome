@@ -15,7 +15,8 @@ export default function EulogyViewPage({ dynamicId }) {
 
     const fetchEulogy = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/eulogies/${dynamicId}`);
+        const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+        const response = await fetch(`${API_URL}/api/eulogies/${dynamicId}`);
         const data = await response.json();
 
         if (response.ok) {

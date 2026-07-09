@@ -350,20 +350,19 @@ def mpesa_callback():
         callback_data = data.get("Body", {}).get("stkCallback", {})
         result_code = callback_data.get("ResultCode")
         
-        # Attempt to correlate callback with an initiated transaction if email missing
-        if not customer_email:
-            try:
-                from .models import PaymentTransaction
-                # Many callbacks include CheckoutRequestID
-                checkout_id = callback_data.get("CheckoutRequestID") or data.get("Body", {}).get("stkCallback", {}).get("CheckoutRequestID")
-                if checkout_id:
-                    tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
-                    if tx and tx.email:
+        # Attempt to correlate callback with an initiated transaction and preserve success/failure state
+        try:
+            from .models import PaymentTransaction
+            checkout_id = callback_data.get("CheckoutRequestID")
+            if checkout_id:
+                tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
+                if tx:
+                    if not customer_email and tx.email:
                         customer_email = tx.email
-                        tx.status = 'completed'
-                        db.session.commit()
-            except Exception:
-                logger.debug("No transaction mapping found for callback or DB error")
+                    tx.status = 'completed' if result_code == 0 else 'failed'
+                    db.session.commit()
+        except Exception:
+            logger.debug("No transaction mapping found for callback or DB error")
 
         if result_code == 0:
             logger.info(f"--- M-PESA SUCCESS --- Callback Data: {callback_data}")
@@ -557,7 +556,7 @@ def debug_status():
         os.environ.get('MPESA_PASSKEY') and
         os.environ.get('MPESA_SHORTCODE')
     )
-    callback_url = os.environ.get('MPESA_CALLBACK_URL')
+    callback_url = os.environ.get('MPESA_CALLBACK_URL', '').strip()
 
     return jsonify({
         'debug_enabled': True,

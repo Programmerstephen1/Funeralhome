@@ -171,6 +171,9 @@ MPESA_CONSUMER_KEY=your-consumer-key
 MPESA_CONSUMER_SECRET=your-consumer-secret
 MPESA_SHORTCODE=123456
 MPESA_PASSKEY=your-passkey
+MPESA_CALLBACK_URL=https://startup-simulator-v2.onrender.com/api/payments/callback
+MAIL_USE_TLS=true
+MAIL_USE_SSL=false
 ```
 
 ---

@@ -80,7 +80,7 @@ export default function PlanAheadPage() {
     const toastId = toast.loading("Sending your request...");
 
     try {
-      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+      const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
       const requestUrl = `${apiBase}/api/consultations`;
 
       // Helpful debug output for deployed environments
@@ -109,7 +109,7 @@ export default function PlanAheadPage() {
     } catch (error) {
       // Network / CORS / SSL errors land here
       console.error("[PlanAhead] Submission Error:", error);
-      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+      const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
       const requestUrl = `${apiBase}/api/consultations`;
       toast.error(`Network error when contacting ${requestUrl}: ${error.message || error}`, { id: toastId });
     } finally {
@@ -124,7 +124,7 @@ export default function PlanAheadPage() {
     let mounted = true;
     (async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+        const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
         const healthUrl = `${apiBase}/api/health`;
         setServerUrlChecked(healthUrl);
         console.info("[PlanAhead] Checking server health:", healthUrl);
