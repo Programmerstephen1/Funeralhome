@@ -4,10 +4,24 @@ import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calenda
 // --- 1. The Categories & Sub-Categories ---
 const categories = [
   { 
-    id: "caskets", 
+    id: "caskets_urns", 
     title: "Caskets & Urns", 
     desc: "A carefully curated selection of premium quality caskets and resting vessels.", 
-    images: ["/images/caskets/casket3.jpeg"] 
+    images: ["/images/caskets/casket3.jpeg"],
+    subcategories: [
+      { 
+        id: "casket_list", 
+        title: "Caskets", 
+        desc: "Premium wood and metal caskets for dignified burials.", 
+        images: ["/images/caskets/casket3.jpeg"] 
+      },
+      { 
+        id: "urns", 
+        title: "Cremation Urns", 
+        desc: "Beautifully crafted vessels to preserve the ashes of your loved ones.", 
+        images: ["/images/urns/images(0).jpg"] 
+      }
+    ]
   },
   { 
     id: "wreaths", 
@@ -69,36 +83,56 @@ const products = [
   // ==========================================
   // --- CASKETS ---
   // ==========================================
-  { id: 101, categoryId: "caskets", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 65000, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
-  { id: 102, categoryId: "caskets", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 45000, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
-  { id: 103, categoryId: "caskets", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 85000, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
-  { id: 104, categoryId: "caskets", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 70000, images: ["/images/caskets/casket4.jpg"] },
-  { id: 105, categoryId: "caskets", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 60000, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
-  { id: 106, categoryId: "caskets", title: "Two-Tone Executive Casket", desc: "Sophisticated two-tone metallic and wood finish.", price: 95000, images: ["/images/caskets/casket6().jpg", "/images/caskets/casket6(0).jpeg", "/images/caskets/casket6(1).jpg", "/images/caskets/casket6(2).jpg"] },
-  { id: 107, categoryId: "caskets", title: "Brown Elegant Casket", desc: "Ornate design with beautiful silver hardware accents.", price: 110000, images: ["/images/caskets/casket7(1).jpeg", "/images/caskets/casket7(2).jpeg"] },
-  { id: 108, categoryId: "caskets", title: "Classic Light Wood Casket", desc: "Traditional mid-tone solid wood construction.", price: 45000, images: ["/images/caskets/casket8.jpeg"] },
-  { id: 109, categoryId: "caskets", title: "Dark Executive Wood", desc: "Deep dark finish for a commanding presence.", price: 68000, images: ["/images/caskets/casket9.jpeg"] },
-  { id: 110, categoryId: "caskets", title: "Pearl White Casket", desc: "Glossy pure white body finished with silver handles.", price: 75000, images: ["/images/caskets/casket10(1).jpeg", "/images/caskets/casket10.jpeg"] },
-  { id: 111, categoryId: "caskets", title: "Heavy Duty Bronze Casket", desc: "Durable metal construction featuring an executive finish.", price: 120000, images: ["/images/caskets/casket11(0).jpeg", "/images/caskets/casket11.jpeg"] },
-  { id: 112, categoryId: "caskets", title: "Sleek White Wood Casket", desc: "Minimalist white casket with gold-tone hardware.", price: 55000, images: ["/images/caskets/casket12.jpeg"] },
-  { id: 113, categoryId: "caskets", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 42000, images: ["/images/caskets/casket13.jpeg"] },
-  { id: 114, categoryId: "caskets", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 80000, images: ["/images/caskets/casket14.jpeg"] },
-  { id: 115, categoryId: "caskets", title: "Pure White Domed Casket", desc: "Elegant domed lid pure white design.", price: 62000, images: ["/images/caskets/casket15.jpeg"] },
-  { id: 116, categoryId: "caskets", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 65000, images: ["/images/caskets/casket16.jpeg"] },
-  { id: 117, categoryId: "caskets", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 66000, images: ["/images/caskets/casket17.jpeg"] },
-  { id: 118, categoryId: "caskets", title: "Solid Oak Heritage Casket", desc: "Heavy-duty solid oak construction with a natural grain.", price: 80000, images: ["/images/caskets/casket18(0).jpg", "/images/caskets/casket18.jpg" ] },
-  { id: 119, categoryId: "caskets", title: "Serenity Blue Interior Casket", desc: "Clean white exterior revealing a peaceful blue and white padded interior.", price: 55000, images: ["/images/caskets/casket19(0).jpg", "/images/caskets/casket19(1).jpg", "/images/caskets/casket19(2).jpg", "/images/caskets/casket19(3).jpg", "/images/caskets/casket19(4).jpg"] },
-  { id: 120, categoryId: "caskets", title: "Gold Accent White Casket", desc: "Luxurious white finish bordered with subtle gold detailing.", price: 88000, images: ["/images/caskets/casket20().jpg", "/images/caskets/casket20(0).jpg", "/images/caskets/casket20(1).jpg", "/images/caskets/casket20(2).jpg"] },
-  { id: 121, categoryId: "caskets", title: "Classic Domed White Casket", desc: "Traditional domed lid with premium white padding.", price: 70000, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
-  { id: 122, categoryId: "caskets", title: "Standard White Wood Casket", desc: "Affordable and dignified pure white wood finish.", price: 40000, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
-  { id: 123, categoryId: "caskets", title: "Pristine White Metal Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 95000, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
-  { id: 124, categoryId: "caskets", title: "Obsidian Black Metal Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 105000, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
-  { id: 125, categoryId: "caskets", title: "Walnut Executive Metal Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 100000, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
-  { id: 126, categoryId: "caskets", title: "Glossy Black Casket", desc: "Highly polished black finish for a modern look.", price: 98000, images: ["/images/caskets/casket26.jpeg"] },
-  { id: 127, categoryId: "caskets", title: "Cream Velvet Interior Casket", desc: "Light exterior finish paired with a luxurious cream velvet interior.", price: 72000, images: ["/images/caskets/casket27().jpg", "/images/caskets/casket27(0).jpg", "/images/caskets/casket27(1).jpg"] },
-  { id: 128, categoryId: "caskets", title: "Premium Dark Oak Casket", desc: "High-grade oak with a deep stain and intricate handles.", price: 82000, images: ["/images/caskets/casket28().jpeg"] },
-  { id: 129, categoryId: "caskets", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 92000, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
-  { id: 130, categoryId: "caskets", title: "Premium Walnut Finish Casket", desc: "High-end wooden box design showcasing expert craftsmanship.", price: 98000, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
+  { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 65000, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
+  { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 45000, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
+  { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 85000, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
+  { id: 104, categoryId: "casket_list", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 70000, images: ["/images/caskets/casket4.jpg"] },
+  { id: 105, categoryId: "casket_list", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 60000, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
+  { id: 106, categoryId: "casket_list", title: "Two-Tone Executive Casket", desc: "Sophisticated two-tone metallic and wood finish.", price: 95000, images: ["/images/caskets/casket6().jpg", "/images/caskets/casket6(0).jpeg", "/images/caskets/casket6(1).jpg", "/images/caskets/casket6(2).jpg"] },
+  { id: 107, categoryId: "casket_list", title: "Brown Elegant Casket", desc: "Ornate design with beautiful silver hardware accents.", price: 110000, images: ["/images/caskets/casket7(1).jpeg", "/images/caskets/casket7(2).jpeg"] },
+  { id: 108, categoryId: "casket_list", title: "Classic Light Wood Casket", desc: "Traditional mid-tone solid wood construction.", price: 45000, images: ["/images/caskets/casket8.jpeg"] },
+  { id: 109, categoryId: "casket_list", title: "Dark Executive Wood", desc: "Deep dark finish for a commanding presence.", price: 68000, images: ["/images/caskets/casket9.jpeg"] },
+  { id: 110, categoryId: "casket_list", title: "Pearl White Casket", desc: "Glossy pure white body finished with silver handles.", price: 75000, images: ["/images/caskets/casket10(1).jpeg", "/images/caskets/casket10.jpeg"] },
+  { id: 111, categoryId: "casket_list", title: "Heavy Duty Bronze Casket", desc: "Durable metal construction featuring an executive finish.", price: 120000, images: ["/images/caskets/casket11(0).jpeg", "/images/caskets/casket11.jpeg"] },
+  { id: 112, categoryId: "casket_list", title: "Sleek White Wood Casket", desc: "Minimalist white casket with gold-tone hardware.", price: 55000, images: ["/images/caskets/casket12.jpeg"] },
+  { id: 113, categoryId: "casket_list", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 42000, images: ["/images/caskets/casket13.jpeg"] },
+  { id: 114, categoryId: "casket_list", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 80000, images: ["/images/caskets/casket14.jpeg"] },
+  { id: 115, categoryId: "casket_list", title: "Pure White Domed Casket", desc: "Elegant domed lid pure white design.", price: 62000, images: ["/images/caskets/casket15.jpeg"] },
+  { id: 116, categoryId: "casket_list", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 65000, images: ["/images/caskets/casket16.jpeg"] },
+  { id: 117, categoryId: "casket_list", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 66000, images: ["/images/caskets/casket17.jpeg"] },
+  { id: 118, categoryId: "casket_list", title: "Solid Oak Heritage Casket", desc: "Heavy-duty solid oak construction with a natural grain.", price: 80000, images: ["/images/caskets/casket18(0).jpg", "/images/caskets/casket18.jpg" ] },
+  { id: 119, categoryId: "casket_list", title: "Serenity Blue Interior Casket", desc: "Clean white exterior revealing a peaceful blue and white padded interior.", price: 55000, images: ["/images/caskets/casket19(0).jpg", "/images/caskets/casket19(1).jpg", "/images/caskets/casket19(2).jpg", "/images/caskets/casket19(3).jpg", "/images/caskets/casket19(4).jpg"] },
+  { id: 120, categoryId: "casket_list", title: "Gold Accent White Casket", desc: "Luxurious white finish bordered with subtle gold detailing.", price: 88000, images: ["/images/caskets/casket20().jpg", "/images/caskets/casket20(0).jpg", "/images/caskets/casket20(1).jpg", "/images/caskets/casket20(2).jpg"] },
+  { id: 121, categoryId: "casket_list", title: "Classic Domed White Casket", desc: "Traditional domed lid with premium white padding.", price: 70000, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
+  { id: 122, categoryId: "casket_list", title: "Standard White Wood Casket", desc: "Affordable and dignified pure white wood finish.", price: 40000, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
+  { id: 123, categoryId: "casket_list", title: "Pristine White Metal Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 95000, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
+  { id: 124, categoryId: "casket_list", title: "Obsidian Black Metal Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 105000, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
+  { id: 125, categoryId: "casket_list", title: "Walnut Executive Metal Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 100000, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
+  { id: 126, categoryId: "casket_list", title: "Glossy Black Casket", desc: "Highly polished black finish for a modern look.", price: 98000, images: ["/images/caskets/casket26.jpeg"] },
+  { id: 127, categoryId: "casket_list", title: "Cream Velvet Interior Casket", desc: "Light exterior finish paired with a luxurious cream velvet interior.", price: 72000, images: ["/images/caskets/casket27().jpg", "/images/caskets/casket27(0).jpg", "/images/caskets/casket27(1).jpg"] },
+  { id: 128, categoryId: "casket_list", title: "Premium Dark Oak Casket", desc: "High-grade oak with a deep stain and intricate handles.", price: 82000, images: ["/images/caskets/casket28().jpeg"] },
+  { id: 129, categoryId: "casket_list", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 92000, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
+  { id: 130, categoryId: "casket_list", title: "Premium Walnut Finish Casket", desc: "High-end wooden box design showcasing expert craftsmanship.", price: 98000, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
+
+  // ==========================================
+  // --- URNS ---
+  // ==========================================
+  { id: 151, categoryId: "urns", title: "Classic Marble Box Urn", desc: "Solid cultured marble in a deep burgundy finish.", price: 18000, images: ["/images/urns/images(0).jpg"] },
+  { id: 152, categoryId: "urns", title: "Rustic Clay Urn", desc: "Hand-crafted rustic earth-tone vessel.", price: 12000, images: ["/images/urns/images(1).jpg"] },
+  { id: 153, categoryId: "urns", title: "Bronze Flying Birds Urn", desc: "Elegant brass urn with engraved flying doves.", price: 22000, images: ["/images/urns/images(2).jpg"] },
+  { id: 154, categoryId: "urns", title: "Purple Floral Keepsake", desc: "Delicate purple and silver finish with floral motif.", price: 15000, images: ["/images/urns/images(3).jpg"] },
+  { id: 155, categoryId: "urns", title: "Natural Stone Urn", desc: "Textured natural stone finish.", price: 20000, images: ["/images/urns/images(4).jpg"] },
+  { id: 156, categoryId: "urns", title: "Sleek Silver Urn", desc: "Minimalist brushed silver metal design.", price: 14000, images: ["/images/urns/images(5).jpg"] },
+  { id: 157, categoryId: "urns", title: "Grey Granite Urn", desc: "Heavy-duty polished grey granite.", price: 25000, images: ["/images/urns/images(6).jpg"] },
+  { id: 158, categoryId: "urns", title: "Engraved Wooden Box", desc: "Premium dark wood with intricate front engraving.", price: 16000, images: ["/images/urns/images(7).jpg"] },
+  { id: 159, categoryId: "urns", title: "Silver Display Urn", desc: "Classic metallic urn perfect for mantle display.", price: 13500, images: ["/images/urns/images(8).jpg"] },
+  { id: 160, categoryId: "urns", title: "Minimalist Sandstone Urn", desc: "Light, textured sandstone finish.", price: 17000, images: ["/images/urns/images(9).jpg"] },
+  { id: 161, categoryId: "urns", title: "Green and Gold Brass Urn", desc: "Deep green body with dual gold bands.", price: 19000, images: ["/images/urns/images(10).jpg"] },
+  { id: 162, categoryId: "urns", title: "Carved Tree Wooden Urn", desc: "Warm wood finish featuring a 'Tree of Life' engraving.", price: 15500, images: ["/images/urns/images(11).jpg"] },
+  { id: 163, categoryId: "urns", title: "Blue Swirl Glass Urn", desc: "Artistic blue swirl pattern, includes protective bag.", price: 21000, images: ["/images/urns/images(12).jpg"] },
+  { id: 164, categoryId: "urns", title: "White Rose Brass Urn", desc: "Pristine white finish with a gold engraved rose.", price: 18500, images: ["/images/urns/images(13).jpg"] },
+  { id: 165, categoryId: "urns", title: "Midnight Blue Keepsake", desc: "Deep blue speckled finish with a velvet bag.", price: 16500, images: ["/images/urns/images(14).jpg"] },
+  { id: 166, categoryId: "urns", title: "Silver Teardrop Urn", desc: "Unique teardrop shape with intricate silver engraving.", price: 24000, images: ["/images/urns/images(15).jpg"] },
 
   // ==========================================
   // --- WREATHS ---
