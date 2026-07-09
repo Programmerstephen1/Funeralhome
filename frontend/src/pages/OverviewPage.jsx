@@ -33,12 +33,18 @@ export default function OverviewPage() {
             <p className="text-[#3D3530] mb-6">
               Go back to the Memorial Hub for a wider view of the tribute sections and choose the next page to visit.
             </p>
-            <a 
-              href="#memorial"
+            <button 
+              onClick={() => {
+                // Extract the family ID (e.g., 'kinuthia-family') from the current URL
+                const currentHash = window.location.hash;
+                const familyId = currentHash.split('/')[1];
+                // Send them back to their specific memorial hub
+                window.location.hash = familyId ? `#memorial/${familyId}` : "#memorial";
+              }}
               className="inline-block w-full border border-[#A8895C] text-[#A8895C] px-6 py-3 text-sm tracking-wider uppercase font-semibold rounded hover:bg-[#A8895C] hover:text-white transition-all duration-300 text-center"
             >
               Back to Memorial Hub
-            </a>
+            </button>
           </div>
         </div>
       </div>
