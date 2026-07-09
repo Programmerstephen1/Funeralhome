@@ -59,7 +59,7 @@ export default function FamilyTreePage({ dynamicId }) {
     };
 
     // Update the UI instantly
-    setFamilyMembers((prev) => [...prev, newConnection]);
+    setFamilyMembers([...familyMembers, newConnection]);
     setAnnouncement("Your tribute has been added to the family tree.");
     
     // --- DATABASE INTEGRATION POINT ---
@@ -94,16 +94,16 @@ export default function FamilyTreePage({ dynamicId }) {
             className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none" 
             onError={(e) => e.target.style.display = 'none'} 
           />
-          
-         {/* Layer 2: The Main Deceased Photo */}
+
+          {/* Layer 2: The Main Deceased Photo (Nudged UP to 8.2% to cover the top checkerboard gap) */}
           {deceasedPhoto ? (
             <div 
               className="absolute z-10 overflow-hidden rounded-full shadow-inner"
               style={{
-                top: '6.8%',          // slightly refined vertical alignment
+                top: '8.2%',          // Decreased from 9.5% to slide the circle HIGHER
                 left: '50%', 
                 transform: 'translateX(-50%)',
-                width: '43.5%',       // matches circle diameter
+                width: '43.5%',       // Keeps your perfectly refined width diameter
                 aspectRatio: '1/1'
               }}
             >
@@ -117,7 +117,7 @@ export default function FamilyTreePage({ dynamicId }) {
             <div 
               className="absolute z-10 flex items-center justify-center overflow-hidden rounded-full bg-[#1A1A18]"
               style={{ 
-                top: '6.8%', 
+                top: '8.2%',          // Decreased from 9.5% to slide the circle HIGHER
                 left: '50%', 
                 transform: 'translateX(-50%)', 
                 width: '43.5%', 
