@@ -8,6 +8,8 @@ export default function PlanAheadPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [serverHealth, setServerHealth] = useState(null); // null | 'ok' | 'error'
+  const [serverUrlChecked, setServerUrlChecked] = useState(null);
   
   // Track the form inputs
   const [formData, setFormData] = useState({
@@ -79,7 +81,12 @@ export default function PlanAheadPage() {
 
     try {
       const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
-      const response = await fetch(`${apiBase}/api/consultations`, {
+      const requestUrl = `${apiBase}/api/consultations`;
+
+      // Helpful debug output for deployed environments
+      console.info("[PlanAhead] Submitting consultation to:", requestUrl);
+
+      const response = await fetch(requestUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,22 +94,56 @@ export default function PlanAheadPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json().catch(() => ({}));
+      let data = {};
+      try { data = await response.json(); } catch (e) { /* non-json responses */ }
 
       if (response.ok) {
         toast.success(data.message || "Request received successfully. We will follow up with you shortly.", { id: toastId });
         setIsModalOpen(false);
         setFormData({ name: "", email: "", phone: "", questions: "" });
       } else {
-        toast.error(data.message || data.error || "Unable to send your request right now.", { id: toastId });
+        const serverMessage = data.message || data.error || (await response.text().catch(() => ""));
+        console.warn("[PlanAhead] Consultation failed", response.status, serverMessage);
+        toast.error(`Server error (${response.status}): ${serverMessage || 'Unable to send your request right now.'}`, { id: toastId });
       }
     } catch (error) {
-      console.error("Submission Error:", error);
-      toast.error("We could not reach the server right now. Please try again in a moment.", { id: toastId });
+      // Network / CORS / SSL errors land here
+      console.error("[PlanAhead] Submission Error:", error);
+      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+      const requestUrl = `${apiBase}/api/consultations`;
+      toast.error(`Network error when contacting ${requestUrl}: ${error.message || error}`, { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Check server health when modal opens so deployed users see clear diagnostics
+  React.useEffect(() => {
+    if (!isModalOpen) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : window.location.origin);
+        const healthUrl = `${apiBase}/api/health`;
+        setServerUrlChecked(healthUrl);
+        console.info("[PlanAhead] Checking server health:", healthUrl);
+        const res = await fetch(healthUrl, { method: "GET" });
+        if (!mounted) return;
+        if (res.ok) {
+          setServerHealth('ok');
+        } else {
+          setServerHealth('error');
+        }
+      } catch (err) {
+        if (!mounted) return;
+        console.warn('[PlanAhead] Health check failed', err);
+        setServerHealth('error');
+      }
+    })();
+
+    return () => { mounted = false; };
+  }, [isModalOpen]);
 
   return (
     <div className="bg-[#F8F6F0] relative min-h-screen">
@@ -240,6 +281,20 @@ export default function PlanAheadPage() {
             </p>
             
             <form onSubmit={handleConsultationSubmit} className="space-y-5" noValidate>
+              {/* API health / diagnostics shown to user for easier troubleshooting */}
+              {serverUrlChecked && (
+                <div className="mb-2 flex items-center justify-between rounded border border-[#E8DFD1] bg-white p-3 text-sm">
+                  <div className="flex-1">
+                    <span className="font-medium">API:</span>
+                    <div className="break-words text-xs text-[#3D3530]">{serverUrlChecked}</div>
+                  </div>
+                  <div className="ml-4 flex-shrink-0">
+                    <span className={`inline-block px-2 py-1 rounded text-white text-xs ${serverHealth === 'ok' ? 'bg-green-600' : 'bg-red-600'}`}>
+                      {serverHealth === 'ok' ? 'Reachable' : 'Unreachable'}
+                    </span>
+                  </div>
+                </div>
+              )}
               <div>
                 <input 
                   type="text" 

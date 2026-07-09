@@ -94,16 +94,16 @@ export default function FamilyTreePage({ dynamicId }) {
             className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none" 
             onError={(e) => e.target.style.display = 'none'} 
           />
-
-          {/* Layer 2: The Main Deceased Photo (Nudged down one last time to 9.5% for the perfect fit) */}
+          
+         {/* Layer 2: The Main Deceased Photo */}
           {deceasedPhoto ? (
             <div 
               className="absolute z-10 overflow-hidden rounded-full shadow-inner"
               style={{
-                top: '9.5%',          // The final micro-adjustment downwards
+                top: '6.8%',          // slightly refined vertical alignment
                 left: '50%', 
                 transform: 'translateX(-50%)',
-                width: '43.5%',       // Keeps your perfectly refined width diameter
+                width: '43.5%',       // matches circle diameter
                 aspectRatio: '1/1'
               }}
             >
@@ -117,7 +117,7 @@ export default function FamilyTreePage({ dynamicId }) {
             <div 
               className="absolute z-10 flex items-center justify-center overflow-hidden rounded-full bg-[#1A1A18]"
               style={{ 
-                top: '9.5%', 
+                top: '6.8%', 
                 left: '50%', 
                 transform: 'translateX(-50%)', 
                 width: '43.5%', 

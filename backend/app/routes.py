@@ -426,13 +426,10 @@ def request_consultation():
 
 def register_routes(app):
     from flask_cors import CORS
-    
-    # 🟢 PRO-GRADE FIX: Safely allows both local testing and live deployment
-    CORS(app, origins=[
-        "http://localhost:5173", 
-        "http://localhost:4173", 
-        "http://127.0.0.1:5173",
-        "https://funeralhome-5inb.onrender.com"
-    ])
-    
+
+    # 🟢 PRO-GRADE FIX: Allow API access from frontend across environments.
+    # Using a resource wildcard here keeps local development working while
+    # allowing the deployed frontend origin to call the API without 500-level CORS failures.
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+
     app.register_blueprint(api)
