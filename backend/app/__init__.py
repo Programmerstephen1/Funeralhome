@@ -17,8 +17,14 @@ def create_app():
     
     app = Flask(__name__, static_folder=frontend_dist, static_url_path='')
     
-    # Enable CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # --- 🔒 PRO-GRADE STRICT CORS RULES ---
+    # Only allow requests from your specific frontend URLs to prevent unauthorized access.
+    # Replace 'your-frontend-name' with your actual Render URL.
+    allowed_origins = [
+        "https://your-frontend-name.onrender.com", 
+        "http://localhost:5173"
+    ]
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     # --- 🟢 PRO-GRADE DATABASE ROUTER ---
     # Checks if a live cloud database URL is provided via Render Environment Variables.
