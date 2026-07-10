@@ -9,22 +9,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_mpesa_access_token():
-    consumer_key = os.getenv("MPESA_CONSUMER_KEY")
-    consumer_secret = os.getenv("MPESA_CONSUMER_SECRET")
+    # .strip() ensures no invisible spaces from your .env file break the keys
+    consumer_key = os.getenv("MPESA_CONSUMER_KEY", "").strip()
+    consumer_secret = os.getenv("MPESA_CONSUMER_SECRET", "").strip()
     
     if not consumer_key or not consumer_secret:
         error = "Missing MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET environment variable."
         logger.error(error)
         return {"token": None, "error": error}
 
+    # Get base URL, explicitly stripping any existing query parameters to avoid duplicates
     api_url = os.getenv(
         "MPESA_OAUTH_URL", 
-        "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-    ).strip()
+        "https://sandbox.safaricom.co.ke/oauth/v1/generate"
+    ).strip().split('?')[0]
 
     try:
-        r = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret), timeout=15)
+        # PRO-FIX: Explicitly passing the grant_type in the params dictionary. 
+        # This prevents the "Invalid grant type passed" error 100% of the time.
+        r = requests.get(
+            api_url, 
+            params={"grant_type": "client_credentials"},
+            auth=HTTPBasicAuth(consumer_key, consumer_secret), 
+            timeout=15
+        )
         r.raise_for_status()
+        
         token = r.json().get("access_token")
         if not token:
             error = "M-Pesa OAuth succeeded but no access token was returned."
@@ -33,6 +43,7 @@ def get_mpesa_access_token():
 
         logger.debug("M-Pesa OAuth token fetched successfully (masked).")
         return {"token": token, "error": None}
+        
     except requests.exceptions.RequestException as e:
         error = f"Failed to get M-Pesa access token: {e}"
         logger.error(error)
@@ -58,6 +69,7 @@ def generate_stk_push_payload(amount, phone, email=None):
 
     auth_result = get_mpesa_access_token()
     access_token = auth_result.get("token")
+    
     if not access_token:
         error_response = {"error": "Failed to authenticate with Safaricom Daraja API."}
         if auth_result.get("detail"):
@@ -73,12 +85,11 @@ def generate_stk_push_payload(amount, phone, email=None):
         logger.error(error)
         return {"error": error, "detail": error}
 
-    # 🔴 PRO-GRADE FIX: Strip stray whitespace/newlines from callback URL
+    # Strip stray whitespace/newlines from callback URL
     base_callback_url = os.getenv(
         "MPESA_CALLBACK_URL",
         "https://startup-simulator-v2.onrender.com/api/payments/callback"
-    )
-    base_callback_url = base_callback_url.strip()
+    ).strip()
 
     if email:
         callback_url = f"{base_callback_url}?email={urllib.parse.quote(email)}"

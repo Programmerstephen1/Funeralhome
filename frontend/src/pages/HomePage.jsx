@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Phone, MapPin, Clock, Calendar, ChevronDown } from "lucide-react";
 import { Button, Card, CardBody } from "../components";
 
+// PRO-GRADE ADDITION: Import the navigation hook
+import { useNavigate } from "react-router-dom";
+
 const testimonials = [
     {
       name: "Amina N",
@@ -35,6 +38,9 @@ const faqs = [
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // PRO-GRADE ADDITION: Initialize navigate
+  const navigate = useNavigate();
 
   return (
     <div className="bg-[#F8F6F0]">
@@ -63,7 +69,8 @@ export default function HomePage() {
                   <Button 
                     variant="secondary" 
                     size="lg"
-                    onClick={() => window.location.hash = '#plan'}
+                    // PRO-GRADE ADDITION: Smooth React Router navigation
+                    onClick={() => navigate('/plan')}
                   >
                     Plan Ahead
                   </Button>
@@ -228,7 +235,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Contact Section - PRO-GRADE UPDATE */}
+      {/* Contact Section */}
       <section 
         id="contact"
         className="w-full border-t border-[#E8DFD1] bg-[linear-gradient(135deg,#FDFBF7_0%,#F8F6F0_100%)] py-20 px-4 md:px-8"
@@ -277,7 +284,6 @@ export default function HomePage() {
               </h3>
               
               <div className="space-y-6">
-                {/* Phone Detail Item */}
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
                     <Phone size={18} className="text-[#A8895C]" />
@@ -292,7 +298,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Location Detail Item */}
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
                     <MapPin size={18} className="text-[#A8895C]" />
@@ -308,7 +313,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Hours Detail Item */}
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
                     <Clock size={18} className="text-[#A8895C]" />
