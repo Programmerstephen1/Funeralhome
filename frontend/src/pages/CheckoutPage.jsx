@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Building2, CheckCircle2, Phone, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 import ProgressSteps from "../components/ProgressSteps";
 import mpesaIcon from "../assets/mpesa.png";
 import airtelIcon from "../assets/airtel.png";
 import debitIcon from "../assets/debit.png";
 import LocationPicker from "../components/LocationPicker"; 
-
-// PRO-GRADE ADDITIONS: Import Router hooks and components
 import { useNavigate, Link } from "react-router-dom";
 
 export default function CheckoutPage({ cart }) {
@@ -23,8 +21,10 @@ export default function CheckoutPage({ cart }) {
   const [paymentMessage, setPaymentMessage] = useState("");
   const [paymentError, setPaymentError] = useState("");
   const [formErrors, setFormErrors] = useState({});
+  
+  // PRO-GRADE ADDITION: State to track the active Daraja transaction for polling
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
 
-  // PRO-GRADE ADDITION: Initialize navigate
   const navigate = useNavigate();
 
   const subtotal = cart?.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0) || 0;
@@ -48,6 +48,43 @@ export default function CheckoutPage({ cart }) {
     { id: "airtel", label: "Airtel Money", icon: airtelIcon },
     { id: "card", label: "Debit/Credit Card", icon: debitIcon },
   ];
+
+  // PRO-GRADE ADDITION: The Real-Time Polling Engine
+  useEffect(() => {
+    let pollInterval;
+
+    if (checkoutRequestId) {
+      pollInterval = setInterval(async () => {
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+          const res = await fetch(`${API_URL}/api/payments/status/${checkoutRequestId}`);
+          const statusData = await res.json();
+
+          if (statusData.status === 'completed') {
+            clearInterval(pollInterval);
+            setPaymentMessage("Payment successful! Redirecting to your receipt...");
+            setTimeout(() => {
+              navigate("/thankyou");
+            }, 2000);
+          } else if (statusData.status === 'failed') {
+            clearInterval(pollInterval);
+            setIsProcessing(false);
+            setCheckoutRequestId(null);
+            setPaymentError("Payment failed or was cancelled. Please try again.");
+            setPaymentMessage("");
+          }
+          // If status is still 'initiated', it does nothing and waits for the next tick
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 3000); // Pings the backend every 3 seconds
+    }
+
+    // Cleanup interval if the component unmounts
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [checkoutRequestId, navigate]);
 
   const handlePayment = async () => {
     setPaymentError("");
@@ -96,10 +133,13 @@ export default function CheckoutPage({ cart }) {
 
         if (response.ok) {
           setPaymentMessage("Prompt sent! Please check your phone and enter your M-Pesa PIN.");
-          setTimeout(() => {
-            // PRO-GRADE ADDITION: Smoothly push to the next route
-            navigate("/thankyou");
-          }, 10000);
+          // PRO-GRADE FIX: Save the ID to trigger the useEffect polling cycle
+          if (data.checkout_request_id) {
+            setCheckoutRequestId(data.checkout_request_id);
+          } else {
+            // Fallback if the ID is missing for some reason
+            setTimeout(() => navigate("/thankyou"), 10000);
+          }
         } else {
           const errMsg = data.detail || data.error || data.message || "Failed to initiate payment. Please try again.";
           setPaymentError(errMsg);
@@ -110,7 +150,6 @@ export default function CheckoutPage({ cart }) {
         setIsProcessing(false);
       }
     } else if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mock") {
-      // Mock payment endpoint for testing without Daraja
       setIsProcessing(true);
       try {
         const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
@@ -123,10 +162,7 @@ export default function CheckoutPage({ cart }) {
         
         if (resp.ok) {
           setPaymentMessage("Payment simulated successfully. Thank you.");
-          setTimeout(() => { 
-            // PRO-GRADE ADDITION: Smoothly push to the next route
-            navigate("/thankyou"); 
-          }, 1500);
+          setTimeout(() => { navigate("/thankyou"); }, 1500);
         } else {
           setPaymentError(data.error || data.message || "Mock payment failed.");
           setIsProcessing(false);
@@ -144,7 +180,6 @@ export default function CheckoutPage({ cart }) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#F8F6F0]">
         <h2 className="text-2xl font-serif text-[#1F2E27] mb-4">No items to checkout.</h2>
-        {/* PRO-GRADE ADDITION: Swapped the anchor tag for a Link Component */}
         <Link to="/catalog" className="text-[#A8895C] underline hover:text-[#1F2E27] uppercase tracking-widest text-sm">Return to Catalog</Link>
       </div>
     );
@@ -217,8 +252,8 @@ export default function CheckoutPage({ cart }) {
               {paymentOptions.map((option) => (
                 <div 
                   key={option.id}
-                  onClick={() => setPaymentMethod(option.id)}
-                  className={`border-2 p-4 cursor-pointer transition-all flex flex-col items-center gap-3 relative rounded-sm ${paymentMethod === option.id ? "border-[#A8895C] bg-[#F8F6F0]" : "border-[#E8DFD1] hover:border-[#D8CFBC] opacity-60 hover:opacity-100"}`}
+                  onClick={() => !isProcessing && setPaymentMethod(option.id)}
+                  className={`border-2 p-4 cursor-pointer transition-all flex flex-col items-center gap-3 relative rounded-sm ${paymentMethod === option.id ? "border-[#A8895C] bg-[#F8F6F0]" : "border-[#E8DFD1] hover:border-[#D8CFBC] opacity-60 hover:opacity-100"} ${isProcessing ? "pointer-events-none opacity-50" : ""}`}
                 >
                   <div className="w-16 h-12 flex items-center justify-center">
                     <img src={option.icon} alt={option.label} className="max-h-full max-w-full object-contain" />
@@ -241,7 +276,8 @@ export default function CheckoutPage({ cart }) {
                   value={formData.phone}
                   placeholder="e.g. 254708374149" 
                   aria-invalid={!!formErrors.phone}
-                  className="w-full p-4 border border-[#E8DFD1] bg-white rounded-sm focus:outline-none focus:border-[#A8895C] transition-colors text-lg" 
+                  disabled={isProcessing}
+                  className="w-full p-4 border border-[#E8DFD1] bg-white rounded-sm focus:outline-none focus:border-[#A8895C] transition-colors text-lg disabled:bg-gray-100 disabled:text-gray-500" 
                 />
                 {formErrors.phone && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.phone}</p>}
                 <p className="text-xs text-[#8F744D] mt-3 tracking-wide">A secure payment prompt will be sent directly to this number.</p>
@@ -284,7 +320,11 @@ export default function CheckoutPage({ cart }) {
           
           {paymentMessage && (
             <div className="mt-6 p-4 rounded-sm border border-emerald-200 bg-emerald-50 text-sm font-medium leading-relaxed text-emerald-800 animate-fadeIn flex items-start gap-3" role="status">
-              <CheckCircle2 size={20} className="shrink-0 mt-0.5" />
+              {checkoutRequestId && !paymentError ? (
+                <Loader2 size={20} className="shrink-0 mt-0.5 text-emerald-600 animate-spin" />
+              ) : (
+                <CheckCircle2 size={20} className="shrink-0 mt-0.5" />
+              )}
               <span>{paymentMessage}</span>
             </div>
           )}
@@ -300,8 +340,10 @@ export default function CheckoutPage({ cart }) {
             className={`w-full mt-6 py-4 uppercase tracking-widest text-sm font-semibold transition-all flex items-center justify-center gap-2 rounded-sm
               ${isProcessing ? "bg-[#3D3530] text-[#E8DFD1] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md hover:shadow-lg"}`}
           >
-            {isProcessing ? (
+            {isProcessing && !checkoutRequestId ? (
               <><Loader2 size={18} className="animate-spin" /> Processing...</>
+            ) : isProcessing && checkoutRequestId ? (
+              <><Loader2 size={18} className="animate-spin" /> Awaiting PIN...</>
             ) : (
               `Pay KSh ${totalAmount.toLocaleString()}`
             )}

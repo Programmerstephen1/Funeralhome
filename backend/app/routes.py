@@ -1,4 +1,3 @@
-import jwt
 import datetime
 import random
 import logging
@@ -6,6 +5,8 @@ import re
 import os
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+
 from .models import db, FuneralService, Tribute, User, Eulogy, Consultation
 from .mpesa import generate_stk_push_payload
 
@@ -16,34 +17,34 @@ logger = logging.getLogger(__name__)
 api = Blueprint("api", __name__)
 
 # --- SECURITY MIDDLEWARE ---
-def token_required(f):
+
+def require_safaricom_ip(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
+    def decorated_function(*args, **kwargs):
+        if current_app.config.get('DEBUG'):
+            return f(*args, **kwargs)
 
-        if not token:
-            return jsonify({"message": "Security token is missing!"}), 401
+        forwarded_for = request.headers.get('X-Forwarded-For')
+        if forwarded_for:
+            client_ip = forwarded_for.split(',')[0].strip()
+        else:
+            client_ip = request.remote_addr
 
-        try:
-            secret = current_app.config.get('SECRET_KEY', 'super-secret-funeral-key')
-            data = jwt.decode(token, secret, algorithms=["HS256"])
-            current_user = User.query.get(data["user_id"])
-            if not current_user:
-                raise Exception("User not found")
-        except Exception as e:
-            logger.error(f"Token error: {e}")
-            return jsonify({"message": "Token is invalid or expired!"}), 401
+        if client_ip and not client_ip.startswith("196.201.") and client_ip not in ["127.0.0.1", "::1"]:
+            logger.warning(f"BLOCKED: Unauthorized Webhook Attempt from IP: {client_ip}")
+            return jsonify({"ResultCode": 1, "ResultDesc": "Unauthorized origin"}), 403
 
-        return f(current_user, *args, **kwargs)
-    return decorated
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # --- AUTHENTICATION ROUTES ---
 
 @api.route("/api/auth/register", methods=["POST"])
 def register():
+    from flask_mail import Message
+    from . import mail
+
     payload = request.get_json() or {}
     email = (payload.get("email") or "").strip().lower()
     password = payload.get("password") or ""
@@ -57,14 +58,53 @@ def register():
     if User.query.filter_by(email=email).first():
         return jsonify({"message": "User already exists"}), 400
 
+    # 1. Create the user using your custom bcrypt set_password from models.py
     new_user = User(email=email)
     new_user.set_password(password)
     new_user.is_verified = False
 
+    # 2. PRO-GRADE FIX: Automatically generate the OTP instantly upon registration
+    otp_code = str(random.randint(100000, 999999))
+    new_user.otp_code = otp_code
+    new_user.otp_expires = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+
     db.session.add(new_user)
     db.session.commit()
 
+    # 3. Fire the email immediately so it's in their inbox when they hit the verify screen
+    try:
+        msg = Message(
+            subject="Your Last Planner Julz Hub Verification Code",
+            sender=("Last Planner Julz Hub Security", current_app.config.get('MAIL_USERNAME')),
+            recipients=[email]
+        )
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; background-color: #F8F6F0; margin: 0; padding: 40px 0;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #E8DFD1;">
+            <div style="background-color: #1F2E27; padding: 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: normal; letter-spacing: 1px;">Verify Your Email</h1>
+            </div>
+            <div style="padding: 40px 30px; text-align: center;">
+              <p style="color: #3D3530; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
+                Welcome to Last Planner Julz Hub. Please use the verification code below to securely access your account.
+              </p>
+              <div style="background-color: #F8F6F0; border: 1px solid #E8DFD1; border-radius: 8px; padding: 20px; display: inline-block; margin-bottom: 30px;">
+                <span style="color: #A8895C; font-size: 36px; font-weight: bold; letter-spacing: 12px;">{otp_code}</span>
+              </div>
+              <p style="color: #716860; font-size: 14px; margin-bottom: 0;">
+                <strong>Note:</strong> This code will expire in 10 minutes.
+              </p>
+            </div>
+          </div>
+        </div>
+        """
+        mail.send(msg)
+        logger.info(f"Welcome OTP successfully sent to {email}")
+    except Exception as e:
+        logger.error(f"Failed to send welcome OTP email: {e}")
+
     return jsonify({"message": "User created successfully"}), 201
+
 
 @api.route("/api/auth/login", methods=["POST"])
 def login():
@@ -74,19 +114,18 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
+    # Restore your original check_password method
     if user and user.check_password(password):
-        secret = current_app.config.get('SECRET_KEY', 'super-secret-funeral-key')
-        token = jwt.encode({
-            "user_id": user.id,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-        }, secret, algorithm="HS256")
+        token = create_access_token(identity=str(user.id))
         
         return jsonify({
             "token": token,
-            "is_verified": user.is_verified # Frontend uses this to route correctly
+            # Force a strict boolean so the React frontend knows EXACTLY where to route them
+            "is_verified": bool(user.is_verified) 
         }), 200
 
     return jsonify({"message": "Invalid email or password"}), 401
+
 
 # --- SECURE OTP VERIFICATION ROUTES ---
 
@@ -112,8 +151,8 @@ def send_otp():
 
     try:
         msg = Message(
-            subject="Your last planner julz Hub Verification Code",
-            sender=("last planner julz Hub Security", "stephenitwika178@gmail.com"),
+            subject="Your Last Planner Julz Hub Verification Code",
+            sender=("Last Planner Julz Hub Security", current_app.config.get('MAIL_USERNAME')),
             recipients=[email]
         )
 
@@ -125,7 +164,7 @@ def send_otp():
             </div>
             <div style="padding: 40px 30px; text-align: center;">
               <p style="color: #3D3530; font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
-                Welcome to last planner julz Hub. Please use the verification code below to securely access your account.
+                Welcome to Last Planner Julz Hub. Please use the verification code below to securely access your account.
               </p>
               <div style="background-color: #F8F6F0; border: 1px solid #E8DFD1; border-radius: 8px; padding: 20px; display: inline-block; margin-bottom: 30px;">
                 <span style="color: #A8895C; font-size: 36px; font-weight: bold; letter-spacing: 12px;">{otp_code}</span>
@@ -142,8 +181,8 @@ def send_otp():
 
     except Exception as e:
         logger.exception(f"CRITICAL: Failed to send OTP email to {email}")
-        # Returns the exact stringified error to your browser's Network tab for instant debugging
         return jsonify({"message": "Failed to send email. Please try again.", "error": str(e)}), 500
+
 
 @api.route("/api/auth/verify-otp", methods=["POST"])
 def verify_otp():
@@ -164,6 +203,7 @@ def verify_otp():
     else:
         return jsonify({"message": "Invalid or expired verification code."}), 400
 
+
 @api.route("/api/auth/reset-password", methods=["POST"])
 def reset_password():
     payload = request.get_json() or {}
@@ -179,6 +219,7 @@ def reset_password():
         return jsonify({"message": "User not found"}), 404
 
     if user.is_otp_valid(code):
+        # Use your custom set_password method for the reset too
         user.set_password(new_password)
         user.otp_code = None     
         user.otp_expires = None
@@ -193,29 +234,34 @@ def reset_password():
 # --- PROTECTED DATA ROUTES ---
 
 @api.route("/api/tributes", methods=["GET"])
-@token_required
-def list_tributes(current_user):
-    tributes = Tribute.query.filter_by(user_id=current_user.id).limit(10).all()
+@jwt_required()
+def list_tributes():
+    user_id = get_jwt_identity()
+    tributes = Tribute.query.filter_by(user_id=user_id).limit(10).all()
     return jsonify([t.to_dict() for t in tributes])
 
+
 @api.route("/api/tributes", methods=["POST"])
-@token_required
-def create_tribute(current_user):
+@jwt_required()
+def create_tribute():
+    user_id = get_jwt_identity()
     payload = request.get_json() or {}
     tribute = Tribute(
         name=payload.get("name", "Anonymous"),
         message=payload.get("message", ""),
-        user_id=current_user.id
+        user_id=user_id
     )
     db.session.add(tribute)
     db.session.commit()
     return jsonify(tribute.to_dict()), 201
 
+
 # --- EULOGY ROUTES ---
 
 @api.route("/api/eulogies", methods=["POST"])
-@token_required
-def create_eulogy(current_user):
+@jwt_required()
+def create_eulogy():
+    user_id = get_jwt_identity()
     payload = request.get_json() or {}
     
     try:
@@ -226,7 +272,7 @@ def create_eulogy(current_user):
             occupation=payload.get("occupation"),
             interests=payload.get("interests"),
             personality=payload.get("personality"),
-            user_id=current_user.id
+            user_id=user_id
         )
         
         db.session.add(new_eulogy)
@@ -242,6 +288,7 @@ def create_eulogy(current_user):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+
 @api.route("/api/eulogies/<eulogy_id>", methods=["GET"])
 def get_public_eulogy(eulogy_id):
     eulogy = Eulogy.query.get(eulogy_id)
@@ -251,11 +298,13 @@ def get_public_eulogy(eulogy_id):
         
     return jsonify(eulogy.to_dict()), 200
 
+
 # --- PUBLIC ROUTES ---
 
 @api.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"})
+
 
 @api.route("/api/services", methods=["GET"])
 def list_services():
@@ -265,6 +314,7 @@ def list_services():
         {"id": 3, "name": "Memorial Tributes", "description": "Personalized pages."},
     ]
     return jsonify(services)
+
 
 # --- M-PESA PAYMENTS ROUTES ---
 
@@ -290,7 +340,6 @@ def stk_push():
         logger.error(f"STK Push Error: {result['error']}")
         return jsonify(result), 500
 
-    # Persist a lightweight transaction record so callbacks can be correlated
     try:
         from .models import PaymentTransaction
         checkout_id = result.get("checkout_request_id")
@@ -312,11 +361,22 @@ def stk_push():
     return jsonify(result), 200
 
 
+@api.route("/api/payments/status/<checkout_id>", methods=["GET"])
+def payment_status(checkout_id):
+    from .models import PaymentTransaction
+    tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
+    
+    if not tx:
+        return jsonify({"error": "Transaction not found"}), 404
+        
+    return jsonify({
+        "checkout_request_id": tx.checkout_request_id,
+        "status": tx.status
+    }), 200
+
+
 @api.route("/api/payments/mock", methods=["POST"])
 def mock_payment():
-    """A simple mock payment endpoint for deployments where M-Pesa is unavailable.
-    Records the request in logs and returns a fake success payload.
-    """
     payload = request.get_json() or {}
     amount = payload.get("amount")
     phone = (payload.get("phone") or "").strip()
@@ -333,24 +393,23 @@ def mock_payment():
 
     logger.info(f"[MOCK PAYMENT] amount={amount} phone={phone} email={email}")
 
-    # Return a deterministic fake transaction id
     tx_id = f"MOCK-{int(datetime.datetime.utcnow().timestamp())}"
     return jsonify({"message": "Mock payment processed", "transaction_id": tx_id}), 200
 
+
 @api.route("/api/payments/callback", methods=["POST"])
+@require_safaricom_ip
 def mpesa_callback():
     from flask_mail import Message
     from . import mail
     
     try:
         data = request.get_json()
-        # First try to get the email from the query string (if callback URL contained it)
         customer_email = request.args.get("email") 
 
         callback_data = data.get("Body", {}).get("stkCallback", {})
         result_code = callback_data.get("ResultCode")
         
-        # Attempt to correlate callback with an initiated transaction and preserve success/failure state
         try:
             from .models import PaymentTransaction
             checkout_id = callback_data.get("CheckoutRequestID")
@@ -374,21 +433,19 @@ def mpesa_callback():
             if customer_email:
                 try:
                     msg = Message(
-                        subject="Your Payment Receipt - last planner julz Hub",
-                        sender=("Last planner julz Hub", "stephenitwika178@gmail.com"), 
+                        subject="Your Payment Receipt - Last Planner Julz Hub",
+                        sender=("Last Planner Julz Hub", current_app.config.get('MAIL_USERNAME')), 
                         recipients=[customer_email]
                     )
-                    
                     msg.html = f"""
                     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
                         <div style="background-color: #1F2E27; padding: 25px; text-align: center;">
-                            <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 24px; letter-spacing: 1px;">last planner julz Hub</h1>
+                            <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 24px; letter-spacing: 1px;">Last Planner Julz Hub</h1>
                             <p style="color: #F8F6F0; margin: 4px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px;">Order Confirmed</p>
                         </div>
                         <div style="padding: 35px 25px; background-color: #FFFFFF; color: #3D3530;">
                             <h2 style="margin-top: 0; font-family: Georgia, serif; font-size: 18px; color: #1F2E27;">Thank You For Your Order</h2>
                             <p style="font-size: 14px; line-height: 1.5; color: #555555;">We have successfully cleared your payment through M-Pesa. Your transaction details have been logged securely into our accounting hub.</p>
-                            
                             <div style="background-color: #F8F6F0; border-left: 4px solid #A8895C; padding: 15px; margin: 25px 0; border-radius: 0 4px 4px 0;">
                                 <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
                                     <tr>
@@ -408,7 +465,7 @@ def mpesa_callback():
                             <p style="font-size: 13px; color: #8F847C; margin-bottom: 0;">Our administrative operators will reach out to organize coordination arrangements shortly.</p>
                         </div>
                         <div style="background-color: #EFEAE0; padding: 15px; text-align: center; font-size: 11px; color: #8F744D;">
-                            <p style="margin: 0;">last planner julz Hub • Kenya</p>
+                            <p style="margin: 0;">Last Planner Julz Hub • Kenya</p>
                         </div>
                     </div>
                     """
@@ -419,14 +476,12 @@ def mpesa_callback():
         else:
             logger.error(f"--- M-PESA FAILED --- Reason: {callback_data.get('ResultDesc')}")
             
-        return jsonify({
-            "ResultCode": 0, 
-            "ResultDesc": "Callback processed successfully"
-        }), 200
+        return jsonify({"ResultCode": 0, "ResultDesc": "Callback processed successfully"}), 200
 
     except Exception as e:
         logger.exception("Error handling M-Pesa callback")
         return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed", "error": str(e)}), 500
+
 
 # --- CONSULTATION EMAIL ROUTE ---
 @api.route('/api/consultations', methods=['POST'])
@@ -450,7 +505,6 @@ def request_consultation():
         return jsonify({"error": "Invalid phone", "message": "Please provide a valid phone number."}), 400
 
     try:
-        # Persist the consultation so requests are not lost even if email fails
         consult = Consultation(name=name, email=user_email, phone=phone, questions=questions)
         db.session.add(consult)
         db.session.commit()
@@ -466,7 +520,7 @@ def request_consultation():
 
         msg = Message(
             subject=f"New Consultation Request: {name}",
-            sender=(f"{name} via last planner julz Hub", mail_username), 
+            sender=(f"{name} via Last Planner Julz Hub", mail_username), 
             recipients=[mail_username],
             reply_to=(name, user_email) 
         )
@@ -474,7 +528,7 @@ def request_consultation():
         msg.html = f"""
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="background-color: #1F2E27; padding: 30px 20px; text-align: center;">
-                <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">last planner julz Hub</h1>
+                <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">Last Planner Julz Hub</h1>
                 <p style="color: #F8F6F0; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Funeral Home & Memorials</p>
             </div>
             <div style="padding: 40px 30px; background-color: #FFFFFF; color: #3D3530;">
@@ -499,7 +553,7 @@ def request_consultation():
                 </div>
             </div>
             <div style="background-color: #EFEAE0; padding: 20px; text-align: center; font-size: 12px; color: #8F744D;">
-                <p style="margin: 0;">This is an automated notification from the last planner julz Hub website.</p>
+                <p style="margin: 0;">This is an automated notification from the Last Planner Julz Hub website.</p>
                 <p style="margin: 5px 0 0 0;">Reply directly to this email to contact the family.</p>
             </div>
         </div>
@@ -512,22 +566,15 @@ def request_consultation():
         logger.exception("Failed to send consultation email")
         return jsonify({"error": str(e), "message": "Consultation request received, but delivery could not be completed right now."}), 200
 
+
 def register_routes(app):
     from flask_cors import CORS
-
-    # 🟢 PRO-GRADE FIX: Allow API access from frontend across environments.
-    # Using a resource wildcard here keeps local development working while
-    # allowing the deployed frontend origin to call the API without 500-level CORS failures.
     CORS(app, resources={r"/api/*": {"origins": "*"}})
-
     app.register_blueprint(api)
 
 
 @api.route('/api/debug/payment-transactions', methods=['GET'])
 def debug_payment_transactions():
-    """Return recent PaymentTransaction records for debugging.
-    Enabled only when `DEBUG` is True or when ALLOW_DEBUG_ENDPOINTS is set in environment.
-    """
     try:
         from .models import PaymentTransaction
 
@@ -544,7 +591,6 @@ def debug_payment_transactions():
 
 @api.route('/api/debug/status', methods=['GET'])
 def debug_status():
-    """Return machine status for M-Pesa and mail environment configuration."""
     allow = current_app.config.get('DEBUG') or os.environ.get('ALLOW_DEBUG_ENDPOINTS', '').strip().lower() in ('1', 'true', 'yes')
     if not allow:
         return jsonify({'message': 'Debug endpoints are disabled on this instance.'}), 403

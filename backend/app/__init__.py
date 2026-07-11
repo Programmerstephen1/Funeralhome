@@ -5,6 +5,9 @@ from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 
+# PRO-GRADE ADDITION: Import JWT Manager
+from flask_jwt_extended import JWTManager
+
 # Load variables from local .env file (Render will use actual OS environment variables)
 load_dotenv()
 
@@ -17,16 +20,17 @@ def create_app():
     
     app = Flask(__name__, static_folder=frontend_dist, static_url_path='')
     
-    # --- 🔒 PRO-GRADE STRICT CORS RULES ---
+    # --- PRO-GRADE STRICT CORS RULES ---
     # Only allow requests from your specific frontend URLs to prevent unauthorized access.
     # Replace 'your-frontend-name' with your actual Render URL.
     allowed_origins = [
         "https://your-frontend-name.onrender.com", 
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "http://localhost:4173"  # ADDED: Your local Vite preview port
     ]
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
-    # --- 🟢 PRO-GRADE DATABASE ROUTER ---
+    # --- PRO-GRADE DATABASE ROUTER ---
     # Checks if a live cloud database URL is provided via Render Environment Variables.
     # If not, it safely falls back to local SQLite for development.
     raw_db_url = os.environ.get('DATABASE_URL')
@@ -36,14 +40,18 @@ def create_app():
         if raw_db_url.startswith("postgres://"):
             raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
         app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
-        print("🟢 CONNECTED: Live Cloud PostgreSQL Database")
+        print("CONNECTED: Live Cloud PostgreSQL Database")
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-        print("💻 CONNECTED: Local SQLite Database")
+        print("CONNECTED: Local SQLite Database")
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # --- SECURITY & JWT CONFIGURATION ---
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'super-secret-funeral-key')
-
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'secure-jwt-key-for-last-planner')
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400 # Token expires in 24 hours
+    
     # --- Email Configuration (Forced SSL on Port 465 to bypass Render firewall) ---
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 465))
@@ -86,6 +94,7 @@ def create_app():
     # Initialize extensions with the app
     db.init_app(app)
     mail.init_app(app)
+    jwt = JWTManager(app) # Initialize JWT here
 
     # Register routes
     from .routes import register_routes

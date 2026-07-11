@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { FileText, ArrowLeft, PenTool } from "lucide-react";
+import { Link } from "react-router-dom"; // PRO-GRADE: React Router
 import { Button, Card, CardBody, Modal } from "../components";
 
 export default function LiveJournalPage({ dynamicId }) {
   const [memorialData, setMemorialData] = useState({ name: "our beloved" });
   
-  // Persistent Journal Storage
   const [entries, setEntries] = useState(() => {
     try {
       const saved = localStorage.getItem(`LastPlannerJulz_Journal_${dynamicId}`);
       return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
 
   const [showForm, setShowForm] = useState(false);
@@ -22,9 +20,7 @@ export default function LiveJournalPage({ dynamicId }) {
   useEffect(() => {
     if (dynamicId) {
       const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
-      if (allMemorials[dynamicId]) {
-        setMemorialData(allMemorials[dynamicId]);
-      }
+      if (allMemorials[dynamicId]) setMemorialData(allMemorials[dynamicId]);
     }
   }, [dynamicId]);
 
@@ -56,19 +52,17 @@ export default function LiveJournalPage({ dynamicId }) {
     <div className="bg-[#F8F6F0] py-12 min-h-screen">
       <div className="site-container max-w-4xl mx-auto">
         
-        <a 
-          href={`#memorial/${dynamicId || ''}`}
+        <Link 
+          to={`/memorial/${dynamicId || ''}`}
           className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
-        </a>
+        </Link>
 
         <section className="mb-16 text-center">
           <FileText size={48} className="mx-auto mb-4 text-[#A8895C]" />
           <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Timeline & Reflections</p>
-          <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">
-            Live Journal
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Live Journal</h1>
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto">
             A chronological space for updates, anniversaries, and ongoing reflections celebrating {memorialData.name}.
           </p>
@@ -87,10 +81,8 @@ export default function LiveJournalPage({ dynamicId }) {
           <div className="relative border-l-2 border-[#D8CFBC] ml-4 md:ml-8 space-y-12 pb-12">
             {entries.map((entry) => (
               <div key={entry.id} className="relative pl-8 md:pl-12">
-                {/* Timeline Dot */}
                 <div className="absolute -left-[9px] top-6 w-4 h-4 rounded-full bg-[#A8895C] border-4 border-[#F8F6F0]"></div>
-                
-                <Card className="hover:shadow-md transition-shadow group border-[#E8DFD1]">
+                <Card className="hover:shadow-lg transition-shadow group border-[#E8DFD1]">
                   <CardBody className="p-8">
                     <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                       <div className="flex-1">
@@ -101,10 +93,7 @@ export default function LiveJournalPage({ dynamicId }) {
                         <p className="text-[#3D3530] leading-loose mb-6 font-serif text-lg italic text-black/80">
                           "{entry.excerpt}"
                         </p>
-                        <button
-                          onClick={() => setSelectedEntry(entry)}
-                          className="text-[#A8895C] border-b border-[#A8895C] pb-0.5 hover:text-[#1F2E27] hover:border-[#1F2E27] text-sm font-semibold transition-colors uppercase tracking-widest"
-                        >
+                        <button onClick={() => setSelectedEntry(entry)} className="text-[#A8895C] border-b border-[#A8895C] pb-0.5 hover:text-[#1F2E27] hover:border-[#1F2E27] text-sm font-semibold transition-colors uppercase tracking-widest">
                           Read Full Entry
                         </button>
                       </div>
@@ -123,25 +112,15 @@ export default function LiveJournalPage({ dynamicId }) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Your Name</label>
-              <input
-                type="text" value={newEntry.author} onChange={(e) => setNewEntry({ ...newEntry, author: e.target.value })}
-                placeholder="Your name" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]"
-              />
+              <input type="text" value={newEntry.author} onChange={(e) => setNewEntry({ ...newEntry, author: e.target.value })} placeholder="Your name" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Title</label>
-              <input
-                type="text" value={newEntry.title} onChange={(e) => setNewEntry({ ...newEntry, title: e.target.value })}
-                placeholder="A title for your reflection" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]"
-              />
+              <input type="text" value={newEntry.title} onChange={(e) => setNewEntry({ ...newEntry, title: e.target.value })} placeholder="A title for your reflection" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Your Entry</label>
-              <textarea
-                value={newEntry.full} onChange={(e) => setNewEntry({ ...newEntry, full: e.target.value })}
-                placeholder="Share a memory, reflection, or life update..." rows={6}
-                className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]"
-              />
+              <textarea value={newEntry.full} onChange={(e) => setNewEntry({ ...newEntry, full: e.target.value })} placeholder="Share a memory, reflection, or life update..." rows={6} className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
             </div>
             <div className="flex gap-3 pt-4">
               <Button variant="primary" onClick={handleAddEntry} className="flex-1 bg-[#1F2E27] hover:bg-[#A8895C] text-white">Publish Entry</Button>
