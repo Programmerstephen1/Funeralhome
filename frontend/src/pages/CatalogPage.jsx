@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route, Phone, Mail, CheckCircle, Camera, Video, PlayCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route as RouteIcon, Phone, Mail, CheckCircle, Camera, Video, PlayCircle, Star, AlertCircle, Zap } from "lucide-react";
 
 // --- 1. The Categories & Sub-Categories ---
 const categories = [
@@ -9,114 +10,62 @@ const categories = [
     desc: "A carefully curated selection of premium quality caskets and resting vessels.", 
     images: ["/images/caskets/casket3.jpeg"],
     subcategories: [
-      { 
-        id: "casket_list", 
-        title: "Caskets", 
-        desc: "Premium wood and metal caskets for dignified burials.", 
-        images: ["/images/caskets/casket3.jpeg"] 
-      },
-      { 
-        id: "urns", 
-        title: "Cremation Urns", 
-        desc: "Beautifully crafted vessels to preserve the ashes of your loved ones.", 
-        images: ["/images/urns/images(0).jpg"] 
-      }
+      { id: "casket_list", title: "Caskets", desc: "Premium wood and metal caskets for dignified burials.", images: ["/images/caskets/casket3.jpeg"] },
+      { id: "urns", title: "Cremation Urns", desc: "Beautifully crafted vessels to preserve the ashes of your loved ones.", images: ["/images/urns/images(0).jpg"] }
     ]
   },
-  { 
-    id: "wreaths", 
-    title: "Floral Wreaths", 
-    desc: "Beautifully arranged fresh floral tributes to honor your loved one.", 
-    images: ["/images/wreaths/wreath1.jpeg"] 
-  },
+  { id: "wreaths", title: "Floral Wreaths", desc: "Beautifully arranged fresh floral tributes to honor your loved one.", images: ["/images/wreaths/wreath1.jpeg"] },
   { 
     id: "setup", 
     title: "Service Setup", 
     desc: "Complete outdoor setup including premium tents, lowering gears, and decor.", 
-    images: [
-      "/images/tents/tent3.jpeg", 
-      "/images/lowering-gears/setup10.jpeg"
-    ],
+    images: ["/images/tents/tent3.jpeg", "/images/lowering-gears/setup10(0).jpeg"],
     subcategories: [
-      { 
-        id: "lowering_gears", 
-        title: "Lowering Gear", 
-        desc: "Professional metal lowering gear and graveside decor.", 
-        images: ["/images/lowering-gears/setup11.jpeg"] 
-      },
-      { 
-        id: "tents", 
-        title: "Tents", 
-        desc: "High-quality marquees, seating, and outdoor decor.", 
-        images: ["/images/tents/tent3.jpeg"] 
-      }
+      { id: "lowering_gears", title: "Lowering Gear", desc: "Professional metal lowering gear and graveside decor.", images: ["/images/lowering-gears/setup11.jpeg"] },
+      { id: "tents", title: "Tents", desc: "High-quality marquees, seating, and outdoor decor.", images: ["/images/tents/tent3.jpeg"] }
     ]
   },
-  { 
-    id: "hearses", 
-    title: "Hearses & Transport", 
-    desc: "Dignified hearse and fleet services for a peaceful journey.", 
-    images: ["/images/hearses/hearse1(0).jpeg"] 
-  },
-  { 
-    id: "catering", 
-    title: "Catering Services", 
-    desc: "Premium plated and buffet services with dedicated waitstaff; serving all major cities and towns in Kenya.", 
-    images: ["/images/catering.jpg"] 
-  },
-  { 
-    id: "attire", 
-    title: "Family & Burial Attire", 
-    desc: "Tailored suits, modest dresses, burial garments, and lapel ribbons.", 
-    images: ["/images/ladies attire/Lattire1.jpeg"] 
-  },
-  { 
-    id: "media", 
-    title: "Photography & Media", 
-    desc: "Professional photography, edited memorial videos, and live streaming.", 
-    images: ["/images/images().jpg"] 
-  }
+  { id: "hearses", title: "Hearses & Transport", desc: "Dignified hearse and fleet services for a peaceful journey.", images: ["/images/hearses/hearse1(0).jpeg"] },
+  { id: "catering", title: "Catering Services", desc: "Premium plated and buffet services with dedicated waitstaff; serving all major cities and towns in Kenya.", images: ["/images/catering.jpg"] },
+  { id: "attire", title: "Family & Burial Attire", desc: "Tailored suits, modest dresses, burial garments, and lapel ribbons.", images: ["/images/ladies attire/Lattire1.jpeg"] },
+  { id: "media", title: "Photography & Media", desc: "Professional photography, edited memorial videos, and live streaming.", images: ["/images/images().jpg"] }
 ];
 
-// --- 2. The Products ---
-const products = [
-  // ==========================================
+// --- 2. The Products (Caskets raised to minimum KSh 92,000) ---
+const fallbackProducts = [
   // --- CASKETS ---
-  // ==========================================
-  { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 65000, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
-  { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 45000, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
-  { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 85000, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
-  { id: 104, categoryId: "casket_list", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 70000, images: ["/images/caskets/casket4.jpg"] },
-  { id: 105, categoryId: "casket_list", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 60000, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
-  { id: 106, categoryId: "casket_list", title: "Two-Tone Executive Casket", desc: "Sophisticated two-tone metallic and wood finish.", price: 95000, images: ["/images/caskets/casket6().jpg", "/images/caskets/casket6(0).jpeg", "/images/caskets/casket6(1).jpg", "/images/caskets/casket6(2).jpg"] },
-  { id: 107, categoryId: "casket_list", title: "Brown Elegant Casket", desc: "Ornate design with beautiful silver hardware accents.", price: 110000, images: ["/images/caskets/casket7(1).jpeg", "/images/caskets/casket7(2).jpeg"] },
-  { id: 108, categoryId: "casket_list", title: "Classic Light Wood Casket", desc: "Traditional mid-tone solid wood construction.", price: 45000, images: ["/images/caskets/casket8.jpeg"] },
-  { id: 109, categoryId: "casket_list", title: "Dark Executive Wood", desc: "Deep dark finish for a commanding presence.", price: 68000, images: ["/images/caskets/casket9.jpeg"] },
-  { id: 110, categoryId: "casket_list", title: "Pearl White Casket", desc: "Glossy pure white body finished with silver handles.", price: 75000, images: ["/images/caskets/casket10(1).jpeg", "/images/caskets/casket10.jpeg"] },
-  { id: 111, categoryId: "casket_list", title: "Heavy Duty Bronze Casket", desc: "Durable metal construction featuring an executive finish.", price: 120000, images: ["/images/caskets/casket11(0).jpeg", "/images/caskets/casket11.jpeg"] },
-  { id: 112, categoryId: "casket_list", title: "Sleek White Wood Casket", desc: "Minimalist white casket with gold-tone hardware.", price: 55000, images: ["/images/caskets/casket12.jpeg"] },
-  { id: 113, categoryId: "casket_list", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 42000, images: ["/images/caskets/casket13.jpeg"] },
-  { id: 114, categoryId: "casket_list", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 80000, images: ["/images/caskets/casket14.jpeg"] },
-  { id: 115, categoryId: "casket_list", title: "Pure White Domed Casket", desc: "Elegant domed lid pure white design.", price: 62000, images: ["/images/caskets/casket15.jpeg"] },
-  { id: 116, categoryId: "casket_list", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 65000, images: ["/images/caskets/casket16.jpeg"] },
-  { id: 117, categoryId: "casket_list", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 66000, images: ["/images/caskets/casket17.jpeg"] },
-  { id: 118, categoryId: "casket_list", title: "Solid Oak Heritage Casket", desc: "Heavy-duty solid oak construction with a natural grain.", price: 80000, images: ["/images/caskets/casket18(0).jpg", "/images/caskets/casket18.jpg" ] },
-  { id: 119, categoryId: "casket_list", title: "Serenity Blue Interior Casket", desc: "Clean white exterior revealing a peaceful blue and white padded interior.", price: 55000, images: ["/images/caskets/casket19(0).jpg", "/images/caskets/casket19(1).jpg", "/images/caskets/casket19(2).jpg", "/images/caskets/casket19(3).jpg", "/images/caskets/casket19(4).jpg"] },
-  { id: 120, categoryId: "casket_list", title: "Premium Wood Glass-Top Casket", desc: "Solid wood construction featuring a full-length glass viewing panel.", price: 95000, images: ["/images/caskets/casket20().jpg", "/images/caskets/casket20(0).jpg", "/images/caskets/casket20(1).jpg", "/images/caskets/casket20(2).jpg"] },
-  { id: 121, categoryId: "casket_list", title: "White & Gold Trim Casket", desc: "Pristine white finish accented with elegant gold-tone border bands.", price: 70000, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
-  { id: 122, categoryId: "casket_list", title: "Classic White Domed Casket", desc: "Traditional domed lid with premium white finish.", price: 50000, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
-  { id: 123, categoryId: "casket_list", title: "Pristine White Metal Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 95000, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
-  { id: 124, categoryId: "casket_list", title: "Obsidian Black Metal Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 105000, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
-  { id: 125, categoryId: "casket_list", title: "Walnut Executive Metal Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 100000, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
-  { id: 126, categoryId: "casket_list", title: "Glossy Black Casket", desc: "Highly polished black finish for a modern look.", price: 98000, images: ["/images/caskets/casket26.jpeg"] },
-  { id: 127, categoryId: "casket_list", title: "Cream Velvet Interior Casket", desc: "Light exterior finish paired with a luxurious cream velvet interior.", price: 72000, images: ["/images/caskets/casket27().jpg", "/images/caskets/casket27(0).jpg", "/images/caskets/casket27(1).jpg"] },
-  { id: 128, categoryId: "casket_list", title: "Premium Dark Oak Casket", desc: "High-grade oak with a deep stain and intricate handles.", price: 82000, images: ["/images/caskets/casket28().jpeg"] },
-  { id: 129, categoryId: "casket_list", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 92000, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
-  { id: 130, categoryId: "casket_list", title: "Half-Glass Wooden Casket", desc: "High-end wooden design featuring a split glass viewing lid.", price: 98000, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
+  { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
+  { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 92000, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
+  { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 105000, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
+  { id: 104, categoryId: "casket_list", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 98000, images: ["/images/caskets/casket4.jpg"] },
+  { id: 105, categoryId: "casket_list", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 96000, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
+  { id: 106, categoryId: "casket_list", title: "Two-Tone Executive Casket", desc: "Sophisticated two-tone metallic and wood finish.", price: 115000, images: ["/images/caskets/casket6().jpg", "/images/caskets/casket6(0).jpeg", "/images/caskets/casket6(1).jpg", "/images/caskets/casket6(2).jpg"] },
+  { id: 107, categoryId: "casket_list", title: "Brown Elegant Casket", desc: "Ornate design with beautiful silver hardware accents.", price: 125000, images: ["/images/caskets/casket7(1).jpeg", "/images/caskets/casket7(2).jpeg"] },
+  { id: 108, categoryId: "casket_list", title: "Classic Light Wood Casket", desc: "Traditional mid-tone solid wood construction.", price: 92000, images: ["/images/caskets/casket8.jpeg"] },
+  { id: 109, categoryId: "casket_list", title: "Dark Executive Wood", desc: "Deep dark finish for a commanding presence.", price: 97000, images: ["/images/caskets/casket9.jpeg"] },
+  { id: 110, categoryId: "casket_list", title: "Pearl White Casket", desc: "Glossy pure white body finished with silver handles.", price: 105000, images: ["/images/caskets/casket10(1).jpeg", "/images/caskets/casket10.jpeg"] },
+  { id: 111, categoryId: "casket_list", title: "Heavy Duty Bronze Casket", desc: "Durable metal construction featuring an executive finish.", price: 145000, images: ["/images/caskets/casket11(0).jpeg", "/images/caskets/casket11.jpeg"] },
+  { id: 112, categoryId: "casket_list", title: "Sleek White Wood Casket", desc: "Minimalist white casket with gold-tone hardware.", price: 94000, images: ["/images/caskets/casket12.jpeg"] },
+  { id: 113, categoryId: "casket_list", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 92000, images: ["/images/caskets/casket13.jpeg"] },
+  { id: 114, categoryId: "casket_list", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 110000, images: ["/images/caskets/casket14.jpeg"] },
+  { id: 115, categoryId: "casket_list", title: "Pure White Domed Casket", desc: "Elegant domed lid pure white design.", price: 96000, images: ["/images/caskets/casket15.jpeg"] },
+  { id: 116, categoryId: "casket_list", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 98000, images: ["/images/caskets/casket16.jpeg"] },
+  { id: 117, categoryId: "casket_list", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 99000, images: ["/images/caskets/casket17.jpeg"] },
+  { id: 118, categoryId: "casket_list", title: "Solid Oak Heritage Casket", desc: "Heavy-duty solid oak construction with a natural grain.", price: 115000, images: ["/images/caskets/casket18(0).jpg", "/images/caskets/casket18.jpg" ] },
+  { id: 119, categoryId: "casket_list", title: "Serenity Blue Interior Casket", desc: "Clean white exterior revealing a peaceful blue and white padded interior.", price: 95000, images: ["/images/caskets/casket19(0).jpg", "/images/caskets/casket19(1).jpg", "/images/caskets/casket19(2).jpg", "/images/caskets/casket19(3).jpg", "/images/caskets/casket19(4).jpg"] },
+  { id: 120, categoryId: "casket_list", title: "Premium Wood Glass-Top Casket", desc: "Solid wood construction featuring a full-length glass viewing panel.", price: 125000, images: ["/images/caskets/casket20().jpg", "/images/caskets/casket20(0).jpg", "/images/caskets/casket20(1).jpg", "/images/caskets/casket20(2).jpg"] },
+  { id: 121, categoryId: "casket_list", title: "White & Gold Trim Casket", desc: "Pristine white finish accented with elegant gold-tone border bands.", price: 105000, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
+  { id: 122, categoryId: "casket_list", title: "Classic White Domed Casket", desc: "Traditional domed lid with premium white finish.", price: 92000, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
+  { id: 123, categoryId: "casket_list", title: "Pristine White Metal Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 125000, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
+  { id: 124, categoryId: "casket_list", title: "Obsidian Black Metal Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 135000, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
+  { id: 125, categoryId: "casket_list", title: "Walnut Executive Metal Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 130000, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
+  { id: 126, categoryId: "casket_list", title: "Glossy Black Casket", desc: "Highly polished black finish for a modern look.", price: 118000, images: ["/images/caskets/casket26.jpeg"] },
+  { id: 127, categoryId: "casket_list", title: "Cream Velvet Interior Casket", desc: "Light exterior finish paired with a luxurious cream velvet interior.", price: 108000, images: ["/images/caskets/casket27().jpg", "/images/caskets/casket27(0).jpg", "/images/caskets/casket27(1).jpg"] },
+  { id: 128, categoryId: "casket_list", title: "Premium Dark Oak Casket", desc: "High-grade oak with a deep stain and intricate handles.", price: 115000, images: ["/images/caskets/casket28().jpeg"] },
+  { id: 129, categoryId: "casket_list", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 125000, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
+  { id: 130, categoryId: "casket_list", title: "Half-Glass Wooden Casket", desc: "High-end wooden design featuring a split glass viewing lid.", price: 128000, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
 
-  // ==========================================
   // --- URNS ---
-  // ==========================================
   { id: 151, categoryId: "urns", title: "Classic Marble Box Urn", desc: "Solid cultured marble in a deep burgundy finish.", price: 18000, images: ["/images/urns/images(0).jpg"] },
   { id: 152, categoryId: "urns", title: "Rustic Clay Urn", desc: "Hand-crafted rustic earth-tone vessel.", price: 12000, images: ["/images/urns/images(1).jpg"] },
   { id: 153, categoryId: "urns", title: "Bronze Flying Birds Urn", desc: "Elegant brass urn with engraved flying doves.", price: 22000, images: ["/images/urns/images(2).jpg"] },
@@ -134,9 +83,7 @@ const products = [
   { id: 165, categoryId: "urns", title: "Midnight Blue Keepsake", desc: "Deep blue speckled finish with a velvet bag.", price: 16500, images: ["/images/urns/images(14).jpg"] },
   { id: 166, categoryId: "urns", title: "Silver Teardrop Urn", desc: "Unique teardrop shape with intricate silver engraving.", price: 24000, images: ["/images/urns/images(15).jpg"] },
 
-  // ==========================================
   // --- WREATHS ---
-  // ==========================================
   { id: 201, categoryId: "wreaths", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 18000, images: ["/images/wreaths/wreath1.jpeg"] },
   { id: 202, categoryId: "wreaths", title: "Classic White & Green Ring", desc: "Beautifully arranged traditional circular wreath.", price: 8000, images: ["/images/wreaths/wreath2.jpeg"] },
   { id: 203, categoryId: "wreaths", title: "Yellow & Blue Floral Dome", desc: "Vibrant yellow and blue dome floral mix.", price: 14000, images: ["/images/wreaths/wreath3.jpeg"] },
@@ -169,9 +116,7 @@ const products = [
   { id: 231, categoryId: "wreaths", title: "Standing White Sympathy Spray", desc: "Tall standing basket arrangement for the graveside or chapel.", price: 16000, images: ["/images/wreaths/wreath31.jpg"] },
   { id: 232, categoryId: "wreaths", title: "Large Red & White Casket Spray", desc: "Oversized, lush arrangement filled with fresh cut red and white flowers.", price: 26000, images: ["/images/wreaths/wreath32.jpg"] },
 
-  // ==========================================
   // --- LOWERING GEARS & SETUP ---
-  // ==========================================
   { id: 300, categoryId: "lowering_gears", title: "Executive Placement Setup ", desc: "Complete elegant lowering service setup.", price: 25000, images: ["/images/lowering-gears/setup10(0).jpeg", "/images/lowering-gears/setup10(1).jpeg"] },
   { id: 301, categoryId: "lowering_gears", title: "Graveside AstroTurf Setup", desc: "Lowering gear accompanied by premium artificial grass.", price: 20000, images: ["/images/lowering-gears/setup.jpeg"] },
   { id: 302, categoryId: "lowering_gears", title: "Standard Lowering Device 1", desc: "Heavy-duty metal lowering gear mechanism.", price: 15000, images: ["/images/lowering-gears/setup1.jpeg"] },
@@ -184,9 +129,7 @@ const products = [
   { id: 309, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 2", desc: "Red carpet setup leading to the tent.", price: 35000, images: ["/images/lowering-gears/setup16.jpeg"] }, 
   { id: 310, categoryId: "lowering_gears", title: "Executive Walkway 2", desc: "Long red carpet runner for family access.", price: 18000, images: ["/images/lowering-gears/setup17.jpeg"] },
 
-  // ==========================================
   // --- TENTS ---
-  // ==========================================
   { id: 351, categoryId: "tents", title: "Standard Pagoda Tent 1", desc: "High-peak white tent ideal for family seating.", price: 10000, images: ["/images/tents/tent1.jpeg"] },
   { id: 352, categoryId: "tents", title: "Standard Pagoda Tent 2", desc: "Medium-sized white tent for outdoor gatherings.", price: 10000, images: ["/images/tents/tent2.jpeg"] },
   { id: 353, categoryId: "tents", title: "Premium Marquee Tent", desc: "Spacious clear-span marquee tent for large gatherings and VIPs.", price: 50000, images: ["/images/tents/tent3.jpeg"] },
@@ -195,18 +138,14 @@ const products = [
   { id: 356, categoryId: "tents", title: "Extended Gathering Tent 1", desc: "Large open-air structure for shielding large groups.", price: 25000, images: ["/images/tents/tent6.jpeg"] },
   { id: 357, categoryId: "tents", title: "Extended Gathering Tent 2", desc: "Spacious multi-pole tent setup for extended family.", price: 25000, images: ["/images/tents/tent7.jpeg"] },
 
-  // ==========================================
   // --- HEARSES ---
-  // ==========================================
   { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 25000, images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
   { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 28000, images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
   { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 15000, images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
   { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 35000, images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
   { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, images: ["/images/hearses/hearse4(0).jpg"] },
 
-  // ==========================================
   // --- ATTIRE (MEN'S & WOMEN'S) ---
-  // ==========================================
   { id: 601, categoryId: "attire", title: "Premium Men's Burial Suit", desc: "Complete 3-piece dark suit tailored specifically for the deceased. Includes shirt and tie.", price: 18000, images: ["/assets/mens-burial-suit.jpg"] },
   { id: 602, categoryId: "attire", title: "Men's Traditional Shroud", desc: "Dignified, high-quality fabric shroud tailored for traditional burial rites.", price: 12000, images: ["/assets/mens-shroud.jpg"] },
   { id: 603, categoryId: "attire", title: "Custom Men's Suit (Family)", desc: "Tailored 3-piece dark suit for family members. Includes measurements and fitting sessions.", price: 15000, images: ["/assets/suit-mens.jpg"] },
@@ -214,9 +153,7 @@ const products = [
   { id: 605, categoryId: "attire", title: "Elegant White Lace Burial Dress", desc: "Beautifully detailed white lace modest dress for family members or burial.", price: 8500, images: ["/images/ladies attire/Lattire1().jpeg", "/images/ladies attire/Lattire1.jpeg"] },
   { id: 606, categoryId: "attire", title: "Custom Ribbon Lapels", desc: "Personalized memorial ribbons for family and guests (Pack of 50).", price: 2500, images: ["/assets/ribbons.jpg"] },
 
-  // ==========================================
   // --- MEDIA ---
-  // ==========================================
   { id: 701, categoryId: "media", title: "Standard Photo Package", desc: "One professional photographer for 6 hours. Includes digital gallery and 50 printed photos.", price: 25000, images: ["/images/images().jpg"] },
   { id: 702, categoryId: "media", title: "Cinematic Videography & Livestream", desc: "Two videographers, edited memorial video, and professional livestream link for diaspora relatives.", price: 55000, images: ["/images/images.jpg"] }
 ];
@@ -230,104 +167,132 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
   const nextImg = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setImgIndex((prev) => (prev + 1) % images.length);
+    let newIndex = imgIndex + 1;
+    if (newIndex >= images.length) {
+      newIndex = 0;
+    }
+    setImgIndex(newIndex);
   };
 
   const prevImg = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setImgIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    let newIndex = imgIndex - 1;
+    if (newIndex < 0) {
+      newIndex = images.length - 1;
+    }
+    setImgIndex(newIndex);
   };
 
   return (
-    <div className={`w-full ${aspectClass} bg-[#F4F1EA] border-b border-[#E8DFD1] overflow-hidden relative group/slider`}>
+    <div className={`w-full ${aspectClass} bg-white overflow-hidden relative group/slider`}>
       <img 
         src={images[imgIndex]} 
         alt={altText}
         loading="lazy"
         onError={(e) => { e.target.src = "https://via.placeholder.com/400x400?text=Photo+Pending" }} 
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700"
       />
       
       {images.length > 1 && (
         <>
-          <button 
-            onClick={prevImg}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-1.5 rounded-full text-[#1F2E27] hover:bg-[#A8895C] hover:text-white opacity-0 group-hover/slider:opacity-100 transition-all z-10"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button 
-            onClick={nextImg}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-1.5 rounded-full text-[#1F2E27] hover:bg-[#A8895C] hover:text-white opacity-0 group-hover/slider:opacity-100 transition-all z-10"
-          >
-            <ChevronRight size={18} />
-          </button>
-          <div className="absolute bottom-3 left-0 w-full flex justify-center gap-1.5 z-10">
-            {images.map((_, idx) => (
-              <div 
-                key={idx} 
-                className={`h-1.5 rounded-full transition-all ${idx === imgIndex ? "bg-[#A8895C] w-4" : "bg-white/60 w-1.5"}`}
-              />
-            ))}
-          </div>
+          <button onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 transition-all z-10 shadow-sm"><ChevronLeft size={16} /></button>
+          <button onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 transition-all z-10 shadow-sm"><ChevronRight size={16} /></button>
         </>
       )}
     </div>
   );
 };
 
-// --- COMPONENT: Category / Sub-Category Card (No Prices) ---
+// --- COMPONENT: Category Card ---
 const CategoryCard = React.memo(function CategoryCard({ item, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className="group flex w-full flex-col overflow-hidden border border-[#E8DFD1] bg-white text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-[0_18px_50px_rgba(31,46,39,0.08)]"
+      className="group flex w-full flex-col overflow-hidden border border-[#E8DFD1] bg-white text-left transition-all duration-300 hover:shadow-lg rounded"
     >
       <div className="relative">
         <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-[4/3]" />
-        <div className="absolute left-4 top-4 rounded-full border border-white/60 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#1F2E27] backdrop-blur">
-          Collection
-        </div>
       </div>
-      <div className="flex w-full flex-grow flex-col p-6">
-        <h3 className="mb-3 text-xl font-serif text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
+      <div className="flex w-full flex-grow flex-col p-4">
+        <h3 className="mb-2 text-lg font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
           {item.title}
         </h3>
-        <p className="mb-6 text-sm leading-relaxed text-[#3D3530]">
+        <p className="text-xs text-[#716860] line-clamp-2">
           {item.desc}
         </p>
-        <span className="mt-auto w-fit border-b border-[#1F2E27] pb-1 text-xs font-semibold uppercase tracking-widest text-[#1F2E27] transition-colors group-hover:border-[#A8895C] group-hover:text-[#A8895C]">
-          View Collection
-        </span>
       </div>
     </button>
   );
 });
 
-// --- COMPONENT: Product Card (Shows Prices and Add to Cart) ---
+// --- COMPONENT: Product Card (Dynamic Admin Tags) ---
 const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAddToCart, onOpenRentalModal }) {
+  
+  const ratingScore = item.average_rating || 0;
+  const reviewCount = item.review_count || 0;
+  
+  // NEW: Dynamic Admin Discount Calculation
+  const discountPercent = item.discount_percent || 0;
+  const originalPrice = discountPercent > 0 ? (item.price / (1 - discountPercent / 100)) : item.price;
+
+  let starsArray = [];
+  for (let i = 0; i < 5; i++) {
+    if (i < Math.round(ratingScore)) {
+      starsArray.push(<Star key={i} size={12} className="text-[#F5A623] fill-[#F5A623]" />);
+    } else {
+      starsArray.push(<Star key={i} size={12} className="text-[#E8DFD1] fill-transparent" />);
+    }
+  }
+
   return (
-    <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-[0_18px_50px_rgba(31,46,39,0.08)]">
-      <div className="relative">
-        <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-square" />
-        <div className="absolute left-4 top-4 rounded-full bg-[#1F2E27]/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F8F6F0] backdrop-blur">
-          {item.categoryId?.replace(/_/g, " ")}
-        </div>
+    <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:border-[#A8895C] hover:shadow-xl rounded-md relative">
+      
+      {/* Category Tag */}
+      <div className="absolute top-2 left-2 bg-[#1F2E27]/90 text-white text-[9px] font-bold px-2 py-0.5 rounded z-20 uppercase tracking-widest">
+        {item.categoryId?.replace(/_/g, " ")}
       </div>
-      <div className="flex flex-grow flex-col p-6 text-center">
-        <h3 className="mx-4 mb-1 border-b border-[#E8DFD1] pb-1 text-xl font-serif text-[#1F2E27]">
+
+      {/* Dynamic Discount Badge (Only renders if admin sets a discount > 0) */}
+      {discountPercent > 0 && (
+        <div className="absolute top-2 right-2 bg-[#FF4747] text-white text-[10px] font-bold px-2 py-1 rounded z-20">
+          {discountPercent}% OFF
+        </div>
+      )}
+
+      <Link to={`/product/${item.id}`} className="relative block border-b border-[#F8F6F0]">
+        <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-square" />
+      </Link>
+      
+      <div className="flex flex-grow flex-col p-4">
+        <Link to={`/product/${item.id}`} className="text-sm font-semibold text-[#1F2E27] hover:text-[#A8895C] transition-colors line-clamp-2 mb-2 leading-tight h-10">
           {item.title}
-        </h3>
-        <div className="mb-3 text-xs text-[#8F847C]">Code: #{item.id}</div>
-        <p className="mb-6 px-2 text-sm leading-relaxed text-[#3D3530]">
-          {item.desc}
-        </p>
-        <div className="mt-auto flex flex-col items-center gap-4">
-          <span className="rounded-full border border-[#E8DFD1] bg-[#F8F6F0] px-4 py-2 text-lg font-semibold text-[#1F2E27]">
+        </Link>
+        
+        {/* Dynamic Pricing Layout */}
+        <div className="flex flex-col mb-2 h-10 justify-center">
+          <span className={`text-xl font-bold ${discountPercent > 0 ? 'text-[#FF4747]' : 'text-[#1F2E27]'}`}>
             KSh {item.price.toLocaleString()}
-            {item.categoryId === "hearses" && <span className="mt-1 block text-xs font-normal text-[#8F847C]">+ Dynamic Mileage</span>}
+            {item.categoryId === "hearses" && <span className="text-[10px] text-[#8F847C] font-normal"> / day</span>}
           </span>
+          {discountPercent > 0 && (
+            <span className="text-xs text-[#8F847C] line-through">
+              KSh {Math.round(originalPrice).toLocaleString()}
+            </span>
+          )}
+        </div>
+
+        {/* Rating and Reviews (Shows actual DB count or clean text) */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex">{starsArray}</div>
+          <span className="text-[10px] text-[#716860]">{ratingScore > 0 ? ratingScore.toFixed(1) : ""}</span>
+          <span className="text-[10px] text-[#716860] border-l border-[#E8DFD1] pl-2">
+            {reviewCount > 0 ? `${reviewCount} Reviews` : "0 Reviews"}
+          </span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-auto flex gap-2">
           <button 
             onClick={() => {
               if (item.categoryId === "hearses") {
@@ -337,21 +302,27 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
               }
             }}
             disabled={recentlyAdded === item.id}
-            className={`flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm uppercase tracking-wider transition-all duration-300 ${
+            className={`flex-1 py-2 text-xs font-bold rounded transition-colors ${
               recentlyAdded === item.id 
-                ? "bg-emerald-700 text-white" 
-                : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
+                ? "bg-green-600 text-white" 
+                : "bg-[#F5A623] text-white hover:bg-[#E09612]"
             }`}
           >
-            {recentlyAdded === item.id ? (
-              <><Check size={16} /> Added</>
-            ) : (
-              item.categoryId === "hearses" ? (
-                "Schedule Hearse"
-              ) : (
-                <><ShoppingCart size={16} /> Add to Booking</>
-              )
-            )}
+            {recentlyAdded === item.id ? <span className="flex items-center justify-center gap-1"><Check size={14}/> Added</span> : "Add to Cart"}
+          </button>
+          
+          <button 
+             onClick={() => {
+              if (item.categoryId === "hearses") {
+                onOpenRentalModal(item);
+              } else {
+                onAddToCart(item);
+                window.location.hash = "#cart";
+              }
+            }}
+            className="flex-1 py-2 text-xs font-bold bg-[#FF4747] text-white rounded hover:bg-[#E63939] transition-colors"
+          >
+            Buy Now
           </button>
         </div>
       </div>
@@ -369,40 +340,60 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [selectedHearse, setSelectedHearse] = useState(null);
   
-  // Advanced State for Enterprise Pricing
+  // LIVE DATABASE STATE
+  const [liveCatalogItems, setLiveCatalogItems] = useState([]);
+  const [serverError, setServerError] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  
   const [rentalDetails, setRentalDetails] = useState({ 
-    pickup: "", 
-    dropoff: "", 
-    pickupDate: "", 
-    returnDate: "",
-    mileagePlan: "limited", 
-    estimatedDistance: "",
-    fuelPolicy: "full_to_full" 
+    pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" 
   });
 
-  // State for the custom Forms
-  const [cateringForm, setCateringForm] = useState({ name: "", phone: "", requirements: "" });
+  const [visibleProducts, setVisibleProducts] = useState([]);
 
-  // Check if we are in one of the new full-window immersive modes
-  const isImmersiveMode = activeCategory && (activeCategory.id === "catering" || activeCategory.id === "media");
+  // FETCH PRODUCTS ON LOAD
+  useEffect(() => {
+    fetch(`${API_URL}/api/products`)
+      .then(res => {
+        if (!res.ok) throw new Error("Server disconnected");
+        return res.json();
+      })
+      .then(data => {
+        setLiveCatalogItems(data);
+        setServerError(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch API products:", err);
+        setServerError(true);
+      });
+  }, [API_URL]);
 
   // Robust Deep-Link Listener
   useEffect(() => {
     if (dynamicId) {
-      const mainCat = categories.find(c => c.id === dynamicId);
-      if (mainCat) {
-        setActiveCategory(mainCat);
+      let foundMainCat = null;
+      for (let i = 0; i < categories.length; i++) {
+        if (categories[i].id === dynamicId) {
+          foundMainCat = categories[i];
+        }
+      }
+
+      if (foundMainCat) {
+        setActiveCategory(foundMainCat);
         setActiveSubCategory(null);
         return;
       }
       
-      for (const cat of categories) {
+      for (let i = 0; i < categories.length; i++) {
+        let cat = categories[i];
         if (cat.subcategories) {
-          const sub = cat.subcategories.find(s => s.id === dynamicId);
-          if (sub) {
-            setActiveCategory(cat);
-            setActiveSubCategory(sub);
-            return;
+          for (let j = 0; j < cat.subcategories.length; j++) {
+            let sub = cat.subcategories[j];
+            if (sub.id === dynamicId) {
+              setActiveCategory(cat);
+              setActiveSubCategory(sub);
+              return;
+            }
           }
         }
       }
@@ -412,19 +403,70 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
   }, [dynamicId]);
 
-  const handleAddToCart = useCallback((product) => {
+  // Handle Search and Filtering Logic
+  useEffect(() => {
+    let currentDisplay = fallbackProducts;
+    if (liveCatalogItems.length > 0) {
+      currentDisplay = liveCatalogItems;
+    }
+
+    let tempFiltered = [];
+    let query = searchTerm.toLowerCase();
+
+    for (let i = 0; i < currentDisplay.length; i++) {
+      let product = currentDisplay[i];
+      let isMatch = false;
+
+      if (query === "") {
+        isMatch = true;
+      } else {
+        if (product.title && product.title.toLowerCase().includes(query)) {
+          isMatch = true;
+        } else if (product.desc && product.desc.toLowerCase().includes(query)) {
+          isMatch = true;
+        } else if (product.categoryId && product.categoryId.toLowerCase().includes(query)) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        tempFiltered.push(product);
+      }
+    }
+
+    let tempVisible = [];
+    let targetCategory = "";
+    if (activeSubCategory) {
+      targetCategory = activeSubCategory.id;
+    } else if (activeCategory) {
+      targetCategory = activeCategory.id;
+    }
+
+    for (let j = 0; j < tempFiltered.length; j++) {
+      let p = tempFiltered[j];
+      if (targetCategory === "") {
+         tempVisible.push(p);
+      } else if (p.categoryId === targetCategory) {
+         tempVisible.push(p);
+      }
+    }
+
+    setVisibleProducts(tempVisible);
+
+  }, [searchTerm, activeCategory, activeSubCategory, liveCatalogItems]);
+
+  const handleAddToCart = (product) => {
     addToCart(product);
     setRecentlyAdded(product.id);
     setTimeout(() => setRecentlyAdded(null), 2000);
-  }, [addToCart]);
+  };
 
-  const handleOpenRentalModal = useCallback((hearse) => {
+  const handleOpenRentalModal = (hearse) => {
     setSelectedHearse(hearse);
     setShowRentalModal(true);
-  }, []);
+  };
 
-  // --- DYNAMIC PRICING ENGINE ---
-  const calculateTotal = useCallback(() => {
+  const calculateTotal = () => {
     if (!selectedHearse) return 0;
     
     const baseDailyRate = selectedHearse.price;
@@ -457,9 +499,9 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
 
     return totalBasePrice + distanceCharge + fuelCharge;
-  }, [rentalDetails, selectedHearse]);
+  };
 
-  const handleConfirmRental = useCallback(() => {
+  const handleConfirmRental = () => {
     const finalCalculatedPrice = calculateTotal();
     
     const customizedHearse = {
@@ -480,29 +522,31 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     
     setShowRentalModal(false);
     setRentalDetails({ pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" });
-  }, [addToCart, bookRental, calculateTotal, selectedHearse]);
+  };
 
   const handleBackClick = () => {
-    if (activeCategory?.subcategories && activeSubCategory) {
+    if (activeCategory && activeCategory.subcategories && activeSubCategory) {
       window.location.hash = `#catalog/${activeCategory.id}`;
     } else {
       window.location.hash = "#catalog";
     }
   };
 
-  const isFormValid = rentalDetails.pickup.trim() && rentalDetails.dropoff.trim() && rentalDetails.pickupDate && rentalDetails.returnDate && rentalDetails.estimatedDistance > 0;
+  let isFormValid = false;
+  if (rentalDetails.pickup !== "" && rentalDetails.dropoff !== "" && rentalDetails.pickupDate !== "" && rentalDetails.returnDate !== "" && rentalDetails.estimatedDistance > 0) {
+    isFormValid = true;
+  }
 
-  const filteredProducts = useMemo(() => products.filter((product) => {
-    const query = searchTerm.trim().toLowerCase();
-    if (!query) return true;
-    return [product.title, product.desc, product.categoryId].some((value) => value?.toLowerCase().includes(query));
-  }), [searchTerm]);
-
-  const visibleProducts = useMemo(() => filteredProducts.filter((p) => p.categoryId === (activeSubCategory ? activeSubCategory.id : activeCategory?.id)), [filteredProducts, activeCategory, activeSubCategory]);
+  let isImmersiveMode = false;
+  if (activeCategory) {
+    if (activeCategory.id === "catering" || activeCategory.id === "media") {
+      isImmersiveMode = true;
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] flex flex-col relative">
-      <div className="pt-12 pb-24 flex-grow">
+    <div className="min-h-screen bg-[#F4F4F4] flex flex-col relative">
+      <div className="pt-8 pb-24 flex-grow">
         
         {/* ========================================================================= */}
         {/* STANDARD DIRECTORY LAYOUT (Hidden if in full-screen immersive mode) */}
@@ -510,45 +554,40 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         {!isImmersiveMode && (
           <section className="site-container px-4 mx-auto max-w-6xl animate-fadeIn">
             
-            {/* Page Header */}
-            <div className="mb-12 text-center">
-              <p className="mb-3 text-sm uppercase tracking-[0.28em] text-[#A8895C]">
-                Classic Provisions
-              </p>
-              <h2 className="mb-4 text-4xl font-serif font-semibold text-[#1F2E27]">
-                Curated Memorial Catalog
-              </h2>
-              <p className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-[#3D3530]">
-                Discover thoughtful memorial selections presented with clarity, dignity, and refined detail for every part of the journey.
-              </p>
-              <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-                <div className="rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-                  <span className="mr-2 inline-flex items-center"><ShieldCheck size={16} /></span>
-                  Secure checkout via M-Pesa
+            {/* Page Header (E-Commerce Style) */}
+            <div className="mb-8 bg-white p-6 rounded shadow-sm border border-[#E8DFD1]">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#1F2E27]">Official Store</h2>
+                  <p className="text-xs text-[#716860] mt-1">
+                    Quality memorial selections fulfilled directly by Last Planner Julz.
+                  </p>
                 </div>
-                <div className="rounded-full border border-[#E8DFD1] bg-white px-4 py-2 text-sm text-[#3D3530]">
-                  Thoughtful arrangement options
-                </div>
-                <div className="rounded-full border border-[#E8DFD1] bg-white px-4 py-2 text-sm text-[#3D3530]">
-                  Flexible scheduling support
-                </div>
-              </div>
 
-              <div className="mx-auto mb-8 flex max-w-xl items-center gap-3 rounded-full border border-[#E8DFD1] bg-white px-4 py-3 shadow-sm">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search offerings, categories, or services"
-                  className="w-full border-none bg-transparent text-sm outline-none placeholder:text-[#8F847C]"
-                />
-                <span className="text-xs uppercase tracking-[0.25em] text-[#A8895C]">Find</span>
+                <div className="flex w-full md:w-96 items-center rounded border border-[#E8DFD1] focus-within:border-[#A8895C] overflow-hidden bg-[#F8F6F0]">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full bg-transparent px-3 py-2 text-sm outline-none text-[#3D3530]"
+                  />
+                  <button className="bg-[#A8895C] text-white px-4 py-2 text-sm font-bold">Search</button>
+                </div>
               </div>
             </div>
 
+            {/* SERVER ERROR WARNING */}
+            {serverError && (
+              <div className="max-w-3xl mx-auto mb-8 bg-[#FFF4F4] border border-[#FF4747] text-[#FF4747] p-3 rounded flex items-center gap-3 shadow-sm text-sm">
+                <AlertCircle size={16} className="shrink-0" />
+                <p>Live database connection unavailable. Rendering offline catalog inventory.</p>
+              </div>
+            )}
+
             {/* VIEW 1: Main Directory Cards */}
             {!activeCategory && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((cat) => (
                   <CategoryCard 
                     key={cat.id} 
@@ -564,12 +603,12 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               <div>
                 <button 
                   onClick={handleBackClick}
-                  className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+                  className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold mb-6"
                 >
-                  <ChevronLeft size={16} /> Back to Directory
+                  <ChevronLeft size={16} /> Back to Categories
                 </button>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {activeCategory.subcategories.map((sub) => (
                     <CategoryCard 
                       key={sub.id} 
@@ -581,21 +620,24 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               </div>
             )}
 
-            {/* VIEW 3: Final Products Grid (For Standard Categories) */}
+            {/* VIEW 3: Final Products Grid */}
             {activeCategory && (!activeCategory.subcategories || activeSubCategory) && (
               <div>
-                <button 
-                  onClick={handleBackClick}
-                  className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
-                >
-                  <ChevronLeft size={16} /> 
-                  {activeCategory.subcategories ? `Back to ${activeCategory.title}` : "Back to Directory"}
-                </button>
+                <div className="flex justify-between items-center mb-6">
+                  <button 
+                    onClick={handleBackClick}
+                    className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold"
+                  >
+                    <ChevronLeft size={16} /> 
+                    {activeCategory.subcategories ? `Back to ${activeCategory.title}` : "Back to Categories"}
+                  </button>
+                  <span className="text-xs text-[#8F847C] font-bold">{visibleProducts.length} Products Found</span>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {visibleProducts.length === 0 ? (
-                    <div className="col-span-full rounded-2xl border border-dashed border-[#E8DFD1] bg-white p-8 text-center text-sm text-[#3D3530]">
-                      No offerings matched your search yet. Try a broader term or return to the full directory.
+                    <div className="col-span-full rounded border border-dashed border-[#E8DFD1] bg-white p-8 text-center text-sm text-[#716860]">
+                      No items matched your search.
                     </div>
                   ) : visibleProducts.map((item) => (
                       <ProductCard 
@@ -673,7 +715,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                       </div>
                     </div>
 
-                    {/* Right: Lead Capture Form Box (WIRED UP TO FORMSUBMIT) */}
+                    {/* Right: Lead Capture Form Box */}
                     <div className="lg:col-span-5 bg-[#0B0B0A] border border-[#2A2A2A] rounded-2xl p-8 shadow-2xl">
                       <h3 className="text-2xl font-serif text-white mb-3">Request a Catering Quote</h3>
                       <p className="text-sm text-[#D8CFBC] mb-8 opacity-80 leading-relaxed">
@@ -681,7 +723,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                       </p>
                       
                       <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="space-y-6">
-                        {/* Hidden Inputs for Form Routing */}
                         <input type="hidden" name="_subject" value="New Catering Quote Request - Last Planner Julz" />
                         <input type="hidden" name="_captcha" value="false" />
                         
@@ -724,7 +765,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                   </div>
                 </div>
 
-                {/* Footer Style Directory (Inside Catering Page) */}
+                {/* Footer Style Directory */}
                 <div className="bg-[#0B0B0A] border-t border-[#2A2A2A]">
                   <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-12">
                     <div className="lg:col-span-1">
@@ -796,7 +837,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     {/* Photo Package Card */}
                     <div className="group rounded-xl overflow-hidden border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-2xl transition-all bg-[#F8F6F0] flex flex-col">
                       <div className="h-80 bg-[#1F2E27] overflow-hidden relative">
-                        {/* Perfect Image Mapping: images().jpg */}
                         <img src="/images/images().jpg" alt="Photography" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { e.target.src = "https://via.placeholder.com/800x600?text=Photography+Showcase" }} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
@@ -818,7 +858,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     {/* Video/Stream Package Card */}
                     <div className="group rounded-xl overflow-hidden border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-2xl transition-all bg-[#F8F6F0] flex flex-col">
                       <div className="h-80 bg-[#1F2E27] overflow-hidden relative">
-                        {/* Perfect Image Mapping: images.jpg */}
                         <img src="/images/images.jpg" alt="Videography" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { e.target.src = "https://via.placeholder.com/800x600?text=Cinematic+Videography" }} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
@@ -839,16 +878,15 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
                   </div>
 
-                  {/* Media Inquiry Box (WIRED UP TO FORMSUBMIT) */}
+                  {/* Media Inquiry Box */}
                   <div className="bg-[#1F2E27] rounded-xl p-10 lg:p-16 text-center text-white relative overflow-hidden shadow-2xl">
                     <div className="relative z-10 max-w-3xl mx-auto">
                       <h3 className="text-3xl lg:text-4xl font-serif mb-6 text-[#A8895C]">Require Custom Media Coverage?</h3>
                       <p className="text-lg text-[#E8DFD1] opacity-90 mb-10 leading-relaxed">
                         We can arrange drone coverage, multi-location streaming, and extended editorial photography. Speak with our media director today to craft your perfect tribute.
-                                        to contact us you can kindly reach out via the phone number +254 799 847727 or  request a call back via the form below and we will get back to you promptly.
+                                        to contact us you can kindly reach out via the phone number +254 799 847727 or request a call back via the form below and we will get back to you promptly.
                       </p>
                       
-                      {/* FormSubmit HTML Form */}
                       <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="flex flex-col sm:flex-row gap-4 justify-center">
                         <input type="hidden" name="_subject" value="New Media Callback Request" />
                         <input type="hidden" name="_captcha" value="false" />
@@ -896,7 +934,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             <div className="p-6 overflow-y-auto space-y-8 custom-scrollbar flex-grow">
               
               {/* SECTION 1: Rental Parameters */}
-              <section className="bg-[#F8F6F0] p-5 rounded border border-[#E8DFD1]">
+              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><MapPin size={16} className="text-[#A8895C]"/> 1. Rental Parameters</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -919,8 +957,8 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               </section>
 
               {/* SECTION 2: Mileage Plan */}
-              <section className="bg-[#F8F6F0] p-5 rounded border border-[#E8DFD1]">
-                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><Route size={16} className="text-[#A8895C]"/> 2. Mileage Plan</h4>
+              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
+                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><RouteIcon size={16} className="text-[#A8895C]"/> 2. Mileage Plan</h4>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Select Mileage Structure</label>
@@ -937,7 +975,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               </section>
 
               {/* SECTION 3: Fuel Policy */}
-              <section className="bg-[#F8F6F0] p-5 rounded border border-[#E8DFD1]">
+              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><Fuel size={16} className="text-[#A8895C]"/> 3. Fuel Policy</h4>
                 <div>
                   <label className="block text-xs font-semibold text-[#716860] mb-1">Select Fuel Handling</label>
@@ -952,7 +990,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             </div>
 
             {/* Sticky Footer: Dynamic Total & Actions */}
-            <div className="p-6 bg-white border-t border-[#E8DFD1] shrink-0">
+            <div className="p-6 bg-[#F8F6F0] border-t border-[#E8DFD1] shrink-0">
               <div className="flex justify-between items-end mb-6">
                 <div>
                   <span className="text-xs font-semibold text-[#716860] uppercase tracking-wider block mb-1">Estimated Total:</span>
@@ -964,19 +1002,19 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               </div>
 
               <div className="flex gap-4">
-                <button onClick={() => setShowRentalModal(false)} className="flex-1 py-3.5 text-sm font-semibold tracking-wider uppercase bg-transparent text-[#3D3530] border-2 border-[#E8DFD1] hover:bg-[#F8F6F0] transition-all rounded">
+                <button onClick={() => setShowRentalModal(false)} className="flex-1 py-3 text-xs font-bold tracking-wider uppercase bg-white text-[#3D3530] border border-[#E8DFD1] hover:bg-[#F8F6F0] transition-all rounded">
                   Cancel
                 </button>
                 <button 
                   onClick={handleConfirmRental} 
                   disabled={!isFormValid}
-                  className={`flex-1 py-3.5 text-sm font-semibold tracking-wider uppercase transition-all rounded ${
+                  className={`flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded ${
                     isFormValid 
-                    ? "bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-lg" 
+                    ? "bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md" 
                     : "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed"
                   }`}
                 >
-                  Generate Quote
+                  Confirm Transport
                 </button>
               </div>
             </div>

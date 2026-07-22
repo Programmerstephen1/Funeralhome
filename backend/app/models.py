@@ -14,6 +14,9 @@ class User(db.Model):
     otp_code = db.Column(db.String(6), nullable=True)
     otp_expires = db.Column(db.DateTime, nullable=True)
 
+    # Added admin flag for the dashboard
+    is_admin = db.Column(db.Boolean, default=False)
+
     def set_password(self, password):
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -50,44 +53,132 @@ class Tribute(db.Model):
         }
 
 
-class FuneralProvision(db.Model):
-    __tablename__ = "funeral_provisions"
+# ==========================================
+# --- ENTERPRISE CATALOG SUITE ---
+# ==========================================
+
+class Product(db.Model):
+    __tablename__ = "products"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255))
-    category = db.Column(db.String(50)) # e.g., 'Wreath', 'Casket', 'Tent'
-    price = db.Column(db.Float, default=0.0) # Added for the shopping cart logic
-    image_url = db.Column(db.String(255)) 
+    category_id = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    price = db.Column(db.Float, nullable=False, default=0.0)
+    
+    # NEW: Dynamic discount tag controlled by admin
+    discount_percent = db.Column(db.Integer, nullable=True, default=0)
+    
+    dispatch_location = db.Column(db.String(100), default="Nairobi Central")
+    
+    images = db.relationship('ProductImage', backref='product', lazy=True, cascade="all, delete-orphan")
+    specifications = db.relationship('ProductSpecification', backref='product', lazy=True, cascade="all, delete-orphan")
+    reviews = db.relationship('ProductReview', backref='product', lazy=True, cascade="all, delete-orphan")
+
+    def get_average_rating(self):
+        if not self.reviews:
+            return 0.0
+        total_prod = sum([review.product_rating for review in self.reviews])
+        total_serv = sum([review.service_rating for review in self.reviews])
+        return round((total_prod + total_serv) / (len(self.reviews) * 2), 1)
+        
+    def get_product_rating(self):
+        if not self.reviews: return 0.0
+        return round(sum([r.product_rating for r in self.reviews]) / len(self.reviews), 1)
+
+    def get_service_rating(self):
+        if not self.reviews: return 0.0
+        return round(sum([r.service_rating for r in self.reviews]) / len(self.reviews), 1)
+
+    def get_review_count(self):
+        return len(self.reviews)
 
     def to_dict(self):
         return {
             "id": self.id,
+            "categoryId": self.category_id,
             "title": self.title,
-            "description": self.description,
-            "category": self.category,
+            "desc": self.description,
             "price": self.price,
-            "image_url": self.image_url
+            "discount_percent": self.discount_percent,
+            "dispatch_location": self.dispatch_location,
+            "average_rating": self.get_average_rating(),
+            "product_rating": self.get_product_rating(),
+            "service_rating": self.get_service_rating(),
+            "review_count": self.get_review_count(),
+            "images": [img.image_url for img in self.images],
+            "specifications": [spec.to_dict() for spec in self.specifications],
+            "reviews": [rev.to_dict() for rev in self.reviews]
         }
 
-# --- NEW: EULOGY MODEL ---
+class ProductImage(db.Model):
+    __tablename__ = "product_images"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
+
+class ProductSpecification(db.Model):
+    __tablename__ = "product_specifications"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    key_name = db.Column(db.String(100), nullable=False)
+    value = db.Column(db.String(255), nullable=False)
+    
+    def to_dict(self):
+        return {"key": self.key_name, "value": self.value}
+
+class ProductReview(db.Model):
+    __tablename__ = "product_reviews"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    product_rating = db.Column(db.Integer, nullable=False, default=5)
+    service_rating = db.Column(db.Integer, nullable=False, default=5)
+    comment = db.Column(db.Text, nullable=True)
+    
+    # Photo Upload Support & Verification Lock
+    image_url = db.Column(db.String(255), nullable=True) 
+    is_verified_buyer = db.Column(db.Boolean, default=True)
+    
+    # Admin Reply Data
+    admin_reply = db.Column(db.Text, nullable=True)
+    admin_replied_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    user = db.relationship('User', backref='product_reviews')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "product_title": self.product.title if self.product else "Unknown Product",
+            "user_email": self.user.email if self.user else "Anonymous",
+            "product_rating": self.product_rating,
+            "service_rating": self.service_rating,
+            "comment": self.comment,
+            "image_url": self.image_url,
+            "is_verified_buyer": self.is_verified_buyer,
+            "admin_reply": self.admin_reply,
+            "admin_replied_at": self.admin_replied_at.isoformat() if self.admin_replied_at else None,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+# ==========================================
+# --- EULOGY & DATA MODELS ---
+# ==========================================
+
 class Eulogy(db.Model):
     __tablename__ = "eulogies"
-
-    # Using a secure UUID as the primary key instead of standard IDs
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    
-    # Basic Information
     deceased_name = db.Column(db.String(150), nullable=False)
     birth_year = db.Column(db.String(4), nullable=True)
     passing_year = db.Column(db.String(4), nullable=True)
     occupation = db.Column(db.String(150), nullable=True)
     interests = db.Column(db.String(255), nullable=True)
-    
-    # Who They Were
     personality = db.Column(db.Text, nullable=False)
-    
-    # Link to the user who created it
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -103,11 +194,8 @@ class Eulogy(db.Model):
             "created_at": self.created_at.isoformat()
         }
 
-
-# --- Consultation model to persist contact requests ---
 class Consultation(db.Model):
     __tablename__ = "consultations"
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), nullable=False)
@@ -125,11 +213,8 @@ class Consultation(db.Model):
             "created_at": self.created_at.isoformat()
         }
 
-
-# --- Payment transaction tracking so callbacks can be correlated with emails ---
 class PaymentTransaction(db.Model):
     __tablename__ = "payment_transactions"
-
     id = db.Column(db.Integer, primary_key=True)
     checkout_request_id = db.Column(db.String(128), unique=True, nullable=True)
     merchant_request_id = db.Column(db.String(128), unique=False, nullable=True)
@@ -149,4 +234,47 @@ class PaymentTransaction(db.Model):
             "amount": self.amount,
             "status": self.status,
             "created_at": self.created_at.isoformat()
+        }
+
+
+# ==========================================
+# --- ENTERPRISE ORDER & VERIFICATION SYSTEM ---
+# ==========================================
+
+class Order(db.Model):
+    __tablename__ = "orders"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    total_amount = db.Column(db.Float, nullable=False, default=0.0)
+    status = db.Column(db.String(50), default="completed") # 'pending', 'completed'
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+    user = db.relationship('User', backref='orders')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_email": self.user.email if self.user else "Unknown",
+            "total_amount": self.total_amount,
+            "status": self.status,
+            "created_at": self.created_at.isoformat(),
+            "items": [item.to_dict() for item in self.items]
+        }
+
+class OrderItem(db.Model):
+    __tablename__ = "order_items"
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    
+    product = db.relationship('Product', backref='order_items')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "product_title": self.product.title if self.product else "Unknown Product",
+            "quantity": self.quantity
         }

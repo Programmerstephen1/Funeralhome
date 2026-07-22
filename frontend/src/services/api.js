@@ -2,7 +2,7 @@
  * API Service Layer
  */
 
-// 🟢 PRO-GRADE FIX: Dynamically falls back to localhost if not on Render
+// PRO-GRADE FIX: Dynamically falls back to localhost if not on Render
 const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 class ApiService {
@@ -51,6 +51,16 @@ class ApiService {
     return data;
   }
 
+  // --- PRO-GRADE GOOGLE SSO HANDLER ---
+  async googleLogin(googleToken) {
+    const data = await this.request("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ token: googleToken }),
+    });
+    if (data.token) localStorage.setItem("token", data.token);
+    return data;
+  }
+
   async register(email, password) {
     return this.request("/api/auth/register", {
       method: "POST",
@@ -58,7 +68,6 @@ class ApiService {
     });
   }
 
-  // 🟢 NEW: Added OTP handler so RegisterPage doesn't have to use raw fetch()
   async sendOtp(email) {
     return this.request("/api/auth/send-otp", {
       method: "POST",
