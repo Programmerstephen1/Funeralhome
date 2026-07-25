@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Image as ImageIcon, ArrowLeft, Upload, Plus } from "lucide-react";
-import { Link } from "react-router-dom"; // PRO-GRADE: React Router
+import { Image as ImageIcon, ArrowLeft, Upload, Plus, Lock, Smartphone, CreditCard, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom"; 
 import { Button, Modal } from "../components";
 
 export default function GalleryPage({ dynamicId }) {
@@ -13,8 +13,18 @@ export default function GalleryPage({ dynamicId }) {
     } catch { return []; }
   });
 
+  // NEW: Paywall & Access State
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return localStorage.getItem(`LastPlannerJulz_GalleryUnlocked_${dynamicId}`) === "true";
+  });
+  const [phone, setPhone] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+
   const [showForm, setShowForm] = useState(false);
   const [newPhoto, setNewPhoto] = useState({ image: null, caption: "", uploader: "" });
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (dynamicId) {
@@ -39,19 +49,51 @@ export default function GalleryPage({ dynamicId }) {
   };
 
   const handleAddPhoto = () => {
-    if (newPhoto.image) {
+    if (newPhoto.image !== null) {
       setPhotos((prev) => [
         {
           id: Date.now(),
           image: newPhoto.image,
           caption: newPhoto.caption,
-          uploader: newPhoto.uploader || "Family Member",
+          uploader: newPhoto.uploader === "" ? "Family Member" : newPhoto.uploader,
           date: new Date().toLocaleDateString()
         },
         ...prev
       ]);
       setNewPhoto({ image: null, caption: "", uploader: "" });
       setShowForm(false);
+    }
+  };
+
+  const handleUnlockGallery = async () => {
+    if (phone === "") {
+      setPaymentError("Please provide an M-Pesa phone number.");
+      return;
+    }
+
+    setIsProcessing(true);
+    setPaymentError("");
+
+    try {
+      const token = localStorage.getItem("token") || "";
+      const userEmail = localStorage.getItem("userEmail") || "guest@example.com";
+
+      const paymentResponse = await fetch(`${API_URL}/api/payments/stkpush`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ amount: 1000, phone: phone, email: userEmail }),
+      });
+
+      if (paymentResponse.ok) {
+        setIsUnlocked(true);
+        localStorage.setItem(`LastPlannerJulz_GalleryUnlocked_${dynamicId}`, "true");
+      } else {
+        setPaymentError("Failed to initiate M-Pesa transaction. Please try again.");
+      }
+    } catch (error) {
+      setPaymentError("Network error. Please check your connection.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -92,7 +134,7 @@ export default function GalleryPage({ dynamicId }) {
               <div key={photo.id} className="break-inside-avoid bg-white rounded-xl overflow-hidden shadow-sm border border-[#E8DFD1] group relative hover:shadow-xl transition-shadow cursor-pointer">
                 <img src={photo.image} alt="Memorial" className="w-full h-auto object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                  {photo.caption && <p className="text-white font-serif italic text-lg mb-2">"{photo.caption}"</p>}
+                  {photo.caption !== "" && <p className="text-white font-serif italic text-lg mb-2">"{photo.caption}"</p>}
                   <div className="flex justify-between items-center text-white/70 text-xs tracking-wider uppercase border-t border-white/20 pt-3">
                     <span>Added by {photo.uploader}</span>
                     <span>{photo.date}</span>
@@ -103,35 +145,80 @@ export default function GalleryPage({ dynamicId }) {
           </div>
         )}
 
-        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Upload a Photograph">
-          <div className="space-y-5">
-            <div>
-              <label className="flex text-sm font-medium text-[#1F2E27] mb-2 items-center gap-2">
-                <Upload size={16} /> Select Image *
-              </label>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="w-full p-2 border border-[#E8DFD1] rounded bg-[#F8F6F0] text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#1F2E27] file:text-white hover:file:bg-[#A8895C] transition-colors cursor-pointer" 
-              />
-              {newPhoto.image && <div className="mt-2 text-xs text-green-600 font-semibold">✓ Image selected and ready</div>}
+        <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={isUnlocked ? "Upload a Photograph" : "Unlock Gallery Storage"}>
+          {isUnlocked ? (
+            <div className="space-y-5">
+              <div>
+                <label className="flex text-sm font-medium text-[#1F2E27] mb-2 items-center gap-2">
+                  <Upload size={16} /> Select Image *
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageUpload} 
+                  className="w-full p-2 border border-[#E8DFD1] rounded bg-[#F8F6F0] text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#1F2E27] file:text-white hover:file:bg-[#A8895C] transition-colors cursor-pointer" 
+                />
+                {newPhoto.image && <div className="mt-2 text-xs text-green-600 font-semibold">✓ Image selected and ready</div>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1F2E27] mb-2">Caption (Optional)</label>
+                <input type="text" value={newPhoto.caption} onChange={(e) => setNewPhoto({ ...newPhoto, caption: e.target.value })} placeholder="e.g., Summer vacation, 1998" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1F2E27] mb-2">Added By (Optional)</label>
+                <input type="text" value={newPhoto.uploader} onChange={(e) => setNewPhoto({ ...newPhoto, uploader: e.target.value })} placeholder="Your name" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button variant="primary" onClick={handleAddPhoto} className="flex-1 bg-[#1F2E27] hover:bg-[#A8895C] text-white disabled:opacity-50" disabled={!newPhoto.image}>
+                  Upload to Gallery
+                </Button>
+                <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1F2E27] mb-2">Caption (Optional)</label>
-              <input type="text" value={newPhoto.caption} onChange={(e) => setNewPhoto({ ...newPhoto, caption: e.target.value })} placeholder="e.g., Summer vacation, 1998" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-[#F8F6F0] border border-[#E8DFD1] rounded-lg p-6 text-center">
+                <Lock size={48} className="mx-auto mb-4 text-[#A8895C]" />
+                <h3 className="text-xl font-serif text-[#1F2E27] mb-2">Premium Cloud Storage</h3>
+                <p className="text-sm text-[#716860] mb-4">
+                  To ensure permanent, secure hosting for high-resolution memorial photographs, the gallery requires a one-time activation fee.
+                </p>
+                <span className="text-3xl font-bold text-[#1F2E27] block">KSh 1,000</span>
+              </div>
+
+              {paymentError !== "" && (
+                 <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded text-xs flex items-start gap-2 font-semibold">
+                   <AlertCircle size={14} className="shrink-0 mt-0.5" /> {paymentError}
+                 </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest font-bold text-[#716860] mb-2">M-Pesa Phone Number</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Smartphone size={16} className="text-[#A8895C]" />
+                  </div>
+                  <input 
+                    type="tel" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    placeholder="07XX XXX XXX" 
+                    className="w-full pl-10 pr-4 py-3 border border-[#E8DFD1] bg-white rounded focus:outline-none focus:border-[#A8895C] transition-colors text-sm font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={handleUnlockGallery}
+                  disabled={isProcessing}
+                  className="flex-1 bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] shadow-md flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  {isProcessing ? "Processing..." : <><CreditCard size={18} /> Unlock Gallery</>}
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1F2E27] mb-2">Added By (Optional)</label>
-              <input type="text" value={newPhoto.uploader} onChange={(e) => setNewPhoto({ ...newPhoto, uploader: e.target.value })} placeholder="Your name" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C]" />
-            </div>
-            <div className="flex gap-3 pt-4">
-              <Button variant="primary" onClick={handleAddPhoto} className="flex-1 bg-[#1F2E27] hover:bg-[#A8895C] text-white disabled:opacity-50" disabled={!newPhoto.image}>
-                Upload to Gallery
-              </Button>
-              <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
-            </div>
-          </div>
+          )}
         </Modal>
       </div>
     </div>

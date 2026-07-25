@@ -11,12 +11,14 @@ export default function AdminDashboardPage() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("orders"); // 'orders', 'payments', 'catalog', 'reviews'
+  const [activeTab, setActiveTab] = useState("orders");
 
-  // Product Modal State
+  // Product Modal State (UPDATED: includes has_sizes and inclusions)
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [productForm, setProductForm] = useState({ title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0 });
+  const [productForm, setProductForm] = useState({ 
+    title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: "" 
+  });
 
   // Reply State
   const [replyText, setReplyText] = useState({});
@@ -68,7 +70,9 @@ export default function AdminDashboardPage() {
   // --- PRODUCT CRUD HANDLERS ---
   const openAddModal = () => {
     setEditingProduct(null);
-    setProductForm({ title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0 });
+    setProductForm({ 
+      title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: "" 
+    });
     setShowProductModal(true);
   };
 
@@ -80,7 +84,9 @@ export default function AdminDashboardPage() {
       price: prod.price,
       category_id: prod.categoryId,
       images: prod.images ? prod.images.join(", ") : "",
-      discount_percent: prod.discount_percent || 0
+      discount_percent: prod.discount_percent || 0,
+      has_sizes: prod.has_sizes || false,
+      inclusions: prod.inclusions ? prod.inclusions.join(", ") : ""
     });
     setShowProductModal(true);
   };
@@ -89,6 +95,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     const token = localStorage.getItem("token");
     const imageArray = productForm.images.split(",").map(i => i.trim()).filter(Boolean);
+    
     const payload = { 
       ...productForm, 
       price: parseFloat(productForm.price), 
@@ -187,7 +194,6 @@ export default function AdminDashboardPage() {
 
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Revenue Card */}
           <div className="bg-white p-6 rounded-xl border border-[#E8DFD1] shadow-sm relative overflow-hidden group hover:border-[#A8895C] transition-colors">
             <div className="absolute -right-6 -top-6 text-emerald-50 opacity-50 group-hover:scale-110 transition-transform"><DollarSign size={120}/></div>
             <div className="relative z-10">
@@ -200,7 +206,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Orders Card */}
           <div className="bg-white p-6 rounded-xl border border-[#E8DFD1] shadow-sm relative overflow-hidden group hover:border-[#A8895C] transition-colors">
             <div className="absolute -right-6 -top-6 text-blue-50 opacity-50 group-hover:scale-110 transition-transform"><ShoppingBag size={120}/></div>
             <div className="relative z-10">
@@ -212,7 +217,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Users Card */}
           <div className="bg-white p-6 rounded-xl border border-[#E8DFD1] shadow-sm relative overflow-hidden group hover:border-[#A8895C] transition-colors">
             <div className="absolute -right-6 -top-6 text-purple-50 opacity-50 group-hover:scale-110 transition-transform"><Users size={120}/></div>
             <div className="relative z-10">
@@ -224,7 +228,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Payments Card */}
           <div className="bg-white p-6 rounded-xl border border-[#E8DFD1] shadow-sm relative overflow-hidden group hover:border-[#A8895C] transition-colors">
             <div className="absolute -right-6 -top-6 text-orange-50 opacity-50 group-hover:scale-110 transition-transform"><CreditCard size={120}/></div>
             <div className="relative z-10">
@@ -456,7 +459,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* EDIT/ADD PRODUCT MODAL */}
+      {/* EDIT/ADD PRODUCT MODAL (UPDATED WITH SIZING TOGGLE & INCLUSIONS FIELD) */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 border border-[#E8DFD1] relative">
@@ -467,7 +470,7 @@ export default function AdminDashboardPage() {
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Title</label><input type="text" required value={productForm.title} onChange={(e) => setProductForm({...productForm, title: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
               
               <div className="grid grid-cols-3 gap-4">
-                <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Price</label><input type="number" required value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
+                <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Base Price</label><input type="number" required value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
                 <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Discount (%)</label><input type="number" min="0" max="99" value={productForm.discount_percent} onChange={(e) => setProductForm({...productForm, discount_percent: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
                 <div>
                   <label className="block text-xs font-bold text-[#716860] uppercase mb-1">Category</label>
@@ -479,11 +482,30 @@ export default function AdminDashboardPage() {
                     <option value="tents">Tents</option>
                     <option value="hearses">Hearses</option>
                     <option value="attire">Attire</option>
+                    <option value="media">Media</option>
                   </select>
                 </div>
               </div>
+
+              {/* NEW: Enable Casket Sizing Engine Toggle */}
+              <div className="flex items-center gap-3 p-3 bg-[#F8F6F0] rounded border border-[#E8DFD1]">
+                <input 
+                  type="checkbox" 
+                  id="has_sizes"
+                  checked={productForm.has_sizes} 
+                  onChange={(e) => setProductForm({...productForm, has_sizes: e.target.checked})} 
+                  className="w-4 h-4 accent-[#1F2E27] cursor-pointer"
+                />
+                <label htmlFor="has_sizes" className="text-xs font-bold text-[#1F2E27] uppercase tracking-wider cursor-pointer">
+                  Enable Casket Sizing Engine (2ft - 12ft options)
+                </label>
+              </div>
               
-              <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Description</label><textarea rows="3" required value={productForm.desc} onChange={(e) => setProductForm({...productForm, desc: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm resize-none"></textarea></div>
+              <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Description</label><textarea rows="2" required value={productForm.desc} onChange={(e) => setProductForm({...productForm, desc: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm resize-none"></textarea></div>
+              
+              {/* NEW: Package Inclusions input */}
+              <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Package Inclusions (Comma-separated)</label><input type="text" placeholder="Auto-lowering gear, Gazebo tent, PA system" value={productForm.inclusions} onChange={(e) => setProductForm({...productForm, inclusions: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
+
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Image URLs (Comma-separated)</label><input type="text" placeholder="/images/caskets/casket1().jpg" value={productForm.images} onChange={(e) => setProductForm({...productForm, images: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
               
               <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors mt-4">Save Catalog Item</button>

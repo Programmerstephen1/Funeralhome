@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Star, ShoppingCart, Truck, ShieldCheck, ChevronLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { Star, ShoppingCart, Truck, ShieldCheck, ChevronLeft, CheckCircle, AlertCircle, Maximize2 } from "lucide-react";
 
 // --- CUSTOM INTERACTIVE STAR COMPONENT ---
 const InteractiveStars = ({ rating, setRating, label }) => {
@@ -33,6 +33,24 @@ const InteractiveStars = ({ rating, setRating, label }) => {
   );
 };
 
+// --- NEW PRO-GRADE COMPONENT: PACKAGE INCLUSIONS ---
+const PackageInclusions = ({ inclusions }) => {
+  if (!inclusions || inclusions.length === 0) return null;
+  return (
+    <div className="mt-8 border-t border-[#E8DFD1] pt-8">
+      <h3 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4">Package Inclusions</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {inclusions.map((item, idx) => (
+          <div key={idx} className="flex items-start gap-2 text-sm text-[#3D3530]">
+            <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function ProductPage({ addToCart }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,6 +59,18 @@ export default function ProductPage({ addToCart }) {
   const [activeTab, setActiveTab] = useState("description");
   const [mainImage, setMainImage] = useState("");
   const [recentlyAdded, setRecentlyAdded] = useState(false);
+
+  // --- NEW: DYNAMIC SIZING ENGINE ---
+  // Defaulting to index 2 (Normal 6 ft)
+  const sizeOptions = [
+    { label: "Small (2 ft)", modifier: -6000 },
+    { label: "Small (4 ft)", modifier: -3000 },
+    { label: "Normal (6 ft)", modifier: 0 },
+    { label: "Large (8 ft)", modifier: 3000 },
+    { label: "Extra Large (10 ft)", modifier: 7000 },
+    { label: "Oversized (12 ft)", modifier: 150000 }
+  ];
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState(2); 
 
   // Split Review State
   const [productRating, setProductRating] = useState(5);
@@ -74,9 +104,30 @@ export default function ProductPage({ addToCart }) {
     }
   };
 
+  // NEW: Calculates final price based on selected size dropdown
+  const getCalculatedPrice = () => {
+    if (!product) return 0;
+    if (product.has_sizes) {
+      return product.price + sizeOptions[selectedSizeIndex].modifier;
+    }
+    return product.price;
+  };
+
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product);
+      const finalPrice = getCalculatedPrice();
+      const selectedSizeLabel = product.has_sizes ? sizeOptions[selectedSizeIndex].label : null;
+      
+      // Ensures different sizes of the same product don't stack up as the exact same item in the cart
+      const cartItem = { 
+        ...product, 
+        price: finalPrice, 
+        selectedSize: selectedSizeLabel,
+        cartItemId: product.has_sizes ? `${product.id}-${selectedSizeIndex}` : product.id,
+        title: product.has_sizes ? `${product.title} - ${selectedSizeLabel}` : product.title
+      };
+
+      addToCart(cartItem);
       setRecentlyAdded(true);
       setTimeout(() => setRecentlyAdded(false), 2000);
     }
@@ -139,8 +190,9 @@ export default function ProductPage({ addToCart }) {
   if (!product) return null;
 
   // DYNAMIC PRICING CALCULATIONS
+  const finalCalculatedPrice = getCalculatedPrice();
   const discountPercent = product.discount_percent || 0;
-  const originalPrice = discountPercent > 0 ? (product.price / (1 - discountPercent / 100)) : product.price;
+  const originalPrice = discountPercent > 0 ? (finalCalculatedPrice / (1 - discountPercent / 100)) : finalCalculatedPrice;
   const ratingScore = product.average_rating || 0;
 
   return (
@@ -193,10 +245,30 @@ export default function ProductPage({ addToCart }) {
                 </span>
               </div>
 
-              <div className="bg-[#F8F6F0] p-6 rounded-lg border border-[#E8DFD1] mb-8">
+              {/* DYNAMIC SIZING ENGINE UI */}
+              {product.has_sizes && (
+                <div className="mb-6">
+                <label className="flex items-center gap-2 text-xs font-bold text-[#1F2E27] uppercase tracking-wider mb-2">
+                    <Maximize2 size={14} className="text-[#A8895C]" /> Select Casket Size
+                  </label>
+                  <select 
+                    value={selectedSizeIndex}
+                    onChange={(e) => setSelectedSizeIndex(Number(e.target.value))}
+                    className="w-full p-4 border border-[#A8895C] rounded-lg outline-none focus:ring-2 focus:ring-[#A8895C]/20 bg-[#F8F6F0] text-sm font-semibold text-[#3D3530] transition-all cursor-pointer shadow-sm"
+                  >
+                    {sizeOptions.map((opt, idx) => (
+                      <option key={idx} value={idx}>
+                        {opt.label} {opt.modifier !== 0 ? `(${opt.modifier > 0 ? '+' : '-'}KSh ${Math.abs(opt.modifier).toLocaleString()})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="bg-[#F8F6F0] p-6 rounded-lg border border-[#E8DFD1] mb-4">
                 <div className="flex flex-col mb-2">
                   <span className={`text-4xl font-bold ${discountPercent > 0 ? 'text-[#FF4747]' : 'text-[#1F2E27]'}`}>
-                    KSh {product.price.toLocaleString()}
+                    KSh {finalCalculatedPrice.toLocaleString()}
                   </span>
                   {discountPercent > 0 && (
                     <span className="text-sm text-[#8F847C] line-through mt-1">
@@ -209,8 +281,11 @@ export default function ProductPage({ addToCart }) {
                 </p>
               </div>
 
+              {/* DYNAMIC PACKAGE INCLUSIONS */}
+              <PackageInclusions inclusions={product.inclusions} />
+
               {/* Logistics & Delivery Details */}
-              <div className="space-y-4 mb-8 text-sm text-[#3D3530]">
+              <div className="space-y-4 mb-8 mt-8 text-sm text-[#3D3530]">
                 <div className="flex items-start gap-3 border-b border-[#E8DFD1] pb-3">
                   <Truck className="text-[#A8895C] shrink-0 mt-0.5" size={18} />
                   <div>

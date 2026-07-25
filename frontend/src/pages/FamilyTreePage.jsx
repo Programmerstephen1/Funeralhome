@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { TreeDeciduous, Camera, User, Plus, X, Quote, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom"; // PRO-GRADE: React Router
+import { TreeDeciduous, Camera, User, Plus, X, Quote, ArrowLeft, Lock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"; 
 import { Button, Card, CardBody } from "../components";
 
 export default function FamilyTreePage({ dynamicId }) {
+  const [isAuthorized, setIsAuthorized] = useState(() => {
+    return localStorage.getItem(`LastPlannerJulz_NuclearFamily_${dynamicId}`) === "true";
+  });
+  const [accessPin, setAccessPin] = useState("");
+  const [authError, setAuthError] = useState("");
+
   const [deceasedPhoto, setDeceasedPhoto] = useState(null);
   const [familyMembers, setFamilyMembers] = useState(() => {
     try {
@@ -27,6 +33,21 @@ export default function FamilyTreePage({ dynamicId }) {
     }
   }, [dynamicId, familyMembers]);
 
+  // THE FIX: Now checks against the specific Family Tree PIN created by the Admin
+  const handleUnlock = (e) => {
+    e.preventDefault();
+    const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
+    const currentMemorial = allMemorials[dynamicId];
+
+    if (currentMemorial && accessPin === currentMemorial.familyTreePin) {
+      setIsAuthorized(true);
+      setAuthError("");
+      localStorage.setItem(`LastPlannerJulz_NuclearFamily_${dynamicId}`, "true");
+    } else {
+      setAuthError("Incorrect Nuclear Family PIN. Please try again.");
+    }
+  };
+
   const handleMemberPhotoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -38,12 +59,52 @@ export default function FamilyTreePage({ dynamicId }) {
 
   const handleSaveConnection = (e) => {
     e.preventDefault();
-    const newConnection = { id: Date.now(), ...newMember };
-    setFamilyMembers([...familyMembers, newConnection]);
-    setAnnouncement("Your tribute has been added to the family tree.");
-    setNewMember({ name: "", relationship: "", quote: "", photo: null });
-    setIsModalOpen(false);
+    if (newMember.name !== "" && newMember.relationship !== "" && newMember.quote !== "") {
+      const newConnection = { id: Date.now(), ...newMember };
+      setFamilyMembers([...familyMembers, newConnection]);
+      setAnnouncement("Your tribute has been added to the family tree.");
+      setNewMember({ name: "", relationship: "", quote: "", photo: null });
+      setIsModalOpen(false);
+    }
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="bg-[#F8F6F0] py-12 min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-[#E8DFD1] p-8 text-center">
+          <div className="w-16 h-16 bg-[#1F2E27] rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock size={28} className="text-[#A8895C]" />
+          </div>
+          <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Restricted Access</h2>
+          <p className="text-[#716860] mb-8 text-sm leading-relaxed">
+            For privacy and closure, the Family Tree module is restricted exclusively to the Nuclear Family. Please enter the specific Family Tree PIN provided by the administrator.
+          </p>
+          
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <div>
+              <input 
+                type="password" 
+                placeholder="Enter 4-Digit PIN" 
+                value={accessPin}
+                onChange={(e) => setAccessPin(e.target.value)}
+                className="w-full text-center tracking-[0.5em] text-2xl font-bold py-4 rounded border border-[#E8DFD1] bg-[#F8F6F0] outline-none focus:border-[#A8895C]"
+              />
+              {authError !== "" && <p className="text-red-600 text-xs mt-2 font-bold">{authError}</p>}
+            </div>
+            <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors">
+              Verify Access
+            </button>
+          </form>
+          
+          <div className="mt-8 pt-6 border-t border-[#E8DFD1]">
+            <Link to={`/memorial/${dynamicId || ''}`} className="text-xs font-bold text-[#A8895C] uppercase tracking-wider hover:text-[#1F2E27]">
+              Return to Public Hub
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F8F6F0] py-12 min-h-screen">
@@ -58,7 +119,7 @@ export default function FamilyTreePage({ dynamicId }) {
 
         <section className="mb-12 text-center">
           <TreeDeciduous size={48} className="mx-auto mb-4 text-[#A8895C]" />
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Memorial Hub</p>
+          <p className="text-sm tracking-[0.28em] uppercase text-emerald-700 font-bold mb-3">Nuclear Family Verified</p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Family Connections</h1>
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto">
             A collaborative space honoring the lives touched, the relationships built, and the legacy left behind.
@@ -67,7 +128,7 @@ export default function FamilyTreePage({ dynamicId }) {
 
         <div className="relative w-full max-w-3xl mx-auto mb-16 rounded-2xl overflow-hidden shadow-2xl bg-[#0B0B0A] border border-[#2A2A2A]">
           <img src="/images/family tree background.png" alt="In Loving Memory Frame" className="relative w-full h-auto z-0 pointer-events-none block" onError={(e) => e.target.style.display = 'none'} />
-          {deceasedPhoto ? (
+          {deceasedPhoto !== null ? (
             <div className="absolute z-10 overflow-hidden rounded-full shadow-inner" style={{ top: '11.3%', left: '50%', transform: 'translateX(-50%)', width: '40.4%', aspectRatio: '1/1' }}>
               <img src={deceasedPhoto} alt="Deceased" className="w-full h-full object-cover" />
             </div>
@@ -78,8 +139,8 @@ export default function FamilyTreePage({ dynamicId }) {
           )}
         </div>
 
-        {announcement && (
-          <div className="mx-auto mb-8 flex max-w-2xl items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+        {announcement !== "" && (
+          <div className="mx-auto mb-8 flex max-w-2xl items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 font-bold">
             {announcement}
           </div>
         )}
@@ -103,12 +164,12 @@ export default function FamilyTreePage({ dynamicId }) {
                 <CardBody className="p-8">
                   <div className="flex items-start gap-6">
                     <div className="w-20 h-20 rounded-full bg-[#F8F6F0] border-2 border-[#E8DFD1] flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
-                      {member.photo ? <img src={member.photo} className="w-full h-full object-cover" alt={member.name} /> : <User size={32} className="text-[#A8895C] opacity-40" />}
+                      {member.photo !== null ? <img src={member.photo} className="w-full h-full object-cover" alt={member.name} /> : <User size={32} className="text-[#A8895C] opacity-40" />}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-serif font-bold text-[#1F2E27] mb-1">{member.name}</h3>
                       <p className="text-xs text-[#A8895C] font-bold tracking-widest uppercase mb-4">{member.relationship}</p>
-                      {member.quote && (
+                      {member.quote !== "" && (
                         <div className="relative bg-[#F8F6F0] p-4 rounded-lg border-l-4 border-[#A8895C]">
                           <Quote size={16} className="text-[#E8DFD1] absolute top-3 right-3" />
                           <p className="text-[#3D3530] italic font-serif text-sm leading-relaxed pr-6">"{member.quote}"</p>
@@ -139,7 +200,7 @@ export default function FamilyTreePage({ dynamicId }) {
             <form onSubmit={handleSaveConnection} className="p-6 space-y-6">
               <div className="flex justify-center">
                 <div className="relative w-24 h-24 rounded-full bg-[#F8F6F0] border-2 border-[#E8DFD1] flex items-center justify-center overflow-hidden shadow-inner group">
-                  {newMember.photo ? <img src={newMember.photo} className="w-full h-full object-cover" alt="Preview" /> : <User size={32} className="text-[#A8895C] opacity-40" />}
+                  {newMember.photo !== null ? <img src={newMember.photo} className="w-full h-full object-cover" alt="Preview" /> : <User size={32} className="text-[#A8895C] opacity-40" />}
                   <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                     <Camera size={20} className="text-white" />
                     <input type="file" accept="image/*" onChange={handleMemberPhotoUpload} className="hidden" />

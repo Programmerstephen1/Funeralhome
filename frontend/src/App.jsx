@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { ShoppingCart, CalendarDays, MessageCircle, Shield } from "lucide-react"; 
+import { ShoppingCart, CalendarDays, MessageCircle, Shield, MapPin, Phone, Mail } from "lucide-react"; 
 
 // --- MAIN PAGES ---
 import HomePage from "./pages/HomePage";
@@ -41,7 +41,6 @@ import FamilyTreePage from "./pages/FamilyTreePage";
 import LiveJournalPage from "./pages/LiveJournalPage";
 import TributePage from "./pages/TributePage";
 import WriteEulogyPage from "./pages/WriteEulogyPage";
-import EulogyViewPage from './pages/EulogyViewPage'; 
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -162,9 +161,12 @@ function AppContent() {
 
   const addToCart = (product) => {
     setCart((prevCart) => {
-      const existing = prevCart.find(item => item.id === product.id);
-      if (existing) return prevCart.map(item => item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item);
-      return [...prevCart, { ...product, quantity: 1 }];
+      const cartItemId = product.cartItemId || product.id;
+      const existing = prevCart.find(item => (item.cartItemId || item.id) === cartItemId);
+      if (existing) {
+        return prevCart.map(item => (item.cartItemId || item.id) === cartItemId ? { ...item, quantity: (item.quantity || 1) + 1 } : item);
+      }
+      return [...prevCart, { ...product, cartItemId, quantity: 1 }];
     });
     setToast(`${product.title} added to your booking cart.`);
   };
@@ -178,9 +180,9 @@ function AppContent() {
     setServiceBookings((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  const updateQuantity = (id, delta) => {
+  const updateQuantity = (cartItemId, delta) => {
     setCart(prevCart => prevCart.map(item => {
-      if (item.id === id) {
+      if ((item.cartItemId || item.id) === cartItemId) {
         const newQty = (item.quantity || 1) + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : item;
       }
@@ -188,15 +190,15 @@ function AppContent() {
     }));
   };
 
-  const removeFromCart = (id) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== id));
+  const removeFromCart = (cartItemId) => {
+    setCart(prevCart => prevCart.filter(item => (item.cartItemId || item.id) !== cartItemId));
   };
 
   const sharedProps = { userEmail, cart, addToCart, bookRental, serviceBookings, removeRental, updateQuantity, removeFromCart };
   const isActive = (path) => location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
 
   return (
-    <div className="site-shell">
+    <div className="site-shell flex flex-col min-h-screen">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap');`}</style>
       <FocusManager />
       <HashBridge />
@@ -222,7 +224,6 @@ function AppContent() {
             <Link to="/plan" className={`transition-opacity ${isActive("/plan") ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}>Plan Ahead</Link>
             <Link to="/catalog" className={`transition-opacity ${isActive("/catalog") ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}>Catalog</Link>
             
-            {/* STEALTH ADMIN BUTTON: Only renders if user is explicitly flagged as Admin */}
             {isAdmin && (
               <Link to="/admin" className={`flex items-center gap-1 transition-opacity ${isActive("/admin") ? "border-b border-[#A8895C] text-[#A8895C]" : "border-b border-transparent text-[#A8895C] hover:opacity-80"} pb-1 font-bold`}>
                  <Shield size={14}/> Admin
@@ -262,12 +263,10 @@ function AppContent() {
       </nav>
 
       <main id="main-content" tabIndex="-1" className="focus:outline-none">
-        {/* CONTACT US: Floating Bottom Right */}
         <a href="tel:+254799847727" className="fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full bg-[#1F2E27] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-transform hover:-translate-y-1">
           <MessageCircle size={18} /><span>Contact Us</span>
         </a>
 
-        {/* LEGAL BUTTONS: Floating Bottom Left (Only on Homepage) */}
         {location.pathname === "/" && (
           <div className="fixed bottom-5 left-5 z-[60] flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Link to="/terms" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]">
@@ -295,7 +294,6 @@ function AppContent() {
           <Route path="/thankyou" element={<ThankYouPage {...sharedProps} />} />
           <Route path="/bookings" element={<ProtectedRoute userEmail={userEmail}><BookingsPage {...sharedProps} /></ProtectedRoute>} />
 
-          {/* STEALTH ADMIN ROUTE: If not admin, the route physically doesn't exist to the user */}
           {isAdmin && (
             <Route path="/admin" element={<AdminDashboardPage />} />
           )}
@@ -313,8 +311,7 @@ function AppContent() {
           <Route path="/journal/:id" element={<DynamicRouteWrapper Component={LiveJournalPage} sharedProps={sharedProps} />} />
           <Route path="/tribute/:id" element={<DynamicRouteWrapper Component={TributePage} sharedProps={sharedProps} />} />
           <Route path="/eulogy/:id" element={<ProtectedRoute userEmail={userEmail}><DynamicRouteWrapper Component={WriteEulogyPage} sharedProps={sharedProps} /></ProtectedRoute>} />
-          <Route path="/eulogy_view/:id" element={<DynamicRouteWrapper Component={EulogyViewPage} sharedProps={sharedProps} />} />
-
+          
           <Route path="/login" element={<LoginPage {...sharedProps} />} />
           <Route path="/register" element={<RegisterPage {...sharedProps} />} />
           <Route path="/verify" element={<EmailVerificationPage {...sharedProps} />} />
@@ -323,7 +320,6 @@ function AppContent() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           
-          {/* Catch-all: If someone types /admin and isn't an admin, they hit this and go Home */}
           <Route path="*" element={<HomePage {...sharedProps} />} />
         </Routes>
       </main>

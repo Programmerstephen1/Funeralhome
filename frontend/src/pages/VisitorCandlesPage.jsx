@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Flame, ArrowLeft, Plus } from "lucide-react";
-import { Link } from "react-router-dom"; // PRO-GRADE: React Router
+import { Link } from "react-router-dom"; 
 import { Button, Card, CardBody, Modal } from "../components";
 
 export default function VisitorCandlesPage({ dynamicId }) {
-  // PRO-GRADE: Added Persistent Storage
   const [candles, setCandles] = useState(() => {
     try {
       const saved = localStorage.getItem(`LastPlannerJulz_Candles_${dynamicId}`);
@@ -23,18 +22,34 @@ export default function VisitorCandlesPage({ dynamicId }) {
     }
   }, [dynamicId]);
 
+  // NEW: Short-polling engine for live-streaming effect
   useEffect(() => {
-    if (dynamicId) {
-      localStorage.setItem(`LastPlannerJulz_Candles_${dynamicId}`, JSON.stringify(candles));
-    }
-  }, [candles, dynamicId]);
+    const fetchLiveCandles = () => {
+      try {
+        const saved = localStorage.getItem(`LastPlannerJulz_Candles_${dynamicId}`);
+        if (saved !== null) {
+          setCandles(JSON.parse(saved));
+        }
+      } catch (error) {
+        // Silent catch for smooth background streaming
+      }
+    };
+
+    // Pings for new data every 3 seconds
+    const streamInterval = setInterval(fetchLiveCandles, 3000);
+    return () => clearInterval(streamInterval);
+  }, [dynamicId]);
 
   const handleLightCandle = () => {
-    if (newCandle.from.trim() && newCandle.message.trim()) {
-      setCandles((prev) => [
+    if (newCandle.from !== "" && newCandle.message !== "") {
+      const updatedCandles = [
         { id: Date.now(), from: newCandle.from, message: newCandle.message, date: new Date().toLocaleDateString() },
-        ...prev,
-      ]);
+        ...candles,
+      ];
+      
+      setCandles(updatedCandles);
+      localStorage.setItem(`LastPlannerJulz_Candles_${dynamicId}`, JSON.stringify(updatedCandles));
+      
       setNewCandle({ from: "", message: "" });
       setShowForm(false);
     }
@@ -65,7 +80,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
 
         <section className="mb-16 text-center flex flex-col items-center">
           <div className="relative mb-8">
-            {memorialData.portrait ? (
+            {memorialData.portrait !== null ? (
               <div 
                 className="w-48 h-48 rounded-full object-cover border-4 border-[#2A2A28] flicker-glow"
                 style={{ backgroundImage: `url(${memorialData.portrait})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -80,7 +95,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
             </div>
           </div>
 
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Vigil & Remembrance</p>
+          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Vigil & Remembrance <span className="ml-2 inline-block w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live</p>
           <h2 className="text-5xl font-serif text-[#F8F6F0] mb-4">In loving memory of {memorialData.name}</h2>
           <p className="text-lg text-[#E8DFD1] max-w-2xl mx-auto opacity-80">
             Light a candle as a symbol of remembrance, support, and eternal hope. Your flame joins others in a circle of quiet reflection in the darkness.
@@ -105,7 +120,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
             ) : (
               <div className="space-y-4">
                 {candles.map((candle) => (
-                  <div key={candle.id} className="bg-[#2A2A28] border-l-4 border-l-orange-500 rounded-lg p-6 flex items-start gap-5 shadow-lg">
+                  <div key={candle.id} className="bg-[#2A2A28] border-l-4 border-l-orange-500 rounded-lg p-6 flex items-start gap-5 shadow-lg animate-fadeIn">
                     <div className="flex-shrink-0 mt-1">
                       <Flame size={28} className="text-orange-500 fill-orange-500 animate-pulse drop-shadow-[0_0_10px_rgba(249,115,22,0.8)]" />
                     </div>
@@ -134,14 +149,14 @@ export default function VisitorCandlesPage({ dynamicId }) {
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Your Name (or leave anonymous)</label>
-              <input type="text" value={newCandle.from} onChange={(e) => setNewCandle({ ...newCandle, from: e.target.value || "Anonymous" })} placeholder="Your name or 'Anonymous'" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-orange-500" />
+              <input type="text" value={newCandle.from} onChange={(e) => setNewCandle({ ...newCandle, from: e.target.value })} placeholder="Your name or 'Anonymous'" className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-orange-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Your Message</label>
-              <textarea value={newCandle.message} onChange={(e) => setNewCandle({ ...newCandle, message: e.target.value })} placeholder="A word, thought, or brief memory..." rows={4} className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-orange-500" />
+              <textarea value={newCandle.message} onChange={(e) => setNewCandle({ ...newCandle, message: e.target.value })} placeholder="A word, thought, or brief memory..." rows={4} className="w-full px-3 py-2 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-orange-500 resize-none" />
             </div>
             <div className="flex gap-3 pt-4 border-t border-[#E8DFD1]">
-              <Button variant="primary" onClick={handleLightCandle} className="flex-1 flex gap-2 justify-center bg-orange-600 hover:bg-orange-700 text-white border-none shadow-[0_4px_15px_rgba(249,115,22,0.3)]">
+              <Button variant="primary" onClick={handleLightCandle} disabled={newCandle.from === "" || newCandle.message === ""} className="flex-1 flex gap-2 justify-center bg-orange-600 hover:bg-orange-700 text-white border-none shadow-[0_4px_15px_rgba(249,115,22,0.3)] disabled:opacity-50">
                 <Flame size={16} /> Ignite Light
               </Button>
               <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>

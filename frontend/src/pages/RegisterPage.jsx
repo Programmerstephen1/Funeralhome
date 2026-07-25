@@ -34,12 +34,20 @@ export default function RegisterPage() {
     if (search && search.includes("code=") && search.includes("state=twitter")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
-      if (code) {
+      
+      // THE FIX: Use sessionStorage to lock this exact code so it never double-fires
+      const processedCode = sessionStorage.getItem("twitter_auth_code_reg");
+      
+      if (code && processedCode !== code) {
+        sessionStorage.setItem("twitter_auth_code_reg", code); // Lock it!
+        
         processSocialLogin("twitter", { 
             code: code, 
             client_id: TWITTER_CLIENT_ID, 
             redirect_uri: `${window.location.origin}${window.location.pathname}` 
         });
+        
+        // Clean the URL immediately
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -125,7 +133,6 @@ export default function RegisterPage() {
       return;
     }
     const redirectUri = encodeURIComponent(`${window.location.origin}/register`);
-    // NOTE: code_challenge MUST be exactly 43 characters minimum for X API v2!
     const codeChallenge = "challenge12345678901234567890123456789012345";
     window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=twitter&code_challenge=${codeChallenge}&code_challenge_method=plain`;
   };

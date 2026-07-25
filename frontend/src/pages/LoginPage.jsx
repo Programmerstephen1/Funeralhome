@@ -34,12 +34,20 @@ export default function LoginPage() {
     if (search && search.includes("code=") && search.includes("state=twitter")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
-      if (code) {
+      
+      // THE FIX: Use sessionStorage to lock this exact code so it never double-fires
+      const processedCode = sessionStorage.getItem("twitter_auth_code");
+      
+      if (code && processedCode !== code) {
+        sessionStorage.setItem("twitter_auth_code", code); // Lock it!
+        
         processSocialLogin("twitter", { 
             code: code, 
             client_id: TWITTER_CLIENT_ID, 
             redirect_uri: `${window.location.origin}${window.location.pathname}` 
         });
+        
+        // Clean the URL immediately so a refresh doesn't trigger it again
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -132,7 +140,6 @@ export default function LoginPage() {
       return;
     }
     const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
-    // NOTE: code_challenge MUST be exactly 43 characters minimum for X API v2!
     const codeChallenge = "challenge12345678901234567890123456789012345";
     window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=twitter&code_challenge=${codeChallenge}&code_challenge_method=plain`;
   };
@@ -214,7 +221,6 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-3">
-            {/* Google SSO */}
             <button 
               onClick={() => googleLogin()}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"
@@ -229,7 +235,6 @@ export default function LoginPage() {
             </button>
 
             <div className="grid grid-cols-2 gap-3">
-              {/* Facebook SSO */}
               <button 
                 onClick={handleFacebookLogin}
                 className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"
@@ -240,7 +245,6 @@ export default function LoginPage() {
                 Facebook
               </button>
 
-              {/* X (Twitter) SSO */}
               <button 
                 onClick={handleTwitterLogin}
                 className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"

@@ -66,8 +66,12 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Float, nullable=False, default=0.0)
     
-    # NEW: Dynamic discount tag controlled by admin
+    # Dynamic discount tag controlled by admin
     discount_percent = db.Column(db.Integer, nullable=True, default=0)
+    
+    # NEW: Casket Sizing Modifier Flag & Dynamic Package Inclusions
+    has_sizes = db.Column(db.Boolean, default=False)
+    inclusions = db.Column(db.Text, nullable=True) # Stored as comma-separated text
     
     dispatch_location = db.Column(db.String(100), default="Nairobi Central")
     
@@ -94,6 +98,10 @@ class Product(db.Model):
         return len(self.reviews)
 
     def to_dict(self):
+        parsed_inclusions = []
+        if self.inclusions:
+            parsed_inclusions = [item.strip() for item in self.inclusions.split(",") if item.strip()]
+
         return {
             "id": self.id,
             "categoryId": self.category_id,
@@ -101,6 +109,8 @@ class Product(db.Model):
             "desc": self.description,
             "price": self.price,
             "discount_percent": self.discount_percent,
+            "has_sizes": bool(self.has_sizes),
+            "inclusions": parsed_inclusions,
             "dispatch_location": self.dispatch_location,
             "average_rating": self.get_average_rating(),
             "product_rating": self.get_product_rating(),

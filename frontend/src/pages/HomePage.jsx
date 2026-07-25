@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Phone, MapPin, Clock, Calendar, ChevronDown } from "lucide-react";
 import { Button, Card, CardBody } from "../components";
-
-// PRO-GRADE ADDITION: Import the navigation hook
 import { useNavigate } from "react-router-dom";
 
 const testimonials = [
@@ -38,8 +36,6 @@ const faqs = [
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // PRO-GRADE ADDITION: Initialize navigate
   const navigate = useNavigate();
 
   return (
@@ -69,10 +65,19 @@ export default function HomePage() {
                   <Button 
                     variant="secondary" 
                     size="lg"
-                    // PRO-GRADE ADDITION: Smooth React Router navigation
                     onClick={() => navigate('/plan')}
                   >
                     Plan Ahead
+                  </Button>
+                  
+                  {/* --- PRO-GRADE ADDITION: DIRECT DEMO LINK --- */}
+                  <Button 
+                    variant="secondary" 
+                    size="lg"
+                    className="border-[#A8895C] text-[#1F2E27] hover:bg-[#F8F6F0]"
+                    onClick={() => navigate('/memorial/demo')}
+                  >
+                    View Sample Memorial
                   </Button>
                 </div>
                 <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
@@ -344,7 +349,7 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Consultation Modal Overlay (FormSubmit Version) */}
+      {/* Consultation Modal Overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="consultation-title">
           <div className="w-full max-w-md rounded-lg border border-[#D8CFBC] bg-[#F8F6F0] p-8 shadow-2xl">
@@ -356,8 +361,6 @@ export default function HomePage() {
             </p>
             
             <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="space-y-5">
-              
-              {/* FormSubmit Configuration */}
               <input type="hidden" name="_subject" value="New Pre-Planning Consultation Request" />
               <input type="hidden" name="_captcha" value="false" />
 

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react"; 
-import { Bookmark, BookOpen, Image as ImageIcon, PenTool, Flower, Flame, Users, TreeDeciduous, FileText, ArrowRight, Lock, UserPlus, FileSignature, CheckCircle, Upload, Heart, Quote } from "lucide-react";
+import { Bookmark, BookOpen, Image as ImageIcon, PenTool, Flower, Flame, Users, TreeDeciduous, FileText, ArrowRight, Lock, UserPlus, FileSignature, CheckCircle, Upload, Heart, Quote, Smartphone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardBody, Button } from "../components";
 
-// PRO-GRADE FIX: All 12 feature pages are now mapped into the grid
 const sections = [
   { icon: Bookmark, title: "Overview", description: "A calm introduction to the memorial site and its purpose.", target: "overview" },
   { icon: BookOpen, title: "Memorial Wall", description: "A dedicated space for highlighted remembrances and honored names.", target: "wall" },
@@ -15,8 +14,7 @@ const sections = [
   { icon: Users, title: "Family & Friends", description: "A curated roster of loved ones connected to the memorial.", target: "family" },
   { icon: TreeDeciduous, title: "Family Tree", description: "A gentle family tree view for tracing relationships and heritage.", target: "tree" },
   { icon: FileText, title: "Live Journal", description: "A journal space for updates, reflections, and ongoing remembrance.", target: "journal" },
-  { icon: FileSignature, title: "Write Eulogy", description: "Draft a digital tribute and generate a secure QR code for attendees.", target: "eulogy" },
-  { icon: Quote, title: "View Eulogy", description: "Read the finalized digital eulogy and scan the QR code.", target: "eulogy_view" },
+  { icon: FileSignature, title: "Write Eulogy", description: "Draft a digital tribute and generate a secure QR code for attendees.", target: "eulogy" }
 ];
 
 export default function MemorialOverviewPage({ dynamicId }) {
@@ -30,6 +28,8 @@ export default function MemorialOverviewPage({ dynamicId }) {
   const [createName, setCreateName] = useState("");
   const [createId, setCreateId] = useState(""); 
   const [createPin, setCreatePin] = useState("");
+  const [createFamilyTreePin, setCreateFamilyTreePin] = useState(""); 
+  const [createDonationNumber, setCreateDonationNumber] = useState("");
   const [createPortrait, setCreatePortrait] = useState("");
   
   const [error, setError] = useState("");
@@ -37,9 +37,47 @@ export default function MemorialOverviewPage({ dynamicId }) {
   const [helpText, setHelpText] = useState("Choose an option to open a private memorial space.");
 
   useEffect(() => {
+    if (dynamicId === "demo") {
+      const memorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
+      
+      if (!memorials["demo"]) {
+        memorials["demo"] = { 
+          name: "Jane Doe (Sample)", 
+          pin: "0000", 
+          familyTreePin: "1111", 
+          donationNumber: "0712 345 678", 
+          portrait: "https://via.placeholder.com/400x400?text=Jane+Doe" 
+        };
+        localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(memorials));
+
+        localStorage.setItem("LastPlannerJulz_Gallery_demo", JSON.stringify([
+          { id: 1, image: "https://via.placeholder.com/600x400?text=Family+Vacation", caption: "A beautiful day together", uploader: "John", date: new Date().toLocaleDateString() },
+          { id: 2, image: "https://via.placeholder.com/600x800?text=Graduation+Day", caption: "Always so proud", uploader: "Sarah", date: new Date().toLocaleDateString() }
+        ]));
+
+        localStorage.setItem("LastPlannerJulz_Candles_demo", JSON.stringify([
+          { id: 1, from: "The Smith Family", message: "Your light will always shine bright in our hearts.", date: new Date().toLocaleDateString() },
+          { id: 2, from: "Michael", message: "Missing you every single day.", date: new Date().toLocaleDateString() }
+        ]));
+
+        localStorage.setItem("LastPlannerJulz_Flowers_demo", JSON.stringify([
+          { id: 1, from: "Grace & Tom", arrangement: "White Roses & Lilies", date: new Date().toLocaleDateString() }
+        ]));
+
+        localStorage.setItem("LastPlannerJulz_NuclearFamily_demo", "true");
+        localStorage.setItem("LastPlannerJulz_Tree_demo", JSON.stringify([
+          { id: 1, name: "John Doe", relationship: "Husband", quote: "Forever my love.", photo: null },
+          { id: 2, name: "Sarah Doe", relationship: "Daughter", quote: "The best mother anyone could ask for.", photo: null }
+        ]));
+      }
+      return; 
+    }
+
     const token = localStorage.getItem("token") || localStorage.getItem("userEmail");
-    if (!token) navigate("/login");
-  }, [navigate]);
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate, dynamicId]);
 
   const triggerToastAndRedirect = (message, routeUrl) => {
     setToast({ show: true, message });
@@ -60,14 +98,26 @@ export default function MemorialOverviewPage({ dynamicId }) {
 
   const handleCreateMemorial = (e) => {
     e.preventDefault();
-    if (!createName || !createId || !createPin) return setError("Please fill out all required fields.");
+    if (createName === "" || createId === "" || createPin === "" || createFamilyTreePin === "" || createDonationNumber === "") {
+      setError("Please fill out all required fields, including PINs and Donation Number.");
+      return;
+    }
     
-    const cleanId = createId.toLowerCase().replace(/\s+/g, '-');
+    const cleanId = createId.toLowerCase().split(' ').join('-');
     const memorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     
-    if (memorials[cleanId]) return setError("This Memorial ID is already taken. Please choose another.");
+    if (memorials[cleanId]) {
+      setError("This Memorial ID is already taken. Please choose another.");
+      return;
+    }
 
-    memorials[cleanId] = { name: createName, pin: createPin, portrait: createPortrait };
+    memorials[cleanId] = { 
+      name: createName, 
+      pin: createPin, 
+      familyTreePin: createFamilyTreePin, 
+      donationNumber: createDonationNumber, 
+      portrait: createPortrait 
+    };
     localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(memorials));
     
     triggerToastAndRedirect("Secure memorial space generated successfully!", `/memorial/${cleanId}`);
@@ -75,13 +125,13 @@ export default function MemorialOverviewPage({ dynamicId }) {
 
   const handleAccessMemorial = (e) => {
     e.preventDefault();
-    const cleanAccessId = accessId.toLowerCase().replace(/\s+/g, '-');
+    const cleanAccessId = accessId.toLowerCase().split(' ').join('-');
     const memorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     
     if (memorials[cleanAccessId] && memorials[cleanAccessId].pin === accessPin) {
       triggerToastAndRedirect("Access granted. Unlocking dashboard...", `/memorial/${cleanAccessId}`);
     } else {
-      setError("Invalid Memorial ID or PIN.");
+      setError("Invalid Memorial ID or General Access PIN.");
     }
   };
 
@@ -104,10 +154,10 @@ export default function MemorialOverviewPage({ dynamicId }) {
           <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-[#E8DFD1]">
             <div className="flex border-b border-[#E8DFD1] mb-8">
               <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "access" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("access"); setError(""); setHelpText("Enter the memorial ID and PIN shared with your family."); }}>Access Space</button>
-              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Create a secure memorial space and choose a memorable access ID."); }}>Create Space</button>
+              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Create a secure memorial space and set up your access controls."); }}>Create Space</button>
             </div>
 
-            {error && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
+            {error !== "" && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
             <div className="mb-6 rounded-lg border border-[#E8DFD1] bg-[#F8F6F0] px-4 py-3 text-sm text-[#3D3530]">{helpText}</div>
 
             {view === "access" && (
@@ -117,7 +167,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
                   <input type="text" value={accessId} onChange={e => setAccessId(e.target.value)} placeholder="e.g., doe-family" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2">Family Access PIN</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2">General Access PIN</label>
                   <input type="password" value={accessPin} onChange={e => setAccessPin(e.target.value)} placeholder="••••" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
                 <button type="submit" className="w-full py-4 bg-[#1F2E27] text-white font-semibold uppercase tracking-widest text-sm rounded-lg hover:bg-[#A8895C] transition-colors mt-4 shadow-md hover:-translate-y-0.5">Unlock Memorial</button>
@@ -134,10 +184,23 @@ export default function MemorialOverviewPage({ dynamicId }) {
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2">Memorial Access ID *</label>
                   <input type="text" value={createId} onChange={e => setCreateId(e.target.value)} placeholder="e.g., doe-family" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2">Create a Secure PIN *</label>
-                  <input type="password" value={createPin} onChange={e => setCreatePin(e.target.value)} placeholder="4-digit PIN" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#1F2E27] mb-2">General PIN *</label>
+                    <input type="password" value={createPin} onChange={e => setCreatePin(e.target.value)} placeholder="e.g. 1234" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all text-center" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#1F2E27] mb-2">Nuclear Family PIN *</label>
+                    <input type="password" value={createFamilyTreePin} onChange={e => setCreateFamilyTreePin(e.target.value)} placeholder="e.g. 9999" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all text-center" />
+                  </div>
                 </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Smartphone size={14} className="text-[#A8895C]"/> Family Treasurer Mobile No. *</label>
+                  <input type="tel" value={createDonationNumber} onChange={e => setCreateDonationNumber(e.target.value)} placeholder="07XX XXX XXX (For Remittances)" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
+                </div>
+
                 <div>
                   <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Upload size={14} className="text-[#A8895C]"/> Primary Portrait (Optional)</label>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full p-2 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] text-sm file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-xs file:uppercase file:tracking-wider file:font-bold file:bg-[#1F2E27] file:text-white hover:file:bg-[#A8895C] transition-colors cursor-pointer" />
@@ -157,8 +220,13 @@ export default function MemorialOverviewPage({ dynamicId }) {
         <section className="mb-16 text-center">
           <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#A8895C] mb-4">Private Memorial Hub</p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-[#1F2E27] mb-6 leading-tight">A quiet place for <br className="hidden md:block"/> collective remembrance</h1>
+          
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto leading-relaxed">
-            You are securely managing the memorial space for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Each space below is designed to support thoughtful tribute, shared memory, and calm family connection.
+            {dynamicId === "demo" ? (
+              <span>You are exploring the interactive sample memorial space for <strong className="text-[#1F2E27]">Jane Doe</strong>. Feel free to navigate the modules below to see how our platform works.</span>
+            ) : (
+              <span>You are securely managing the memorial space for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Each space below is designed to support thoughtful tribute, shared memory, and calm family connection.</span>
+            )}
           </p>
         </section>
 
