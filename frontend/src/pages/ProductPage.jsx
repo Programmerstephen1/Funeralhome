@@ -1,457 +1,301 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Star, ShoppingCart, Truck, ShieldCheck, ChevronLeft, CheckCircle, AlertCircle, Maximize2 } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { ChevronLeft, Check, Star, ShieldCheck, Box, Route as RouteIcon, MapPin, Fuel, ShoppingCart } from "lucide-react";
 
-// --- CUSTOM INTERACTIVE STAR COMPONENT ---
-const InteractiveStars = ({ rating, setRating, label }) => {
-  const [hover, setHover] = useState(0);
-  
-  return (
-    <div className="mb-6">
-      <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">{label}</label>
-      <div className="flex gap-1">
-        {[...Array(5)].map((_, index) => {
-          const starValue = index + 1;
-          return (
-            <button
-              type="button"
-              key={starValue}
-              className="focus:outline-none transition-transform hover:scale-110"
-              onClick={() => setRating(starValue)}
-              onMouseEnter={() => setHover(starValue)}
-              onMouseLeave={() => setHover(0)}
-            >
-              <Star
-                size={28}
-                className={starValue <= (hover || rating) ? "text-[#A8895C] fill-[#A8895C]" : "text-[#E8DFD1] fill-transparent"}
-              />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+// --- FALLBACK DATA ---
+const fallbackProducts = [
+  { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
+  { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 92000, has_sizes: true, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
+  { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 105000, has_sizes: true, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
+  { id: 104, categoryId: "casket_list", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 98000, has_sizes: true, images: ["/images/caskets/casket4.jpg"] },
+  { id: 105, categoryId: "casket_list", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 96000, has_sizes: true, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
+  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Base daily rate shown.", price: 25000, images: ["/images/hearses/hearse1(0).jpeg"] },
+  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport. Base daily rate shown.", price: 15000, images: ["/images/hearses/hearse2(0).jpeg"] },
+  { id: 201, categoryId: "wreaths", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 18000, images: ["/images/wreaths/wreath1.jpeg"] },
+  { id: 151, categoryId: "urns", title: "Classic Marble Box Urn", desc: "Solid cultured marble in a deep burgundy finish.", price: 18000, images: ["/images/urns/images(0).jpg"] },
+];
 
-// --- NEW PRO-GRADE COMPONENT: PACKAGE INCLUSIONS ---
-const PackageInclusions = ({ inclusions }) => {
-  if (!inclusions || inclusions.length === 0) return null;
-  return (
-    <div className="mt-8 border-t border-[#E8DFD1] pt-8">
-      <h3 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4">Package Inclusions</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {inclusions.map((item, idx) => (
-          <div key={idx} className="flex items-start gap-2 text-sm text-[#3D3530]">
-            <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-            <span>{item}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+// --- STRICT ENTERPRISE SIZING MATH ---
+const casketSizes = [
+  { id: "s2", label: "Small (2 ft)", priceModifier: -30000 },
+  { id: "s4", label: "Small (4 ft)", priceModifier: -26000 },
+  { id: "s6", label: "Small (6 ft)", priceModifier: -22000 },
+  { id: "s8", label: "Small (8 ft)", priceModifier: -18000 },
+  { id: "s10", label: "Small (10 ft)", priceModifier: -14000 },
+  { id: "s12", label: "Small (12 ft)", priceModifier: -10000 },
+  { id: "normal", label: "Normal (Standard Adult)", priceModifier: 0 },
+  { id: "large", label: "Large (Oversized)", priceModifier: 50000 },
+  { id: "xl", label: "Extra Large (Custom Fit)", priceModifier: 68000 }
+];
 
-export default function ProductPage({ addToCart }) {
+export default function ProductPage({ addToCart, bookRental }) {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("description");
   const [mainImage, setMainImage] = useState("");
   const [recentlyAdded, setRecentlyAdded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // --- NEW: DYNAMIC SIZING ENGINE ---
-  // Defaulting to index 2 (Normal 6 ft)
-  const sizeOptions = [
-    { label: "Small (2 ft)", modifier: -6000 },
-    { label: "Small (4 ft)", modifier: -3000 },
-    { label: "Normal (6 ft)", modifier: 0 },
-    { label: "Large (8 ft)", modifier: 3000 },
-    { label: "Extra Large (10 ft)", modifier: 7000 },
-    { label: "Oversized (12 ft)", modifier: 150000 }
-  ];
-  const [selectedSizeIndex, setSelectedSizeIndex] = useState(2); 
-
-  // Split Review State
-  const [productRating, setProductRating] = useState(5);
-  const [serviceRating, setServiceRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
-  const [reviewStatus, setReviewStatus] = useState(null);
+  // Configuration States
+  const [casketSizeIndex, setCasketSizeIndex] = useState(6); // Normal Size Default (Index 6)
+  const [rentalDetails, setRentalDetails] = useState({ 
+    pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" 
+  });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetchProduct();
-  }, [id]);
-
-  const fetchProduct = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/products/${id}`);
-      if (response.ok) {
-        const data = await response.json();
+    fetch(`${API_URL}/api/products/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
         setProduct(data);
-        if (data.images && data.images.length > 0) {
-          setMainImage(data.images[0]);
+        setMainImage(data.images[0]);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback if Flask server is offline
+        let found = null;
+        for (let i = 0; i < fallbackProducts.length; i++) {
+          if (fallbackProducts[i].id === parseInt(id)) {
+            found = fallbackProducts[i];
+          }
         }
-      } else {
-        navigate("/catalog");
-      }
-    } catch (error) {
-      console.error("Error fetching product:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // NEW: Calculates final price based on selected size dropdown
-  const getCalculatedPrice = () => {
-    if (!product) return 0;
-    if (product.has_sizes) {
-      return product.price + sizeOptions[selectedSizeIndex].modifier;
-    }
-    return product.price;
-  };
-
-  const handleAddToCart = () => {
-    if (product) {
-      const finalPrice = getCalculatedPrice();
-      const selectedSizeLabel = product.has_sizes ? sizeOptions[selectedSizeIndex].label : null;
-      
-      // Ensures different sizes of the same product don't stack up as the exact same item in the cart
-      const cartItem = { 
-        ...product, 
-        price: finalPrice, 
-        selectedSize: selectedSizeLabel,
-        cartItemId: product.has_sizes ? `${product.id}-${selectedSizeIndex}` : product.id,
-        title: product.has_sizes ? `${product.title} - ${selectedSizeLabel}` : product.title
-      };
-
-      addToCart(cartItem);
-      setRecentlyAdded(true);
-      setTimeout(() => setRecentlyAdded(false), 2000);
-    }
-  };
-
-  const submitReview = async (e) => {
-    e.preventDefault();
-    setReviewStatus(null);
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setReviewStatus({ type: "error", message: "You must be signed in to leave a review." });
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/products/${id}/reviews`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          productRating: productRating, 
-          serviceRating: serviceRating, 
-          comment: reviewComment 
-        })
+        setProduct(found);
+        if (found && found.images.length > 0) {
+          setMainImage(found.images[0]);
+        }
+        setLoading(false);
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setReviewStatus({ type: "success", message: "Review submitted successfully!" });
-        setProduct(data.product); 
-        setReviewComment("");
-        setProductRating(5);
-        setServiceRating(5);
-      } else {
-        setReviewStatus({ type: "error", message: data.error || "Failed to submit review." });
-      }
-    } catch (error) {
-      setReviewStatus({ type: "error", message: "Network error occurred." });
-    }
-  };
-
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, index) => (
-      <Star 
-        key={index} 
-        size={14} 
-        className={index < Math.round(rating) ? "text-[#A8895C] fill-[#A8895C]" : "text-[#E8DFD1] fill-transparent"} 
-      />
-    ));
-  };
+  }, [id, API_URL]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#F8F6F0]"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A8895C]"></div></div>;
+    return (
+      <div className="min-h-screen bg-[#F8F6F0] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A8895C]"></div>
+      </div>
+    );
   }
 
-  if (!product) return null;
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-[#F8F6F0] flex flex-col items-center justify-center text-center p-4">
+        <Box size={48} className="text-[#A8895C] mb-4" />
+        <h2 className="text-2xl font-serif text-[#1F2E27] mb-4">Item Not Found</h2>
+        <Link to="/catalog" className="bg-[#1F2E27] text-white px-6 py-3 rounded text-sm uppercase tracking-widest hover:bg-[#A8895C] transition-colors">
+          Return to Catalog
+        </Link>
+      </div>
+    );
+  }
 
-  // DYNAMIC PRICING CALCULATIONS
-  const finalCalculatedPrice = getCalculatedPrice();
+  const isCasket = product.has_sizes || product.categoryId === "casket_list";
+  const isHearse = product.categoryId === "hearses";
+  
   const discountPercent = product.discount_percent || 0;
-  const originalPrice = discountPercent > 0 ? (finalCalculatedPrice / (1 - discountPercent / 100)) : finalCalculatedPrice;
-  const ratingScore = product.average_rating || 0;
+  const originalPrice = discountPercent > 0 ? (product.price / (1 - discountPercent / 100)) : product.price;
+
+  // DYNAMIC PRICE CALCULATION
+  let finalPrice = product.price;
+  
+  if (isCasket) {
+    finalPrice = product.price + casketSizes[casketSizeIndex].priceModifier;
+  } else if (isHearse) {
+    const baseDailyRate = product.price;
+    let days = 1;
+    if (rentalDetails.pickupDate && rentalDetails.returnDate) {
+      const start = new Date(rentalDetails.pickupDate);
+      const end = new Date(rentalDetails.returnDate);
+      const timeDiff = end.getTime() - start.getTime();
+      if (timeDiff > 0) days = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    }
+    const totalBasePrice = baseDailyRate * days;
+
+    let distanceCharge = 0;
+    const distance = Number(rentalDetails.estimatedDistance) || 0;
+    if (rentalDetails.mileagePlan === "limited") {
+      const allowedDistance = 150 * days;
+      if (distance > allowedDistance) distanceCharge = (distance - allowedDistance) * 120;
+    } else if (rentalDetails.mileagePlan === "unlimited") {
+      distanceCharge = 8000 * days; 
+    }
+
+    let fuelCharge = 0;
+    if (rentalDetails.fuelPolicy === "pre_purchased") {
+        fuelCharge = 12500;
+    }
+    
+    finalPrice = totalBasePrice + distanceCharge + fuelCharge;
+  }
+
+  const handleAction = () => {
+    let itemToAdd = { ...product, price: finalPrice };
+
+    if (isCasket) {
+      const size = casketSizes[casketSizeIndex];
+      itemToAdd.cartItemId = `${product.id}-${size.id}`;
+      itemToAdd.title = `${product.title} (${size.label})`;
+      addToCart(itemToAdd);
+    } else if (isHearse) {
+      itemToAdd.title = `${product.title} (Scheduled Transport)`;
+      itemToAdd.rentalSchedule = rentalDetails;
+      bookRental(itemToAdd);
+    } else {
+      itemToAdd.cartItemId = product.id;
+      addToCart(itemToAdd);
+    }
+
+    setRecentlyAdded(true);
+    setTimeout(() => setRecentlyAdded(false), 2000);
+  };
+
+  let isFormValid = true;
+  if (isHearse) {
+    if (rentalDetails.pickup === "" || rentalDetails.dropoff === "" || rentalDetails.pickupDate === "" || rentalDetails.returnDate === "" || rentalDetails.estimatedDistance <= 0) {
+      isFormValid = false;
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#F8F6F0] min-h-screen py-12">
+      <div className="site-container max-w-6xl mx-auto px-4">
         
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-6 transition-colors">
-          <ChevronLeft size={16} /> Back to Catalog
-        </button>
+        <div className="mb-8">
+          <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold transition-colors">
+            <ChevronLeft size={16} /> Back to Results
+          </button>
+        </div>
 
-        {/* --- TOP SECTION: IMAGE & BUY BOX --- */}
-        <div className="bg-white border border-[#E8DFD1] rounded-xl shadow-sm overflow-hidden mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            
-            {/* Left: Image Gallery */}
-            <div className="p-8 border-b lg:border-b-0 lg:border-r border-[#E8DFD1] flex flex-col items-center relative">
-              
-              {/* Dynamic Discount Badge on Image */}
-              {discountPercent > 0 && (
-                <div className="absolute top-8 left-8 bg-[#FF4747] text-white text-xs font-bold px-3 py-1 rounded z-20 shadow-md">
-                  {discountPercent}% OFF
-                </div>
-              )}
-
-              <div className="w-full aspect-square bg-[#F4F1EA] rounded-lg mb-4 overflow-hidden flex items-center justify-center">
-                <img src={mainImage || "https://via.placeholder.com/600x600?text=No+Image"} alt={product.title} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex gap-2 overflow-x-auto w-full pb-2 custom-scrollbar">
-                {product.images?.map((img, idx) => (
-                  <button 
-                    key={idx} 
-                    onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 shrink-0 rounded border-2 overflow-hidden ${mainImage === img ? 'border-[#A8895C]' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                  >
-                    <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+          {/* Images */}
+          <div className="space-y-4">
+            <div className="bg-white border border-[#E8DFD1] rounded-xl p-4 aspect-square flex items-center justify-center overflow-hidden shadow-sm">
+              <img src={mainImage} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.target.src = "https://via.placeholder.com/600x600?text=Photo+Pending" }} />
+            </div>
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                {product.images.map((img, idx) => (
+                  <button key={idx} onClick={() => setMainImage(img)} className={`w-20 h-20 shrink-0 bg-white border rounded overflow-hidden transition-all ${mainImage === img ? "border-[#A8895C] ring-2 ring-[#A8895C]/20" : "border-[#E8DFD1] hover:border-[#A8895C]"}`}>
+                    <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Right: Product Details & Logistics */}
-            <div className="p-8 lg:p-12 flex flex-col">
-              <h1 className="text-3xl font-serif text-[#1F2E27] mb-3">{product.title}</h1>
-              
-              <div className="flex items-center gap-2 mb-6 border-b border-[#E8DFD1] pb-6">
-                <div className="flex">{renderStars(ratingScore)}</div>
-                <span className="text-sm font-semibold text-[#1F2E27]">{ratingScore > 0 ? ratingScore.toFixed(1) : ""}</span>
-                <span className="text-sm text-[#8F847C] ml-2 border-l border-[#E8DFD1] pl-2">
-                  {product.review_count > 0 ? `${product.review_count} Reviews` : "0 Reviews"}
-                </span>
-              </div>
-
-              {/* DYNAMIC SIZING ENGINE UI */}
-              {product.has_sizes && (
-                <div className="mb-6">
-                <label className="flex items-center gap-2 text-xs font-bold text-[#1F2E27] uppercase tracking-wider mb-2">
-                    <Maximize2 size={14} className="text-[#A8895C]" /> Select Casket Size
-                  </label>
-                  <select 
-                    value={selectedSizeIndex}
-                    onChange={(e) => setSelectedSizeIndex(Number(e.target.value))}
-                    className="w-full p-4 border border-[#A8895C] rounded-lg outline-none focus:ring-2 focus:ring-[#A8895C]/20 bg-[#F8F6F0] text-sm font-semibold text-[#3D3530] transition-all cursor-pointer shadow-sm"
-                  >
-                    {sizeOptions.map((opt, idx) => (
-                      <option key={idx} value={idx}>
-                        {opt.label} {opt.modifier !== 0 ? `(${opt.modifier > 0 ? '+' : '-'}KSh ${Math.abs(opt.modifier).toLocaleString()})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="bg-[#F8F6F0] p-6 rounded-lg border border-[#E8DFD1] mb-4">
-                <div className="flex flex-col mb-2">
-                  <span className={`text-4xl font-bold ${discountPercent > 0 ? 'text-[#FF4747]' : 'text-[#1F2E27]'}`}>
-                    KSh {finalCalculatedPrice.toLocaleString()}
-                  </span>
-                  {discountPercent > 0 && (
-                    <span className="text-sm text-[#8F847C] line-through mt-1">
-                      KSh {Math.round(originalPrice).toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-green-700 flex items-center gap-1 font-semibold mt-4">
-                  <ShieldCheck size={16} /> 100% Secure Checkout via M-Pesa
-                </p>
-              </div>
-
-              {/* DYNAMIC PACKAGE INCLUSIONS */}
-              <PackageInclusions inclusions={product.inclusions} />
-
-              {/* Logistics & Delivery Details */}
-              <div className="space-y-4 mb-8 mt-8 text-sm text-[#3D3530]">
-                <div className="flex items-start gap-3 border-b border-[#E8DFD1] pb-3">
-                  <Truck className="text-[#A8895C] shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <span className="font-semibold block mb-1">Dispatch Hub:</span>
-                    {product.dispatch_location}
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <span className="font-semibold block mb-1">Services:</span>
-                    Local Dispatch & Professional Handling
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-6 border-t border-[#E8DFD1]">
-                <button 
-                  onClick={handleAddToCart}
-                  disabled={recentlyAdded}
-                  className={`w-full py-4 rounded font-bold uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 ${
-                    recentlyAdded ? "bg-emerald-700 text-white" : "bg-[#1F2E27] text-white hover:bg-[#A8895C]"
-                  }`}
-                >
-                  {recentlyAdded ? <><CheckCircle size={20} /> Added to Cart</> : <><ShoppingCart size={20} /> Add to Booking</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* --- BOTTOM SECTION: THE TABBED INTERFACE --- */}
-        <div className="bg-white border border-[#E8DFD1] rounded-xl shadow-sm overflow-hidden">
-          <div className="flex border-b border-[#E8DFD1] bg-[#F8F6F0] overflow-x-auto">
-            {["description", "specifications", "reviews"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-8 py-4 text-sm font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${
-                  activeTab === tab 
-                  ? "bg-white text-[#A8895C] border-t-2 border-t-[#A8895C]" 
-                  : "text-[#716860] hover:text-[#1F2E27]"
-                }`}
-              >
-                {tab} {tab === 'reviews' && `(${product.review_count})`}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-8">
-            {/* 1. Description Tab */}
-            {activeTab === "description" && (
-              <div className="prose max-w-none text-[#3D3530] leading-relaxed">
-                <h3 className="text-xl font-serif mb-4 text-[#1F2E27]">Product Details</h3>
-                <p>{product.desc}</p>
-              </div>
             )}
+          </div>
 
-            {/* 2. Specifications Tab */}
-            {activeTab === "specifications" && (
-              <div>
-                <h3 className="text-xl font-serif mb-6 text-[#1F2E27]">Detailed Specifications</h3>
-                {product.specifications && product.specifications.length > 0 ? (
-                  <div className="overflow-hidden border border-[#E8DFD1] rounded-lg">
-                    <table className="min-w-full divide-y divide-[#E8DFD1]">
-                      <tbody className="bg-white divide-y divide-[#E8DFD1]">
-                        {product.specifications.map((spec, idx) => (
-                          <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-[#F8F6F0]"}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#716860] w-1/3">{spec.key}</td>
-                            <td className="px-6 py-4 text-sm text-[#3D3530]">{spec.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-[#8F847C] italic">No technical specifications available for this item.</p>
+          {/* Configuration & Purchase Block */}
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-[#A8895C] uppercase tracking-widest mb-2 block">
+              {product.categoryId?.replace(/_/g, " ")}
+            </span>
+            <h1 className="text-3xl lg:text-4xl font-serif text-[#1F2E27] mb-4">{product.title}</h1>
+            
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#E8DFD1]">
+              <div className="flex flex-col">
+                <span className="text-4xl font-bold text-[#1F2E27]">
+                  KSh {finalPrice.toLocaleString()} {isHearse && <span className="text-sm text-[#8F847C] font-normal tracking-wide">/ calculated</span>}
+                </span>
+                {discountPercent > 0 && (
+                   <span className="text-sm text-[#8F847C] line-through mt-1">
+                     Was KSh {Math.round(originalPrice).toLocaleString()}
+                   </span>
                 )}
               </div>
-            )}
+            </div>
 
-            {/* 3. Reviews Tab */}
-            {activeTab === "reviews" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                {/* Left: Customer Reviews */}
-                <div>
-                  <div className="flex items-end justify-between mb-6">
-                    <h3 className="text-xl font-serif text-[#1F2E27]">Customer Feedback</h3>
-                    
-                    {/* Aggregated Score Breakdown */}
-                    {product.review_count > 0 && (
-                      <div className="text-right text-xs text-[#8F847C]">
-                        <p>Product: <span className="text-[#A8895C] font-bold">{product.product_rating.toFixed(1)}</span></p>
-                        <p>Service: <span className="text-[#A8895C] font-bold">{product.service_rating.toFixed(1)}</span></p>
-                      </div>
-                    )}
-                  </div>
+            <p className="text-[#3D3530] leading-relaxed mb-8">{product.desc}</p>
 
-                  {product.reviews && product.reviews.length > 0 ? (
-                    <div className="space-y-6">
-                      {product.reviews.map((review) => (
-                         <div key={review.id} className="border-b border-[#E8DFD1] pb-6 last:border-0">
-                           <div className="flex flex-col gap-1.5 mb-3 bg-[#F8F6F0] p-3 rounded border border-[#E8DFD1]/50">
-                             <div className="flex items-center text-xs text-[#716860]">
-                               <span className="w-16 font-semibold uppercase tracking-wider">Product</span>
-                               <div className="flex">{renderStars(review.product_rating)}</div>
-                             </div>
-                             <div className="flex items-center text-xs text-[#716860]">
-                               <span className="w-16 font-semibold uppercase tracking-wider">Service</span>
-                               <div className="flex">{renderStars(review.service_rating)}</div>
-                             </div>
-                           </div>
-                           
-                           <div className="flex justify-between items-center mb-1">
-                             <p className="text-sm font-bold text-[#1F2E27]">{review.user_email.split('@')[0]}</p>
-                             <span className="text-xs text-[#8F847C]">{new Date(review.created_at).toLocaleDateString()}</span>
-                           </div>
-                           <p className="text-sm text-[#3D3530] italic">"{review.comment}"</p>
-                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-[#8F847C] italic bg-[#F8F6F0] p-6 rounded text-center border border-[#E8DFD1]/50">No reviews have been posted yet. Be the first to share your thoughts.</p>
-                  )}
-                </div>
-
-                {/* Right: Submit a Review (INTERACTIVE STARS) */}
-                <div className="bg-white p-6 lg:p-8 rounded-xl border border-[#E8DFD1] shadow-sm h-fit">
-                  <h3 className="text-xl font-serif mb-6 text-[#1F2E27]">Write a Review</h3>
-                  
-                  {reviewStatus && (
-                    <div className={`p-3 rounded mb-6 text-sm flex items-center gap-2 ${reviewStatus.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                      {reviewStatus.type === 'error' ? <AlertCircle size={16}/> : <CheckCircle size={16}/>}
-                      {reviewStatus.message}
-                    </div>
-                  )}
-
-                  <form onSubmit={submitReview} className="space-y-2">
-                    
-                    {/* Interactive Star Rows */}
-                    <InteractiveStars rating={productRating} setRating={setProductRating} label="Product Satisfaction" />
-                    <InteractiveStars rating={serviceRating} setRating={setServiceRating} label="Service Satisfaction" />
-                    
-                    <div className="pt-2">
-                      <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Review (Optional)</label>
-                      <textarea 
-                        value={reviewComment}
-                        onChange={(e) => setReviewComment(e.target.value)}
-                        rows="4" 
-                        placeholder="Share your thoughts..."
-                        className="w-full p-4 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-sm resize-none transition-colors"
-                      ></textarea>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <button type="submit" className="bg-[#A8895C] text-white px-6 py-4 rounded text-sm font-bold uppercase tracking-widest hover:bg-[#1F2E27] transition-colors w-full shadow-md">
-                        Submit Review
-                      </button>
-                    </div>
-                  </form>
+            {/* EMBEDDED CASKET SIZING ENGINE */}
+            {isCasket && (
+              <div className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 shadow-sm">
+                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Box size={16} className="text-[#A8895C]"/> Select Dimensions
+                </h4>
+                <div className="space-y-3">
+                  {casketSizes.map((size, index) => {
+                    const priceModifierText = size.priceModifier === 0 
+                      ? "Base Price" 
+                      : size.priceModifier > 0 
+                        ? `+ KSh ${size.priceModifier.toLocaleString()}` 
+                        : `- KSh ${Math.abs(size.priceModifier).toLocaleString()}`;
+                        
+                    return (
+                      <label key={size.id} className={`flex items-center justify-between p-4 rounded border cursor-pointer transition-all ${casketSizeIndex === index ? "bg-[#F8F6F0] border-[#A8895C] shadow-sm" : "border-[#E8DFD1] hover:bg-[#F8F6F0]"}`}>
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="casketSize" className="accent-[#A8895C] w-4 h-4" checked={casketSizeIndex === index} onChange={() => setCasketSizeIndex(index)}/>
+                          <span className="text-sm font-semibold text-[#3D3530]">{size.label}</span>
+                        </div>
+                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#A8895C]" : "text-[#716860]"}`}>{priceModifierText}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             )}
+
+            {/* EMBEDDED RENTAL ENGINE */}
+            {isHearse && (
+              <div className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 space-y-8 shadow-sm">
+                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider flex items-center gap-2 border-b border-[#F8F6F0] pb-4">
+                  <MapPin size={16} className="text-[#A8895C]"/> Logistics Configuration
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Location</label>
+                    <input type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.pickup} onChange={(e) => setRentalDetails({...rentalDetails, pickup: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Destination (Burial Site)</label>
+                    <input type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.dropoff} onChange={(e) => setRentalDetails({...rentalDetails, dropoff: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Date</label>
+                    <input type="date" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.pickupDate} onChange={(e) => setRentalDetails({...rentalDetails, pickupDate: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Return Date</label>
+                    <input type="date" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.returnDate} onChange={(e) => setRentalDetails({...rentalDetails, returnDate: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Mileage Structure</label>
+                    <select className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.mileagePlan} onChange={(e) => setRentalDetails({...rentalDetails, mileagePlan: e.target.value})}>
+                      <option value="limited">Capped Mileage (150 km/day included)</option>
+                      <option value="unlimited">Unlimited Mileage (Premium Flat Fee)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Estimated Distance (Kilometers)</label>
+                    <input type="number" min="1" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.estimatedDistance} onChange={(e) => setRentalDetails({...rentalDetails, estimatedDistance: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-auto">
+              <button 
+                onClick={handleAction}
+                disabled={!isFormValid || recentlyAdded}
+                className={`w-full py-4 px-6 text-sm font-bold rounded flex items-center justify-center gap-2 uppercase tracking-widest transition-colors shadow-lg ${(!isFormValid || recentlyAdded) ? "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#3D3530]"}`}
+              >
+                {recentlyAdded ? (
+                  <><Check size={18}/> Successfully Added</>
+                ) : (
+                  <><ShoppingCart size={18}/> {isHearse ? "Add to Booking Requests" : "Add to Cart"}</>
+                )}
+              </button>
+            </div>
+            
+            <div className="mt-6 flex items-center gap-3 text-sm text-[#716860] bg-white p-4 border border-[#E8DFD1] rounded shadow-sm">
+               <ShieldCheck size={18} className="text-[#A8895C] shrink-0" />
+               <p>Verified Last Planner Julz Inventory. Secure Checkout.</p>
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   );

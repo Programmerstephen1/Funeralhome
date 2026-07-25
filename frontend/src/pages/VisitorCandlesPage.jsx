@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Flame, ArrowLeft, Plus } from "lucide-react";
 import { Link } from "react-router-dom"; 
-import { Button, Card, CardBody, Modal } from "../components";
+import { Button, Modal } from "../components";
 
 export default function VisitorCandlesPage({ dynamicId }) {
   const [candles, setCandles] = useState(() => {
@@ -22,7 +22,6 @@ export default function VisitorCandlesPage({ dynamicId }) {
     }
   }, [dynamicId]);
 
-  // NEW: Short-polling engine for live-streaming effect
   useEffect(() => {
     const fetchLiveCandles = () => {
       try {
@@ -34,8 +33,6 @@ export default function VisitorCandlesPage({ dynamicId }) {
         // Silent catch for smooth background streaming
       }
     };
-
-    // Pings for new data every 3 seconds
     const streamInterval = setInterval(fetchLiveCandles, 3000);
     return () => clearInterval(streamInterval);
   }, [dynamicId]);

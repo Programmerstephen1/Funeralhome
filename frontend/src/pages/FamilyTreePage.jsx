@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { TreeDeciduous, Camera, User, Plus, X, Quote, ArrowLeft, Lock } from "lucide-react";
+import { TreeDeciduous, Camera, User, Plus, X, Quote, ArrowLeft, Lock, HelpCircle, ShieldAlert } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; 
 import { Button, Card, CardBody } from "../components";
 
 export default function FamilyTreePage({ dynamicId }) {
+  const [memorialData, setMemorialData] = useState(null);
+  
   const [isAuthorized, setIsAuthorized] = useState(() => {
     return localStorage.getItem(`LastPlannerJulz_NuclearFamily_${dynamicId}`) === "true";
   });
   const [accessPin, setAccessPin] = useState("");
   const [authError, setAuthError] = useState("");
+
+  // PIN Recovery State
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryAnswerInput, setRecoveryAnswerInput] = useState("");
+  const [recoveredPin, setRecoveredPin] = useState(null);
 
   const [deceasedPhoto, setDeceasedPhoto] = useState(null);
   const [familyMembers, setFamilyMembers] = useState(() => {
@@ -26,25 +33,33 @@ export default function FamilyTreePage({ dynamicId }) {
   useEffect(() => {
     if (dynamicId) {
       const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
-      if (allMemorials[dynamicId] && allMemorials[dynamicId].portrait) {
-        setDeceasedPhoto(allMemorials[dynamicId].portrait);
+      if (allMemorials[dynamicId]) {
+        setMemorialData(allMemorials[dynamicId]);
+        if (allMemorials[dynamicId].portrait) {
+          setDeceasedPhoto(allMemorials[dynamicId].portrait);
+        }
       }
       localStorage.setItem(`LastPlannerJulz_Tree_${dynamicId}`, JSON.stringify(familyMembers));
     }
   }, [dynamicId, familyMembers]);
 
-  // THE FIX: Now checks against the specific Family Tree PIN created by the Admin
   const handleUnlock = (e) => {
     e.preventDefault();
-    const allMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
-    const currentMemorial = allMemorials[dynamicId];
-
-    if (currentMemorial && accessPin === currentMemorial.familyTreePin) {
+    if (memorialData && accessPin === memorialData.familyTreePin) {
       setIsAuthorized(true);
       setAuthError("");
       localStorage.setItem(`LastPlannerJulz_NuclearFamily_${dynamicId}`, "true");
     } else {
       setAuthError("Incorrect Nuclear Family PIN. Please try again.");
+    }
+  };
+
+  const handleVerifyRecovery = () => {
+    setAuthError("");
+    if (memorialData && recoveryAnswerInput.toLowerCase().trim() === memorialData.securityAnswer) {
+      setRecoveredPin(memorialData.familyTreePin);
+    } else {
+      setAuthError("Incorrect security answer. Please try again.");
     }
   };
 
@@ -71,31 +86,75 @@ export default function FamilyTreePage({ dynamicId }) {
   if (!isAuthorized) {
     return (
       <div className="bg-[#F8F6F0] py-12 min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-[#E8DFD1] p-8 text-center">
-          <div className="w-16 h-16 bg-[#1F2E27] rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock size={28} className="text-[#A8895C]" />
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-[#E8DFD1] p-8 text-center animate-fadeIn relative">
+          
+          <div className="w-16 h-16 bg-[#1F2E27] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            {recoveryMode ? <HelpCircle size={28} className="text-[#A8895C]" /> : <Lock size={28} className="text-[#A8895C]" />}
           </div>
-          <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Restricted Access</h2>
-          <p className="text-[#716860] mb-8 text-sm leading-relaxed">
-            For privacy and closure, the Family Tree module is restricted exclusively to the Nuclear Family. Please enter the specific Family Tree PIN provided by the administrator.
-          </p>
+          <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">{recoveryMode ? "Recover Access" : "Restricted Access"}</h2>
           
-          <form onSubmit={handleUnlock} className="space-y-4">
-            <div>
-              <input 
-                type="password" 
-                placeholder="Enter 4-Digit PIN" 
-                value={accessPin}
-                onChange={(e) => setAccessPin(e.target.value)}
-                className="w-full text-center tracking-[0.5em] text-2xl font-bold py-4 rounded border border-[#E8DFD1] bg-[#F8F6F0] outline-none focus:border-[#A8895C]"
-              />
-              {authError !== "" && <p className="text-red-600 text-xs mt-2 font-bold">{authError}</p>}
+          {authError !== "" && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-100 text-red-700 rounded text-xs flex items-center justify-center gap-1 font-semibold">
+              <ShieldAlert size={14} /> {authError}
             </div>
-            <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors">
-              Verify Access
-            </button>
-          </form>
-          
+          )}
+
+          {/* Login Mode */}
+          {!recoveryMode && (
+            <>
+              <p className="text-[#716860] mb-8 text-sm leading-relaxed">
+                For privacy and closure, the Family Tree module is restricted exclusively to the Nuclear Family. Please enter the specific Family Tree PIN.
+              </p>
+              <form onSubmit={handleUnlock} className="space-y-4">
+                <input 
+                  type="password" 
+                  placeholder="Enter 4-Digit PIN" 
+                  value={accessPin}
+                  onChange={(e) => setAccessPin(e.target.value)}
+                  className="w-full text-center tracking-[0.5em] text-2xl font-bold py-4 rounded border border-[#E8DFD1] bg-[#F8F6F0] outline-none focus:border-[#A8895C]"
+                />
+                <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors shadow-md">
+                  Verify Access
+                </button>
+                <button type="button" onClick={() => {setRecoveryMode(true); setAuthError("");}} className="text-[10px] uppercase font-bold tracking-widest text-[#A8895C] hover:text-[#1F2E27] transition-colors mt-4 block mx-auto">
+                  Forgot Family PIN?
+                </button>
+              </form>
+            </>
+          )}
+
+          {/* Recovery Mode */}
+          {recoveryMode && !recoveredPin && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-[#F8F6F0] p-4 rounded border border-[#E8DFD1] mb-4">
+                <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-1">Security Question</span>
+                <p className="font-serif text-[#1F2E27] text-sm">{memorialData?.securityQuestion || "No question set."}</p>
+              </div>
+              <input 
+                type="text" 
+                value={recoveryAnswerInput} 
+                onChange={(e) => setRecoveryAnswerInput(e.target.value)} 
+                placeholder="Type your answer..." 
+                className="w-full p-4 border border-[#E8DFD1] rounded bg-[#F8F6F0] outline-none focus:border-[#A8895C] text-center text-sm" 
+              />
+              <div className="flex gap-2">
+                <button onClick={() => {setRecoveryMode(false); setAuthError("");}} className="flex-1 bg-[#F8F6F0] text-[#3D3530] py-3 rounded font-bold uppercase tracking-widest text-[10px] hover:bg-[#E8DFD1] transition-colors border border-[#E8DFD1]">Back</button>
+                <button onClick={handleVerifyRecovery} className="flex-1 bg-[#A8895C] text-white py-3 rounded font-bold uppercase tracking-widest text-[10px] hover:bg-[#1F2E27] transition-colors">Verify</button>
+              </div>
+            </div>
+          )}
+
+          {/* Recovery Success */}
+          {recoveryMode && recoveredPin && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-[#1F2E27] p-6 rounded border border-[#1F2E27]">
+                <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-2">Nuclear Family PIN</span>
+                <p className="font-mono text-3xl tracking-[0.3em] text-white font-bold">{recoveredPin}</p>
+              </div>
+              <button onClick={() => {setRecoveryMode(false); setRecoveredPin(null);}} className="w-full border border-[#E8DFD1] text-[#1F2E27] py-3 rounded font-bold uppercase tracking-widest text-xs hover:bg-[#F8F6F0] transition-colors">Return to Login</button>
+            </div>
+          )}
+
           <div className="mt-8 pt-6 border-t border-[#E8DFD1]">
             <Link to={`/memorial/${dynamicId || ''}`} className="text-xs font-bold text-[#A8895C] uppercase tracking-wider hover:text-[#1F2E27]">
               Return to Public Hub

@@ -11,10 +11,9 @@ from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
-from .models import db, FuneralService, Tribute, User, Eulogy, Consultation, Product, ProductImage, ProductSpecification, ProductReview, Order, OrderItem, PaymentTransaction
+from .models import db, FuneralService, User, Eulogy, Consultation, Product, ProductImage, ProductSpecification, ProductReview, Order, OrderItem, PaymentTransaction, Memorial, JournalEntry, GalleryImage, MemorialCandle, FamilyTreeMember
 from .mpesa import generate_stk_push_payload
 
-# --- INITIALIZE PRO-GRADE LOGGER ---
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -110,7 +109,6 @@ def register():
         </div>
         """
         mail.send(msg)
-        logger.info(f"Welcome OTP successfully sent to {email}")
     except Exception as e:
         logger.error(f"Failed to send welcome OTP email: {e}")
 
@@ -136,7 +134,6 @@ def login():
     return jsonify({"message": "Invalid email or password"}), 401
 
 
-# --- PRO-GRADE GOOGLE SSO ROUTE ---
 @api.route("/api/auth/google", methods=["POST"])
 def google_login():
     payload = request.get_json() or {}
@@ -164,7 +161,6 @@ def google_login():
         user.is_verified = True 
         db.session.add(user)
         db.session.commit()
-        logger.info(f"New account created seamlessly via Google SSO: {email}")
         
     token = create_access_token(identity=str(user.id))
     
@@ -176,7 +172,6 @@ def google_login():
     }), 200
 
 
-# --- PRO-GRADE FACEBOOK SSO ROUTE ---
 @api.route("/api/auth/facebook", methods=["POST"])
 def facebook_login():
     payload = request.get_json() or {}
@@ -205,7 +200,6 @@ def facebook_login():
         user.is_verified = True 
         db.session.add(user)
         db.session.commit()
-        logger.info(f"New account created seamlessly via Facebook SSO: {email}")
         
     token = create_access_token(identity=str(user.id))
     
@@ -217,7 +211,6 @@ def facebook_login():
     }), 200
 
 
-# --- PRO-GRADE X (TWITTER) PKCE ROUTE ---
 @api.route("/api/auth/twitter", methods=["POST"])
 def twitter_login():
     payload = request.get_json() or {}
@@ -242,7 +235,6 @@ def twitter_login():
     token_res = py_requests.post(token_url, data=data, headers=headers)
     
     if not token_res.ok:
-        logger.error(f"X Token Exchange Error: {token_res.text}")
         return jsonify({"message": "Invalid or expired X/Twitter authorization code."}), 401
         
     access_token = token_res.json().get("access_token")
@@ -268,7 +260,6 @@ def twitter_login():
         user.is_verified = True 
         db.session.add(user)
         db.session.commit()
-        logger.info(f"New account created seamlessly via X/Twitter SSO: {email}")
         
     token = create_access_token(identity=str(user.id))
     
@@ -279,8 +270,6 @@ def twitter_login():
         "is_admin": bool(user.is_admin)
     }), 200
 
-
-# --- SECURE OTP VERIFICATION ROUTES ---
 
 @api.route("/api/auth/send-otp", methods=["POST"])
 def send_otp():
@@ -333,7 +322,6 @@ def send_otp():
         return jsonify({"message": "OTP sent successfully"}), 200
 
     except Exception as e:
-        logger.exception(f"CRITICAL: Failed to send OTP email to {email}")
         return jsonify({"message": "Failed to send email. Please try again.", "error": str(e)}), 500
 
 
@@ -383,29 +371,31 @@ def reset_password():
         return jsonify({"message": "Invalid or expired verification code."}), 400
 
 
-# --- PROTECTED DATA ROUTES ---
+# ==========================================
+# --- MEMORIAL HUB API ROUTES ---
+# ==========================================
 
-@api.route("/api/tributes", methods=["GET"])
-@jwt_required()
-def list_tributes():
-    user_id = get_jwt_identity()
-    tributes = Tribute.query.filter_by(user_id=user_id).limit(10).all()
-    return jsonify([t.to_dict() for t in tributes])
-
-
-@api.route("/api/tributes", methods=["POST"])
-@jwt_required()
-def create_tribute():
-    user_id = get_jwt_identity()
+@api.route("/api/memorials", methods=["POST"])
+def create_memorial():
     payload = request.get_json() or {}
-    tribute = Tribute(
-        name=payload.get("name", "Anonymous"),
-        message=payload.get("message", ""),
-        user_id=user_id
+    new_memorial = Memorial(
+        id=payload.get("id"),
+        name=payload.get("name"),
+        general_pin=payload.get("pin"),
+        nuclear_pin=payload.get("familyTreePin"),
+        donation_number=payload.get("donationNumber"),
+        portrait_url=payload.get("portrait"),
+        security_question=payload.get("securityQuestion"),
+        security_answer=payload.get("securityAnswer", "").lower().strip()
     )
-    db.session.add(tribute)
+    db.session.add(new_memorial)
     db.session.commit()
-    return jsonify(tribute.to_dict()), 201
+    return jsonify({"message": "Memorial created successfully", "memorial": new_memorial.to_dict()}), 201
+
+@api.route("/api/memorials/<memorial_id>", methods=["GET"])
+def get_memorial(memorial_id):
+    memorial = Memorial.query.get_or_404(memorial_id)
+    return jsonify(memorial.to_dict()), 200
 
 
 # --- EULOGY ROUTES ---
@@ -436,7 +426,6 @@ def create_eulogy():
         }), 201
         
     except Exception as e:
-        logger.error(f"Eulogy creation failed: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
@@ -466,7 +455,6 @@ def get_product_detail(product_id):
     return jsonify(product.to_dict()), 200
 
 @api.route("/api/upload", methods=["POST"])
-@jwt_required()
 def upload_file():
     if 'file' not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -518,17 +506,6 @@ def add_review(product_id):
     
     return jsonify({"message": "Review submitted successfully!", "product": product.to_dict()}), 201
 
-@api.route("/api/debug/mock-purchase/<int:product_id>", methods=["POST"])
-@jwt_required()
-def debug_mock_purchase(product_id):
-    user_id = get_jwt_identity()
-    new_order = Order(user_id=user_id, total_amount=1000, status="completed")
-    db.session.add(new_order)
-    db.session.flush()
-    purchased_item = OrderItem(order_id=new_order.id, product_id=product_id, quantity=1)
-    db.session.add(purchased_item)
-    db.session.commit()
-    return jsonify({"message": f"Successfully simulated purchase of product {product_id}. You can now leave a review!"}), 200
 
 # ==========================================
 # --- ADMIN CMS CONTROL ENDPOINTS ---
@@ -565,7 +542,6 @@ def admin_payments():
 def admin_create_product():
     payload = request.get_json() or {}
     
-    # Process inclusions input (converts list or string to string)
     inclusions_data = payload.get("inclusions", "")
     if isinstance(inclusions_data, list):
         inclusions_data = ", ".join(inclusions_data)
@@ -656,16 +632,6 @@ def health_check():
     return jsonify({"status": "ok"})
 
 
-@api.route("/api/services", methods=["GET"])
-def list_services():
-    services = [
-        {"id": 1, "name": "Funeral Planning", "description": "Guided planning support."},
-        {"id": 2, "name": "Obituary Writing", "description": "Compassionate services."},
-        {"id": 3, "name": "Memorial Tributes", "description": "Personalized pages."},
-    ]
-    return jsonify(services)
-
-
 # --- M-PESA PAYMENTS ROUTES ---
 
 @api.route("/api/payments/stkpush", methods=["POST"])
@@ -681,13 +647,9 @@ def stk_push():
     if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
         return jsonify({"error": "Enter a valid phone number for M-Pesa."}), 400
 
-    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-        return jsonify({"error": "Enter a valid email address."}), 400
-
     result = generate_stk_push_payload(amount, phone, email)
     
     if "error" in result:
-        logger.error(f"STK Push Error: {result['error']}")
         return jsonify(result), 500
 
     try:
@@ -703,7 +665,6 @@ def stk_push():
         )
         db.session.add(tx)
         db.session.commit()
-        logger.info(f"STK Push persisted: checkout={checkout_id} email={email}")
     except Exception as e:
         logger.exception(f"Failed to persist MPESA transaction: {e}")
 
@@ -721,28 +682,6 @@ def payment_status(checkout_id):
         "checkout_request_id": tx.checkout_request_id,
         "status": tx.status
     }), 200
-
-
-@api.route("/api/payments/mock", methods=["POST"])
-def mock_payment():
-    payload = request.get_json() or {}
-    amount = payload.get("amount")
-    phone = (payload.get("phone") or "").strip()
-    email = (payload.get("email") or "").strip().lower()
-
-    if not amount or not phone:
-        return jsonify({"error": "Amount and phone number are required."}), 400
-
-    if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
-        return jsonify({"error": "Enter a valid phone number for the mock payment flow."}), 400
-
-    if email and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-        return jsonify({"error": "Enter a valid email address."}), 400
-
-    logger.info(f"[MOCK PAYMENT] amount={amount} phone={phone} email={email}")
-
-    tx_id = f"MOCK-{int(datetime.datetime.utcnow().timestamp())}"
-    return jsonify({"message": "Mock payment processed", "transaction_id": tx_id}), 200
 
 
 @api.route("/api/payments/callback", methods=["POST"])
@@ -771,8 +710,6 @@ def mpesa_callback():
             logger.debug("No transaction mapping found for callback or DB error")
 
         if result_code == 0:
-            logger.info(f"--- M-PESA SUCCESS --- Callback Data: {callback_data}")
-            
             metadata = callback_data.get("CallbackMetadata", {}).get("Item", [])
             receipt_no = next((item["Value"] for item in metadata if item["Name"] == "MpesaReceiptNumber"), "N/A")
             amount_paid = next((item["Value"] for item in metadata if item["Name"] == "Amount"), "N/A")
@@ -817,16 +754,12 @@ def mpesa_callback():
                     </div>
                     """
                     mail.send(msg)
-                    logger.info(f"[MAIL SYSTEM] Secure confirmation receipt sent straight to: {customer_email}")
                 except Exception as mail_err:
-                    logger.error(f"[MAIL ERROR] Callback succeeded, but automated receipt transmission faulted: {mail_err}")
-        else:
-            logger.error(f"--- M-PESA FAILED --- Reason: {callback_data.get('ResultDesc')}")
+                    logger.error(f"[MAIL ERROR] Automated receipt transmission faulted: {mail_err}")
             
         return jsonify({"ResultCode": 0, "ResultDesc": "Callback processed successfully"}), 200
 
     except Exception as e:
-        logger.exception("Error handling M-Pesa callback")
         return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed", "error": str(e)}), 500
 
 
@@ -842,13 +775,10 @@ def request_consultation():
     questions = (data.get('questions') or 'No questions provided.').strip()
 
     if not name or not user_email or not phone:
-        return jsonify({"error": "Missing required consultation details", "message": "Please complete your name, email, and phone number."}), 400
+        return jsonify({"error": "Missing required details", "message": "Please complete your name, email, and phone number."}), 400
 
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", user_email):
         return jsonify({"error": "Invalid email", "message": "Please provide a valid email address."}), 400
-
-    if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
-        return jsonify({"error": "Invalid phone", "message": "Please provide a valid phone number."}), 400
 
     try:
         consult = Consultation(name=name, email=user_email, phone=phone, questions=questions)
@@ -856,60 +786,48 @@ def request_consultation():
         db.session.commit()
 
         mail_username = current_app.config.get('MAIL_USERNAME')
-        mail_password = current_app.config.get('MAIL_PASSWORD')
+        if mail_username:
+            msg = Message(
+                subject=f"New Consultation Request: {name}",
+                sender=(f"{name} via Last Planner Julz Hub", mail_username), 
+                recipients=[mail_username],
+                reply_to=(name, user_email) 
+            )
 
-        if not mail_username or not mail_password:
-            logger.warning("Consultation request received, email credentials not configured. Saved request and returning success.")
-            return jsonify({
-                "message": "Consultation request received successfully. We will follow up with you shortly."
-            }), 200
-
-        msg = Message(
-            subject=f"New Consultation Request: {name}",
-            sender=(f"{name} via Last Planner Julz Hub", mail_username), 
-            recipients=[mail_username],
-            reply_to=(name, user_email) 
-        )
-
-        msg.html = f"""
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <div style="background-color: #1F2E27; padding: 30px 20px; text-align: center;">
-                <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">Last Planner Julz Hub</h1>
-                <p style="color: #F8F6F0; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Funeral Home & Memorials</p>
-            </div>
-            <div style="padding: 40px 30px; background-color: #FFFFFF; color: #3D3530;">
-                <h2 style="border-bottom: 2px solid #EFEAE0; padding-bottom: 15px; margin-top: 0; font-family: Georgia, serif; font-size: 22px; color: #1F2E27;">New Consultation Request</h2>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                    <tr>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0; width: 100px;"><strong>Name:</strong></td>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;">{name}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><strong>Email:</strong></td>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><a href="mailto:{user_email}" style="color: #A8895C; text-decoration: none;">{user_email}</a></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><strong>Phone:</strong></td>
-                        <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;">{phone}</td>
-                    </tr>
-                </table>
-                <div style="background-color: #F8F6F0; padding: 20px; border-left: 4px solid #A8895C; border-radius: 0 4px 4px 0; margin-top: 30px;">
-                    <h3 style="margin-top: 0; margin-bottom: 10px; color: #1F2E27; font-size: 16px;">Questions & Notes</h3>
-                    <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">{questions}</p>
+            msg.html = f"""
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div style="background-color: #1F2E27; padding: 30px 20px; text-align: center;">
+                    <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 28px; letter-spacing: 1px;">Last Planner Julz Hub</h1>
+                    <p style="color: #F8F6F0; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Funeral Home & Memorials</p>
+                </div>
+                <div style="padding: 40px 30px; background-color: #FFFFFF; color: #3D3530;">
+                    <h2 style="border-bottom: 2px solid #EFEAE0; padding-bottom: 15px; margin-top: 0; font-family: Georgia, serif; font-size: 22px; color: #1F2E27;">New Consultation Request</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <tr>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0; width: 100px;"><strong>Name:</strong></td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;">{name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><strong>Email:</strong></td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><a href="mailto:{user_email}" style="color: #A8895C; text-decoration: none;">{user_email}</a></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;"><strong>Phone:</strong></td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #EFEAE0;">{phone}</td>
+                        </tr>
+                    </table>
+                    <div style="background-color: #F8F6F0; padding: 20px; border-left: 4px solid #A8895C; border-radius: 0 4px 4px 0; margin-top: 30px;">
+                        <h3 style="margin-top: 0; margin-bottom: 10px; color: #1F2E27; font-size: 16px;">Questions & Notes</h3>
+                        <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">{questions}</p>
+                    </div>
                 </div>
             </div>
-            <div style="background-color: #EFEAE0; padding: 20px; text-align: center; font-size: 12px; color: #8F744D;">
-                <p style="margin: 0;">This is an automated notification from the Last Planner Julz Hub website.</p>
-                <p style="margin: 5px 0 0 0;">Reply directly to this email to contact the family.</p>
-            </div>
-        </div>
-        """
+            """
+            mail.send(msg)
 
-        mail.send(msg)
         return jsonify({"message": "Consultation request sent successfully!"}), 200
 
     except Exception as e:
-        logger.exception("Failed to send consultation email")
         return jsonify({"error": str(e), "message": "Consultation request received, but delivery could not be completed right now."}), 200
 
 
@@ -917,55 +835,3 @@ def register_routes(app):
     from flask_cors import CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     app.register_blueprint(api)
-
-
-@api.route('/api/debug/payment-transactions', methods=['GET'])
-def debug_payment_transactions():
-    try:
-        from .models import PaymentTransaction
-
-        allow = current_app.config.get('DEBUG') or os.environ.get('ALLOW_DEBUG_ENDPOINTS', '').lower() in ('1', 'true')
-        if not allow:
-            return jsonify({'message': 'Debug endpoints are disabled on this instance.'}), 403
-
-        txs = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(50).all()
-        return jsonify([t.to_dict() for t in txs]), 200
-    except Exception as e:
-        logger.exception('Failed to fetch payment transactions')
-        return jsonify({'error': str(e)}), 500
-
-
-@api.route('/api/debug/status', methods=['GET'])
-def debug_status():
-    allow = current_app.config.get('DEBUG') or os.environ.get('ALLOW_DEBUG_ENDPOINTS', '').strip().lower() in ('1', 'true', 'yes')
-    if not allow:
-        return jsonify({'message': 'Debug endpoints are disabled on this instance.'}), 403
-
-    mail_configured = bool(current_app.config.get('MAIL_USERNAME') and current_app.config.get('MAIL_PASSWORD'))
-    mpesa_configured = bool(
-        os.environ.get('MPESA_CONSUMER_KEY') and
-        os.environ.get('MPESA_CONSUMER_SECRET') and
-        os.environ.get('MPESA_PASSKEY') and
-        os.environ.get('MPESA_SHORTCODE')
-    )
-    callback_url = os.environ.get('MPESA_CALLBACK_URL', '').strip()
-
-    return jsonify({
-        'debug_enabled': True,
-        'debug_mode': bool(current_app.config.get('DEBUG')),
-        'allow_debug_endpoints': True,
-        'mail': {
-            'configured': mail_configured,
-            'suppress_send': current_app.config.get('MAIL_SUPPRESS_SEND', False),
-            'server': current_app.config.get('MAIL_SERVER'),
-            'port': current_app.config.get('MAIL_PORT'),
-            'use_tls': current_app.config.get('MAIL_USE_TLS'),
-            'use_ssl': current_app.config.get('MAIL_USE_SSL')
-        },
-        'mpesa': {
-            'configured': mpesa_configured,
-            'callback_url': callback_url,
-            'oauth_url': os.environ.get('MPESA_OAUTH_URL', 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'),
-            'stk_push_url': os.environ.get('MPESA_STK_PUSH_URL', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest')
-        }
-    }), 200

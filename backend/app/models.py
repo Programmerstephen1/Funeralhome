@@ -14,7 +14,6 @@ class User(db.Model):
     otp_code = db.Column(db.String(6), nullable=True)
     otp_expires = db.Column(db.DateTime, nullable=True)
 
-    # Added admin flag for the dashboard
     is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
@@ -35,24 +34,6 @@ class FuneralService(db.Model):
     description = db.Column(db.Text, nullable=False)
 
 
-class Tribute(db.Model):
-    __tablename__ = "tributes"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "message": self.message,
-            "user_id": self.user_id
-        }
-
-
 # ==========================================
 # --- ENTERPRISE CATALOG SUITE ---
 # ==========================================
@@ -66,13 +47,9 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Float, nullable=False, default=0.0)
     
-    # Dynamic discount tag controlled by admin
     discount_percent = db.Column(db.Integer, nullable=True, default=0)
-    
-    # NEW: Casket Sizing Modifier Flag & Dynamic Package Inclusions
     has_sizes = db.Column(db.Boolean, default=False)
-    inclusions = db.Column(db.Text, nullable=True) # Stored as comma-separated text
-    
+    inclusions = db.Column(db.Text, nullable=True) 
     dispatch_location = db.Column(db.String(100), default="Nairobi Central")
     
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade="all, delete-orphan")
@@ -147,11 +124,9 @@ class ProductReview(db.Model):
     service_rating = db.Column(db.Integer, nullable=False, default=5)
     comment = db.Column(db.Text, nullable=True)
     
-    # Photo Upload Support & Verification Lock
     image_url = db.Column(db.String(255), nullable=True) 
     is_verified_buyer = db.Column(db.Boolean, default=True)
     
-    # Admin Reply Data
     admin_reply = db.Column(db.Text, nullable=True)
     admin_replied_at = db.Column(db.DateTime, nullable=True)
 
@@ -246,17 +221,12 @@ class PaymentTransaction(db.Model):
             "created_at": self.created_at.isoformat()
         }
 
-
-# ==========================================
-# --- ENTERPRISE ORDER & VERIFICATION SYSTEM ---
-# ==========================================
-
 class Order(db.Model):
     __tablename__ = "orders"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     total_amount = db.Column(db.Float, nullable=False, default=0.0)
-    status = db.Column(db.String(50), default="completed") # 'pending', 'completed'
+    status = db.Column(db.String(50), default="completed") 
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
@@ -287,4 +257,102 @@ class OrderItem(db.Model):
             "product_id": self.product_id,
             "product_title": self.product.title if self.product else "Unknown Product",
             "quantity": self.quantity
+        }
+
+# ==========================================
+# --- PRIVATE MEMORIAL HUB SUITE ---
+# ==========================================
+
+class Memorial(db.Model):
+    __tablename__ = "memorials"
+    id = db.Column(db.String(150), primary_key=True) # The URL slug (e.g., doe-family)
+    name = db.Column(db.String(150), nullable=False)
+    general_pin = db.Column(db.String(10), nullable=False)
+    nuclear_pin = db.Column(db.String(10), nullable=False)
+    donation_number = db.Column(db.String(20), nullable=False)
+    portrait_url = db.Column(db.Text, nullable=True)
+    security_question = db.Column(db.String(255), nullable=False)
+    security_answer = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "donation_number": self.donation_number,
+            "portrait_url": self.portrait_url,
+            "security_question": self.security_question,
+            "created_at": self.created_at.isoformat()
+        }
+
+class JournalEntry(db.Model):
+    __tablename__ = "journal_entries"
+    id = db.Column(db.Integer, primary_key=True)
+    memorial_id = db.Column(db.String(150), db.ForeignKey('memorials.id'), nullable=False)
+    author = db.Column(db.String(150), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "author": self.author,
+            "title": self.title,
+            "content": self.content,
+            "created_at": self.created_at.isoformat()
+        }
+
+class GalleryImage(db.Model):
+    __tablename__ = "gallery_images"
+    id = db.Column(db.Integer, primary_key=True)
+    memorial_id = db.Column(db.String(150), db.ForeignKey('memorials.id'), nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+    caption = db.Column(db.String(255), nullable=True)
+    uploader = db.Column(db.String(150), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "image_url": self.image_url,
+            "caption": self.caption,
+            "uploader": self.uploader,
+            "created_at": self.created_at.isoformat()
+        }
+        
+class MemorialCandle(db.Model):
+    __tablename__ = "memorial_candles"
+    id = db.Column(db.Integer, primary_key=True)
+    memorial_id = db.Column(db.String(150), db.ForeignKey('memorials.id'), nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "message": self.message,
+            "created_at": self.created_at.isoformat()
+        }
+
+class FamilyTreeMember(db.Model):
+    __tablename__ = "family_tree_members"
+    id = db.Column(db.Integer, primary_key=True)
+    memorial_id = db.Column(db.String(150), db.ForeignKey('memorials.id'), nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    relationship = db.Column(db.String(150), nullable=False)
+    quote = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "relationship": self.relationship,
+            "quote": self.quote,
+            "image_url": self.image_url,
+            "created_at": self.created_at.isoformat()
         }

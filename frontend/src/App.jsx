@@ -39,7 +39,6 @@ import VisitorCandlesPage from "./pages/VisitorCandlesPage";
 import FamilyAndFriendsPage from "./pages/FamilyAndFriendsPage";
 import FamilyTreePage from "./pages/FamilyTreePage";
 import LiveJournalPage from "./pages/LiveJournalPage";
-import TributePage from "./pages/TributePage";
 import WriteEulogyPage from "./pages/WriteEulogyPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -309,7 +308,6 @@ function AppContent() {
           <Route path="/family/:id" element={<DynamicRouteWrapper Component={FamilyAndFriendsPage} sharedProps={sharedProps} />} />
           <Route path="/tree/:id" element={<DynamicRouteWrapper Component={FamilyTreePage} sharedProps={sharedProps} />} />
           <Route path="/journal/:id" element={<DynamicRouteWrapper Component={LiveJournalPage} sharedProps={sharedProps} />} />
-          <Route path="/tribute/:id" element={<DynamicRouteWrapper Component={TributePage} sharedProps={sharedProps} />} />
           <Route path="/eulogy/:id" element={<ProtectedRoute userEmail={userEmail}><DynamicRouteWrapper Component={WriteEulogyPage} sharedProps={sharedProps} /></ProtectedRoute>} />
           
           <Route path="/login" element={<LoginPage {...sharedProps} />} />

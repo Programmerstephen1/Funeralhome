@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route as RouteIcon, Phone, Mail, CheckCircle, Camera, Video, PlayCircle, Star, AlertCircle, Zap } from "lucide-react";
+import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route as RouteIcon, Phone, Mail, CheckCircle, Camera, Video, PlayCircle, Star, AlertCircle, Zap, Box } from "lucide-react";
 
 // --- 1. The Categories & Sub-Categories ---
 const categories = [
@@ -31,9 +31,9 @@ const categories = [
   { id: "media", title: "Photography & Media", desc: "Professional photography, edited memorial videos, and live streaming.", images: ["/images/images().jpg"] }
 ];
 
-// --- 2. The Products (UPDATED: Added has_sizes to caskets & inclusions to hearses/media) ---
+// --- 2. The Products ---
 const fallbackProducts = [
-  // --- CASKETS (Now feature has_sizes: true) ---
+  // --- CASKETS ---
   { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
   { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 92000, has_sizes: true, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
   { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 105000, has_sizes: true, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
@@ -138,14 +138,14 @@ const fallbackProducts = [
   { id: 356, categoryId: "tents", title: "Extended Gathering Tent 1", desc: "Large open-air structure for shielding large groups.", price: 25000, images: ["/images/tents/tent6.jpeg"] },
   { id: 357, categoryId: "tents", title: "Extended Gathering Tent 2", desc: "Spacious multi-pole tent setup for extended family.", price: 25000, images: ["/images/tents/tent7.jpeg"] },
 
-  // --- HEARSES (Now feature inclusions arrays) ---
+  // --- HEARSES ---
   { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 25000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
   { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 28000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
   { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 15000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
   { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 35000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
   { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
 
-  // --- ATTIRE (MEN'S & WOMEN'S) ---
+  // --- ATTIRE ---
   { id: 601, categoryId: "attire", title: "Premium Men's Burial Suit", desc: "Complete 3-piece dark suit tailored specifically for the deceased. Includes shirt and tie.", price: 18000, images: ["/assets/mens-burial-suit.jpg"] },
   { id: 602, categoryId: "attire", title: "Men's Traditional Shroud", desc: "Dignified, high-quality fabric shroud tailored for traditional burial rites.", price: 12000, images: ["/assets/mens-shroud.jpg"] },
   { id: 603, categoryId: "attire", title: "Custom Men's Suit (Family)", desc: "Tailored 3-piece dark suit for family members. Includes measurements and fitting sessions.", price: 15000, images: ["/assets/suit-mens.jpg"] },
@@ -153,9 +153,22 @@ const fallbackProducts = [
   { id: 605, categoryId: "attire", title: "Elegant White Lace Burial Dress", desc: "Beautifully detailed white lace modest dress for family members or burial.", price: 8500, images: ["/images/ladies attire/Lattire1().jpeg", "/images/ladies attire/Lattire1.jpeg"] },
   { id: 606, categoryId: "attire", title: "Custom Ribbon Lapels", desc: "Personalized memorial ribbons for family and guests (Pack of 50).", price: 2500, images: ["/assets/ribbons.jpg"] },
 
-  // --- MEDIA (Now feature inclusions arrays) ---
+  // --- MEDIA ---
   { id: 701, categoryId: "media", title: "Standard Photo Package", desc: "One professional photographer for 6 hours. Includes digital gallery and 50 printed photos.", price: 25000, inclusions: ["Professional Sound Systems", "Wireless Microphones"], images: ["/images/images().jpg"] },
   { id: 702, categoryId: "media", title: "Cinematic Videography & Livestream", desc: "Two videographers, edited memorial video, and professional livestream link for diaspora relatives.", price: 55000, inclusions: ["Professional Sound Systems", "Wireless Microphones", "High-Resolution Output"], images: ["/images/images.jpg"] }
+];
+
+// --- 3. THE CASKET SIZING LOGIC ---
+const casketSizes = [
+  { id: "s2", label: "Small (2 ft)", priceModifier: -30000 },
+  { id: "s4", label: "Small (4 ft)", priceModifier: -26000 },
+  { id: "s6", label: "Small (6 ft)", priceModifier: -22000 },
+  { id: "s8", label: "Small (8 ft)", priceModifier: -18000 },
+  { id: "s10", label: "Small (10 ft)", priceModifier: -14000 },
+  { id: "s12", label: "Small (12 ft)", priceModifier: -10000 },
+  { id: "normal", label: "Normal (Standard Adult)", priceModifier: 0 },
+  { id: "large", label: "Large (Oversized)", priceModifier: 50000 },
+  { id: "xl", label: "Extra Large (Custom Fit)", priceModifier: 68000 }
 ];
 
 // --- REUSABLE COMPONENT: Automatic Image Slider ---
@@ -226,13 +239,12 @@ const CategoryCard = React.memo(function CategoryCard({ item, onClick }) {
   );
 });
 
-// --- COMPONENT: Product Card (Dynamic Admin Tags) ---
-const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAddToCart, onOpenRentalModal }) {
+// --- COMPONENT: Product Card ---
+const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAddToCart, onOpenRentalModal, onOpenCasketModal }) {
   
   const ratingScore = item.average_rating || 0;
   const reviewCount = item.review_count || 0;
   
-  // NEW: Dynamic Admin Discount Calculation
   const discountPercent = item.discount_percent || 0;
   const originalPrice = discountPercent > 0 ? (item.price / (1 - discountPercent / 100)) : item.price;
 
@@ -245,15 +257,23 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
     }
   }
 
+  const handlePrimaryAction = (isBuyNow) => {
+    if (item.categoryId === "hearses") {
+      onOpenRentalModal(item);
+    } else if (item.has_sizes || item.categoryId === "casket_list") {
+      onOpenCasketModal(item, isBuyNow);
+    } else {
+      onAddToCart(item);
+      if (isBuyNow) window.location.hash = "#cart";
+    }
+  };
+
   return (
     <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:border-[#A8895C] hover:shadow-xl rounded-md relative">
-      
-      {/* Category Tag */}
       <div className="absolute top-2 left-2 bg-[#1F2E27]/90 text-white text-[9px] font-bold px-2 py-0.5 rounded z-20 uppercase tracking-widest">
         {item.categoryId?.replace(/_/g, " ")}
       </div>
 
-      {/* Dynamic Discount Badge (Only renders if admin sets a discount > 0) */}
       {discountPercent > 0 && (
         <div className="absolute top-2 right-2 bg-[#FF4747] text-white text-[10px] font-bold px-2 py-1 rounded z-20">
           {discountPercent}% OFF
@@ -269,7 +289,6 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
           {item.title}
         </Link>
         
-        {/* Dynamic Pricing Layout */}
         <div className="flex flex-col mb-2 h-10 justify-center">
           <span className={`text-xl font-bold ${discountPercent > 0 ? 'text-[#FF4747]' : 'text-[#1F2E27]'}`}>
             KSh {item.price.toLocaleString()}
@@ -282,7 +301,6 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
           )}
         </div>
 
-        {/* Rating and Reviews (Shows actual DB count or clean text) */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex">{starsArray}</div>
           <span className="text-[10px] text-[#716860]">{ratingScore > 0 ? ratingScore.toFixed(1) : ""}</span>
@@ -291,16 +309,9 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
           </span>
         </div>
 
-        {/* Action Buttons */}
         <div className="mt-auto flex gap-2">
           <button 
-            onClick={() => {
-              if (item.categoryId === "hearses") {
-                onOpenRentalModal(item);
-              } else {
-                onAddToCart(item);
-              }
-            }}
+            onClick={() => handlePrimaryAction(false)}
             disabled={recentlyAdded === item.id}
             className={`flex-1 py-2 text-xs font-bold rounded transition-colors ${
               recentlyAdded === item.id 
@@ -312,14 +323,7 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
           </button>
           
           <button 
-             onClick={() => {
-              if (item.categoryId === "hearses") {
-                onOpenRentalModal(item);
-              } else {
-                onAddToCart(item);
-                window.location.hash = "#cart";
-              }
-            }}
+             onClick={() => handlePrimaryAction(true)}
             className="flex-1 py-2 text-xs font-bold bg-[#FF4747] text-white rounded hover:bg-[#E63939] transition-colors"
           >
             Buy Now
@@ -339,8 +343,13 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [selectedHearse, setSelectedHearse] = useState(null);
+
+  // CASKET SIZING MODAL STATE
+  const [showCasketModal, setShowCasketModal] = useState(false);
+  const [selectedCasket, setSelectedCasket] = useState(null);
+  const [casketSizeIndex, setCasketSizeIndex] = useState(6); // Default to index 6 ('Normal')
+  const [buyNowRedirect, setBuyNowRedirect] = useState(false);
   
-  // LIVE DATABASE STATE
   const [liveCatalogItems, setLiveCatalogItems] = useState([]);
   const [serverError, setServerError] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -351,7 +360,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
   const [visibleProducts, setVisibleProducts] = useState([]);
 
-  // FETCH PRODUCTS ON LOAD
   useEffect(() => {
     fetch(`${API_URL}/api/products`)
       .then(res => {
@@ -368,7 +376,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
       });
   }, [API_URL]);
 
-  // Robust Deep-Link Listener
   useEffect(() => {
     if (dynamicId) {
       let foundMainCat = null;
@@ -403,7 +410,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
   }, [dynamicId]);
 
-  // Handle Search and Filtering Logic
   useEffect(() => {
     let currentDisplay = fallbackProducts;
     if (liveCatalogItems.length > 0) {
@@ -428,10 +434,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
           isMatch = true;
         }
       }
-
-      if (isMatch) {
-        tempFiltered.push(product);
-      }
+      if (isMatch) tempFiltered.push(product);
     }
 
     let tempVisible = [];
@@ -452,7 +455,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     }
 
     setVisibleProducts(tempVisible);
-
   }, [searchTerm, activeCategory, activeSubCategory, liveCatalogItems]);
 
   const handleAddToCart = (product) => {
@@ -461,6 +463,36 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     setTimeout(() => setRecentlyAdded(null), 2000);
   };
 
+  // --- CASKET MODAL HANDLERS ---
+  const handleOpenCasketModal = (casket, redirect) => {
+    setSelectedCasket(casket);
+    setCasketSizeIndex(6); 
+    setBuyNowRedirect(redirect);
+    setShowCasketModal(true);
+  };
+
+  const handleConfirmCasketSize = () => {
+    const selectedSize = casketSizes[casketSizeIndex];
+    const customizedCasket = {
+      ...selectedCasket,
+      cartItemId: `${selectedCasket.id}-${selectedSize.id}`,
+      title: `${selectedCasket.title} (${selectedSize.label})`,
+      price: selectedCasket.price + selectedSize.priceModifier
+    };
+
+    addToCart(customizedCasket);
+    
+    setRecentlyAdded(selectedCasket.id);
+    setTimeout(() => setRecentlyAdded(null), 2000);
+    
+    setShowCasketModal(false);
+    
+    if (buyNowRedirect) {
+      window.location.hash = "#cart";
+    }
+  };
+
+  // --- RENTAL MODAL HANDLERS ---
   const handleOpenRentalModal = (hearse) => {
     setSelectedHearse(hearse);
     setShowRentalModal(true);
@@ -468,7 +500,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
   const calculateTotal = () => {
     if (!selectedHearse) return 0;
-    
     const baseDailyRate = selectedHearse.price;
     let days = 1;
     if (rentalDetails.pickupDate && rentalDetails.returnDate) {
@@ -483,7 +514,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
     let distanceCharge = 0;
     const distance = Number(rentalDetails.estimatedDistance) || 0;
-    
     if (rentalDetails.mileagePlan === "limited") {
       const allowedDistance = 150 * days;
       if (distance > allowedDistance) {
@@ -503,7 +533,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
   const handleConfirmRental = () => {
     const finalCalculatedPrice = calculateTotal();
-    
     const customizedHearse = {
       ...selectedHearse,
       title: `${selectedHearse.title} (Scheduled Transport)`,
@@ -645,7 +674,8 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                         item={item} 
                         recentlyAdded={recentlyAdded} 
                         onAddToCart={handleAddToCart} 
-                        onOpenRentalModal={handleOpenRentalModal} 
+                        onOpenRentalModal={handleOpenRentalModal}
+                        onOpenCasketModal={handleOpenCasketModal} 
                       />
                     ))}
                 </div>
@@ -913,6 +943,85 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         )}
 
       </div>
+
+      {/* --- ENTERPRISE CASKET SIZING MODAL --- */}
+      {showCasketModal && selectedCasket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-8 animate-fadeIn">
+           <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E8DFD1]">
+            <div className="bg-[#1F2E27] p-5 flex justify-between items-center text-white border-b-4 border-[#A8895C] shrink-0">
+              <div>
+                <h3 className="font-serif text-xl tracking-wide">Select Casket Size</h3>
+                <p className="text-xs text-[#E8DFD1] opacity-80 mt-1 uppercase tracking-widest">{selectedCasket.title}</p>
+              </div>
+              <button onClick={() => setShowCasketModal(false)} className="hover:text-[#A8895C] transition-colors p-1">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-grow">
+              <div className="bg-[#F8F6F0] p-4 rounded border border-[#E8DFD1]">
+                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Box size={16} className="text-[#A8895C]"/> Dimensions & Pricing
+                </h4>
+                <div className="space-y-2">
+                  {casketSizes.map((size, index) => {
+                    const priceModifierText = size.priceModifier === 0 
+                      ? "Base Price" 
+                      : size.priceModifier > 0 
+                        ? `+ KSh ${size.priceModifier.toLocaleString()}` 
+                        : `- KSh ${Math.abs(size.priceModifier).toLocaleString()}`;
+                        
+                    return (
+                      <label 
+                        key={size.id} 
+                        className={`flex items-center justify-between p-3 rounded border cursor-pointer transition-colors ${
+                          casketSizeIndex === index ? "bg-white border-[#A8895C] shadow-sm" : "border-transparent hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="radio" 
+                            name="casketSize" 
+                            className="accent-[#A8895C]"
+                            checked={casketSizeIndex === index}
+                            onChange={() => setCasketSizeIndex(index)}
+                          />
+                          <span className="text-sm font-semibold text-[#3D3530]">{size.label}</span>
+                        </div>
+                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#A8895C]" : "text-[#716860]"}`}>
+                          {priceModifierText}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-[#F8F6F0] border-t border-[#E8DFD1] shrink-0">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <span className="text-xs font-semibold text-[#716860] uppercase tracking-wider block mb-1">Final Price:</span>
+                  <span className="text-3xl font-bold text-[#1F2E27]">
+                    KSh {(selectedCasket.price + casketSizes[casketSizeIndex].priceModifier).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <button onClick={() => setShowCasketModal(false)} className="flex-1 py-3 text-xs font-bold tracking-wider uppercase bg-white text-[#3D3530] border border-[#E8DFD1] hover:bg-[#F8F6F0] transition-all rounded">
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleConfirmCasketSize} 
+                  className="flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md" 
+                >
+                  Confirm & Add
+                </button>
+              </div>
+            </div>
+           </div>
+        </div>
+      )}
 
       {/* --- ENTERPRISE RENTAL MODAL --- */}
       {showRentalModal && selectedHearse && (
