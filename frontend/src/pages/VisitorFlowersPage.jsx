@@ -62,9 +62,10 @@ export default function VisitorFlowersPage({ dynamicId }) {
         body: JSON.stringify({ amount: newFlower.price, phone: phone, email: userEmail }),
       });
 
+      // STRICT API ENFORCEMENT: No more simulations
       if (!paymentResponse.ok) {
-        console.warn("Daraja API offline or invalid keys. Utilizing local simulation for presentation.");
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "M-Pesa transaction failed to initiate.");
       }
 
       setFlowers((prev) => [
@@ -76,7 +77,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
       setShowForm(false);
       
     } catch (error) {
-      setPaymentError("Network error. Please try again.");
+      setPaymentError(error.message || "Network error. Please try again.");
     } finally {
       setIsProcessing(false);
     }

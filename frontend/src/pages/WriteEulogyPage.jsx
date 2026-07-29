@@ -138,9 +138,10 @@ export default function WriteEulogyPage({ dynamicId }) {
         body: JSON.stringify({ amount: currentTemplate.price, phone: phone, email: userEmail }),
       });
 
+      // STRICT API ENFORCEMENT: No more simulations
       if (!paymentResponse.ok) {
-        console.warn("Daraja API offline. Utilizing local simulation.");
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "M-Pesa transaction failed to initiate.");
       }
 
       const fullStory = `
@@ -190,7 +191,7 @@ ${formData.legacy}
         setErrors({ payment: eulogyData.error || "Failed to save eulogy details." });
       }
     } catch (error) {
-      setErrors({ payment: "Network error. Please check your connection." });
+      setErrors({ payment: error.message || "Network error. Please check your connection." });
     } finally {
       setIsSubmitting(false);
     }
