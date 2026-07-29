@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Check, Star, ShieldCheck, Box, Route as RouteIcon, MapPin, Fuel, ShoppingCart } from "lucide-react";
+import { ChevronLeft, Check, Star, ShieldCheck, Box, Route as RouteIcon, MapPin, Fuel, ShoppingCart, CheckCircle } from "lucide-react";
 
-// --- FALLBACK DATA ---
+// --- FALLBACK DATA WITH INCLUSIONS ---
 const fallbackProducts = [
   { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
   { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 92000, has_sizes: true, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
   { id: 103, categoryId: "casket_list", title: "Glossy Mahogany Casket", desc: "Premium reddish-brown mahogany with a high-gloss finish.", price: 105000, has_sizes: true, images: ["/images/caskets/casket3().jpeg", "/images/caskets/casket3.jpeg"] },
   { id: 104, categoryId: "casket_list", title: "Classic Red Wood Casket", desc: "Traditional deep red wood build with sturdy handles.", price: 98000, has_sizes: true, images: ["/images/caskets/casket4.jpg"] },
   { id: 105, categoryId: "casket_list", title: "Premium Pine Casket", desc: "Smooth light wood finish for a natural, dignified rest.", price: 96000, has_sizes: true, images: ["/images/caskets/casket5().jpeg", "/images/caskets/casket5(0).jpeg", "/images/caskets/casket5(1).jpg", "/images/caskets/casket5(2).jpg"] },
-  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Base daily rate shown.", price: 25000, images: ["/images/hearses/hearse1(0).jpeg"] },
-  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport. Base daily rate shown.", price: 15000, images: ["/images/hearses/hearse2(0).jpeg"] },
+  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Base daily rate shown.", price: 25000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg"] },
+  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport. Base daily rate shown.", price: 15000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg"] },
+  { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
   { id: 201, categoryId: "wreaths", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 18000, images: ["/images/wreaths/wreath1.jpeg"] },
   { id: 151, categoryId: "urns", title: "Classic Marble Box Urn", desc: "Solid cultured marble in a deep burgundy finish.", price: 18000, images: ["/images/urns/images(0).jpg"] },
+  { id: 701, categoryId: "media", title: "Standard Photo Package", desc: "One professional photographer for 6 hours.", price: 25000, inclusions: ["Sound systems"], images: ["/images/images().jpg"] },
+  { id: 702, categoryId: "media", title: "Cinematic Videography & Livestream", desc: "Two videographers, edited memorial video.", price: 55000, inclusions: ["Sound systems"], images: ["/images/images.jpg"] }
 ];
 
 // --- STRICT ENTERPRISE SIZING MATH ---
@@ -51,12 +54,16 @@ export default function ProductPage({ addToCart, bookRental }) {
         return res.json();
       })
       .then(data => {
+        // INJECTION: Force merge the hardcoded inclusions into the live database response
+        const fallbackMatch = fallbackProducts.find(fp => fp.id === parseInt(id));
+        if (fallbackMatch && fallbackMatch.inclusions && (!data.inclusions || data.inclusions.length === 0)) {
+          data.inclusions = fallbackMatch.inclusions;
+        }
         setProduct(data);
-        setMainImage(data.images[0]);
+        setMainImage(data.images && data.images.length > 0 ? data.images[0] : "");
         setLoading(false);
       })
       .catch(() => {
-        // Fallback if Flask server is offline
         let found = null;
         for (let i = 0; i < fallbackProducts.length; i++) {
           if (fallbackProducts[i].id === parseInt(id)) {
@@ -64,7 +71,7 @@ export default function ProductPage({ addToCart, bookRental }) {
           }
         }
         setProduct(found);
-        if (found && found.images.length > 0) {
+        if (found && found.images && found.images.length > 0) {
           setMainImage(found.images[0]);
         }
         setLoading(false);
@@ -130,7 +137,7 @@ export default function ProductPage({ addToCart, bookRental }) {
     finalPrice = totalBasePrice + distanceCharge + fuelCharge;
   }
 
-  const handleAction = () => {
+  const handleAction = (isBuyNow) => {
     let itemToAdd = { ...product, price: finalPrice };
 
     if (isCasket) {
@@ -149,6 +156,10 @@ export default function ProductPage({ addToCart, bookRental }) {
 
     setRecentlyAdded(true);
     setTimeout(() => setRecentlyAdded(false), 2000);
+    
+    if (isBuyNow) {
+      window.location.hash = "#cart";
+    }
   };
 
   let isFormValid = true;
@@ -205,7 +216,22 @@ export default function ProductPage({ addToCart, bookRental }) {
               </div>
             </div>
 
-            <p className="text-[#3D3530] leading-relaxed mb-8">{product.desc}</p>
+            <p className="text-[#3D3530] leading-relaxed mb-6">{product.desc}</p>
+
+            {/* --- INJECTIONS RENDERED HERE --- */}
+            {product.inclusions && product.inclusions.length > 0 && (
+              <div className="mb-8 pt-6 border-t border-[#E8DFD1]">
+                <span className="text-[10px] font-bold text-[#A8895C] uppercase tracking-wider block mb-3">Package Includes:</span>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {product.inclusions.map((inc, i) => (
+                    <li key={i} className="text-sm text-[#716860] flex items-start gap-2">
+                      <CheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                      <span>{inc}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* EMBEDDED CASKET SIZING ENGINE */}
             {isCasket && (
@@ -276,17 +302,25 @@ export default function ProductPage({ addToCart, bookRental }) {
               </div>
             )}
 
-            <div className="mt-auto">
+            <div className="flex gap-4 mt-auto">
               <button 
-                onClick={handleAction}
+                onClick={() => handleAction(false)}
                 disabled={!isFormValid || recentlyAdded}
-                className={`w-full py-4 px-6 text-sm font-bold rounded flex items-center justify-center gap-2 uppercase tracking-widest transition-colors shadow-lg ${(!isFormValid || recentlyAdded) ? "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#3D3530]"}`}
+                className={`flex-1 py-4 text-xs font-bold rounded uppercase tracking-widest transition-colors shadow-md ${(!isFormValid || recentlyAdded) ? "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#3D3530]"}`}
               >
                 {recentlyAdded ? (
-                  <><Check size={18}/> Successfully Added</>
+                  <span className="flex items-center justify-center gap-2"><Check size={18}/> Added</span>
                 ) : (
-                  <><ShoppingCart size={18}/> {isHearse ? "Add to Booking Requests" : "Add to Cart"}</>
+                  <span className="flex items-center justify-center gap-2"><ShoppingCart size={18}/> {isHearse ? "Add to Booking Requests" : "Add to Cart"}</span>
                 )}
+              </button>
+              
+              <button 
+                 onClick={() => handleAction(true)}
+                 disabled={!isFormValid}
+                className={`flex-1 py-4 text-xs font-bold text-white rounded uppercase tracking-widest transition-colors shadow-md ${!isFormValid ? "bg-[#FF8888] cursor-not-allowed" : "bg-[#FF4747] hover:bg-[#E63939]"}`}
+              >
+                {isHearse ? "Book Now" : "Buy Now"}
               </button>
             </div>
             

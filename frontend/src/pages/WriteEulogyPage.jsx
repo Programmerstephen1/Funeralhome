@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Button, Card, CardBody } from "../components";
 
 // --- THE PREMIUM TEMPLATE DATA ---
-// NOTE: Place your custom Canva/Photoshop backgrounds into your public/templates/ folder and map them here!
 const availableTemplates = [
   { id: "basic", name: "Executive Minimal", bg: "", thumbnail: "", price: 2500, textColor: "#1F2E27" },
   { id: "blue_rose", name: "Blue Rose Border", bg: "/images/download.jpg", thumbnail: "/images/download.jpg", price: 3500, textColor: "#1F2E27" },
@@ -39,8 +38,8 @@ export default function WriteEulogyPage({ dynamicId }) {
   const [activeFontIndex, setActiveFontIndex] = useState(0);
   const [fontSize, setFontSize] = useState(16); 
   const [layoutOffset, setLayoutOffset] = useState(15); 
+  const [showFloatingEditor, setShowFloatingEditor] = useState(false);
   
-  // Two separate image states to prevent the 2-second broken link flash
   const [displayImageUrl, setDisplayImageUrl] = useState(""); 
   const [backendImageUrl, setBackendImageUrl] = useState(""); 
   
@@ -87,7 +86,6 @@ export default function WriteEulogyPage({ dynamicId }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 1. Instantly display the unbreakable local preview to the user
     const reader = new FileReader();
     reader.onloadend = () => {
       setDisplayImageUrl(reader.result); 
@@ -99,7 +97,6 @@ export default function WriteEulogyPage({ dynamicId }) {
     const uploadData = new FormData();
     uploadData.append("file", file);
 
-    // 2. Silently attempt to send it to the backend
     try {
       const response = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
@@ -108,7 +105,7 @@ export default function WriteEulogyPage({ dynamicId }) {
       });
       const data = await response.json();
       if (response.ok) {
-        setBackendImageUrl(data.image_url); // Store the official link for the database payload
+        setBackendImageUrl(data.image_url); 
       }
     } catch (err) {
       console.warn("Backend image upload failed. Local preview remains active for presentation.");
@@ -171,7 +168,9 @@ ${formData.legacy}
         passing_year: formData.passing_year,
         occupation: formData.occupation,
         interests: formData.interests,
-        personality: fullStory
+        personality: fullStory,
+        template_id: currentTemplate.id,
+        price: currentTemplate.price
       };
 
       const eulogyResponse = await fetch(`${API_URL}/api/eulogies`, {
@@ -237,7 +236,7 @@ ${formData.legacy}
           
           {step === "writing" && (
             <p className="text-lg text-[#3D3530]">
-              Draft a meaningful tribute. When finished, you can select a premium design template and submit your text for official QR code generation.
+              Draft a meaningful tribute. When finished, you can select a premium design template and submit your text for official generation.
             </p>
           )}
         </section>
@@ -349,11 +348,12 @@ ${formData.legacy}
         )}
       </div>
 
+      {/* --- PREVIEW & PAYMENT MODAL --- */}
       {(step === "preview" || step === "payment") && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 lg:p-8">
           <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full h-[95vh] md:h-[90vh] flex flex-col md:flex-row overflow-hidden border border-[#A8895C] animate-fadeIn">
             
-            {/* LEFT PANEL: True WYSIWYG Template Preview (Independent Scroll) */}
+            {/* LEFT PANEL: True WYSIWYG Template Preview */}
             <div className="w-full md:w-[55%] h-[40vh] md:h-full bg-[#EFEAE0] p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-[#E8DFD1] relative overflow-y-auto shrink-0">
               
               <div className="absolute top-6 left-6 z-10 bg-white/80 backdrop-blur px-3 py-1.5 rounded border border-[#A8895C]/30 text-[10px] uppercase tracking-[0.2em] text-[#3D3530] font-bold shadow-sm">
@@ -411,7 +411,7 @@ ${formData.legacy}
 
             </div>
 
-            {/* RIGHT PANEL: Settings & Payment (Independent Scroll with Sticky Header) */}
+            {/* RIGHT PANEL: Settings & Payment */}
             <div className="w-full md:w-[45%] h-[55vh] md:h-full bg-white flex flex-col relative shrink-0">
               
               <div className="sticky top-0 z-20 flex items-center justify-between px-8 py-6 border-b border-[#E8DFD1] bg-white/95 backdrop-blur-sm shrink-0">
@@ -452,7 +452,6 @@ ${formData.legacy}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] text-[#8F847C] italic mt-2">Design custom graphical backgrounds, place them in your public/templates folder, and they will apply to the inside pages of the generated document.</p>
                 </div>
 
                 <div className="mb-8 space-y-4 border-t border-[#E8DFD1] pt-6">
@@ -527,6 +526,42 @@ ${formData.legacy}
         </div>
       )}
 
+      {/* Floating Template Selector / Quick Editor */}
+      <div className="fixed right-6 bottom-6 z-[70]">
+        <button onClick={() => setShowFloatingEditor(v => !v)} className="bg-white border border-[#E8DFD1] rounded-full p-3 shadow-lg hover:scale-105 transition-transform">
+          <LayoutTemplate size={20} className="text-[#1F2E27]" />
+        </button>
+
+        {showFloatingEditor && (
+          <div className="mt-3 w-80 bg-white rounded-xl shadow-2xl border border-[#E8DFD1] overflow-hidden">
+            <div className="p-3 border-b border-[#E8DFD1] flex items-center justify-between">
+              <span className="text-sm font-bold text-[#1F2E27]">Template Editor</span>
+              <button onClick={() => setShowFloatingEditor(false)} className="text-[#8F847C] hover:text-[#1F2E27]"><X size={16} /></button>
+            </div>
+            <div className="p-3 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {availableTemplates.map((t, i) => (
+                  <button key={t.id} onClick={() => setActiveTemplateIndex(i)} className={`h-20 rounded-md overflow-hidden border ${activeTemplateIndex===i? 'border-[#A8895C] shadow':''}`}>
+                    <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: t.thumbnail ? `url('${t.thumbnail}')` : 'none', backgroundColor: t.thumbnail? 'transparent' : '#E8DFD1' }} />
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-[#716860] mb-2">Font</label>
+                <select value={activeFontIndex} onChange={(e) => setActiveFontIndex(Number(e.target.value))} className="w-full p-2 border border-[#E8DFD1] rounded bg-[#F8F6F0]">
+                  {availableFonts.map((f, idx) => <option key={f.id} value={idx}>{f.name}</option>)}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowFloatingEditor(false); setStep('preview'); }} className="flex-1 bg-[#1F2E27] text-white py-2 rounded font-bold">Apply & Preview</button>
+                <button onClick={() => setShowFloatingEditor(false)} className="flex-1 border border-[#E8DFD1] py-2 rounded text-sm">Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

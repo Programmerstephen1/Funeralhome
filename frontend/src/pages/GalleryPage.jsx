@@ -84,7 +84,6 @@ export default function GalleryPage({ dynamicId }) {
         body: JSON.stringify({ amount: 1000, phone: phone, email: userEmail }),
       });
 
-      // PITCH SAVER: Simulate success if API fails during demo
       if (!paymentResponse.ok) {
         console.warn("Daraja API offline. Utilizing local simulation.");
         await new Promise(resolve => setTimeout(resolve, 1500)); 

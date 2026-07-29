@@ -19,7 +19,7 @@ export default function OverviewPage({ dynamicId }) {
           <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Memorial Hub</p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Overview</h1>
           <p className="text-lg text-[#3D3530] max-w-3xl mx-auto">
-            A calm introduction to the memorial experience, designed to make visitors feel supported and informed.
+            A calm introduction to the memorial experience, designed to make our guests feel supported and informed.
           </p>
         </section>
 
@@ -31,7 +31,7 @@ export default function OverviewPage({ dynamicId }) {
                 This space provides a gentle orientation for guests. It explains the purpose of the Memorial Hub and highlights the interactive sections available for honoring a loved one.
               </p>
               <ul className="space-y-4 text-[#3D3530]">
-                <li className="flex gap-3 items-start"><span className="text-[#A8895C] font-bold">•</span> Guidance for visitors who want to explore in a meaningful way.</li>
+                <li className="flex gap-3 items-start"><span className="text-[#A8895C] font-bold">•</span> Guidance for clients who want to explore in a meaningful way.</li>
                 <li className="flex gap-3 items-start"><span className="text-[#A8895C] font-bold">•</span> Clear descriptions of memorial features and how they work.</li>
                 <li className="flex gap-3 items-start"><span className="text-[#A8895C] font-bold">•</span> A respectful overview of tribute options including candles, flowers, and journal entries.</li>
               </ul>

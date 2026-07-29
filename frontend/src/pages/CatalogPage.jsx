@@ -137,13 +137,14 @@ const fallbackProducts = [
   { id: 355, categoryId: "tents", title: "Basic Gazebo Shade", desc: "Simple pop-up tent for utility, overflow, or minimal shade.", price: 5000, images: ["/images/tents/tent5.jpeg"] },
   { id: 356, categoryId: "tents", title: "Extended Gathering Tent 1", desc: "Large open-air structure for shielding large groups.", price: 25000, images: ["/images/tents/tent6.jpeg"] },
   { id: 357, categoryId: "tents", title: "Extended Gathering Tent 2", desc: "Spacious multi-pole tent setup for extended family.", price: 25000, images: ["/images/tents/tent7.jpeg"] },
+  { id: 358, categoryId: "tents", title: "Extended Marquee Tent 8", desc: "Spacious multi-pole outdoor seating setup for large memorial services.", price: 30000, images: ["/images/tents/tents8.jpg"] },
 
   // --- HEARSES ---
-  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 25000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
-  { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 28000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
-  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 15000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
-  { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 35000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
-  { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, inclusions: ["Auto-lowering gear", "Casket gazebo tent", "Graveside PA system", "Portrait stand", "Church trolley", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
+  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 25000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
+  { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 28000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
+  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 15000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
+  { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 35000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
+  { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
 
   // --- ATTIRE ---
   { id: 601, categoryId: "attire", title: "Premium Men's Burial Suit", desc: "Complete 3-piece dark suit tailored specifically for the deceased. Includes shirt and tie.", price: 18000, images: ["/assets/mens-burial-suit.jpg"] },
@@ -154,8 +155,8 @@ const fallbackProducts = [
   { id: 606, categoryId: "attire", title: "Custom Ribbon Lapels", desc: "Personalized memorial ribbons for family and guests (Pack of 50).", price: 2500, images: ["/assets/ribbons.jpg"] },
 
   // --- MEDIA ---
-  { id: 701, categoryId: "media", title: "Standard Photo Package", desc: "One professional photographer for 6 hours. Includes digital gallery and 50 printed photos.", price: 25000, inclusions: ["Professional Sound Systems", "Wireless Microphones"], images: ["/images/images().jpg"] },
-  { id: 702, categoryId: "media", title: "Cinematic Videography & Livestream", desc: "Two videographers, edited memorial video, and professional livestream link for diaspora relatives.", price: 55000, inclusions: ["Professional Sound Systems", "Wireless Microphones", "High-Resolution Output"], images: ["/images/images.jpg"] }
+  { id: 701, categoryId: "media", title: "Standard Photo Package", desc: "One professional photographer for 6 hours. Includes digital gallery and 50 printed photos.", price: 25000, inclusions: ["Sound systems"], images: ["/images/images().jpg"] },
+  { id: 702, categoryId: "media", title: "Cinematic Videography & Livestream", desc: "Two videographers, edited memorial video, and professional livestream link for diaspora relatives.", price: 55000, inclusions: ["Sound systems"], images: ["/images/images.jpg"] }
 ];
 
 // --- 3. THE CASKET SIZING LOGIC ---
@@ -269,7 +270,7 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:border-[#A8895C] hover:shadow-xl rounded-md relative">
+    <div className="group flex flex-col overflow-hidden border border-[#E8DFD1] bg-white transition-all duration-300 hover:border-[#A8895C] hover:shadow-xl rounded-md relative h-full">
       <div className="absolute top-2 left-2 bg-[#1F2E27]/90 text-white text-[9px] font-bold px-2 py-0.5 rounded z-20 uppercase tracking-widest">
         {item.categoryId?.replace(/_/g, " ")}
       </div>
@@ -309,6 +310,20 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
           </span>
         </div>
 
+        {item.inclusions && item.inclusions.length > 0 && (
+          <div className="mb-4 pt-3 border-t border-[#F8F6F0]">
+            <span className="text-[9px] font-bold text-[#A8895C] uppercase tracking-wider block mb-1.5">Package Includes:</span>
+            <ul className="space-y-1">
+              {item.inclusions.map((inc, i) => (
+                <li key={i} className="text-[10px] text-[#716860] flex items-start gap-1.5 leading-tight">
+                  <CheckCircle size={10} className="text-emerald-600 shrink-0 mt-[1px]" />
+                  <span>{inc}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="mt-auto flex gap-2">
           <button 
             onClick={() => handlePrimaryAction(false)}
@@ -326,7 +341,7 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
              onClick={() => handlePrimaryAction(true)}
             className="flex-1 py-2 text-xs font-bold bg-[#FF4747] text-white rounded hover:bg-[#E63939] transition-colors"
           >
-            Buy Now
+            {item.categoryId === "hearses" ? "Book Now" : "Buy Now"}
           </button>
         </div>
       </div>
@@ -367,7 +382,15 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         return res.json();
       })
       .then(data => {
-        setLiveCatalogItems(data);
+        // INJECTION: Force merge the hardcoded inclusions into the live database response
+        const mergedData = data.map(liveItem => {
+          const fallbackMatch = fallbackProducts.find(fp => fp.id === liveItem.id);
+          if (fallbackMatch && fallbackMatch.inclusions && (!liveItem.inclusions || liveItem.inclusions.length === 0)) {
+            return { ...liveItem, inclusions: fallbackMatch.inclusions };
+          }
+          return liveItem;
+        });
+        setLiveCatalogItems(mergedData);
         setServerError(false);
       })
       .catch(err => {
@@ -821,7 +844,6 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                       <ul className="space-y-4 text-sm text-[#D8CFBC] opacity-90">
                         <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Phone size={16} className="text-[#A8895C]"/> +254 799 847727</li>
                         <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Mail size={16} className="text-[#A8895C]"/> catering@lastplannerjulz.co.ke</li>
-                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><MapPin size={16} className="text-[#A8895C]"/> Ruiru, Kiambu County, Kenya</li>
                       </ul>
                     </div>
 

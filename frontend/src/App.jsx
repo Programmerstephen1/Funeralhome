@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { ShoppingCart, CalendarDays, MessageCircle, Shield, MapPin, Phone, Mail } from "lucide-react"; 
+import { ShoppingCart, CalendarDays, MessageCircle, Shield, MapPin, Phone, Mail, X, MessageSquare } from "lucide-react"; 
 
 // --- MAIN PAGES ---
 import HomePage from "./pages/HomePage";
@@ -86,6 +86,34 @@ const getSavedCart = (email) => {
 const getSavedBookings = (email) => {
   try { return JSON.parse(localStorage.getItem(email ? `bookings_${email}` : "bookings_guest")) || []; } 
   catch { return []; }
+};
+
+// ==========================================
+// FLOATING WHATSAPP & CONTACT WIDGET
+// ==========================================
+const FloatingContactWidget = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="fixed bottom-5 right-5 z-[100] flex flex-col items-end">
+      {isOpen && (
+        <div className="mb-4 bg-white rounded-xl shadow-2xl border border-[#E8DFD1] p-2 flex flex-col gap-2 w-48 animate-fadeIn">
+          <a href="https://wa.me/254799847727" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-lg hover:bg-emerald-50 text-[#1F2E27] transition-colors">
+            <div className="bg-emerald-500 text-white p-2 rounded-full"><MessageCircle size={18} /></div>
+            <span className="text-sm font-bold">WhatsApp Us</span>
+          </a>
+          <a href="tel:+254799847727" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F8F6F0] text-[#1F2E27] transition-colors">
+            <div className="bg-[#1F2E27] text-white p-2 rounded-full"><Phone size={18} /></div>
+            <span className="text-sm font-bold">Call Directly</span>
+          </a>
+        </div>
+      )}
+      <button onClick={() => setIsOpen(!isOpen)} className="bg-[#1F2E27] text-white px-5 py-3.5 rounded-full shadow-2xl hover:bg-[#A8895C] transition-all flex items-center gap-2 font-bold tracking-widest text-sm uppercase">
+        {isOpen ? <X size={18} /> : <MessageSquare size={18} />}
+        {isOpen ? "Close" : "Contact Us"}
+      </button>
+    </div>
+  );
 };
 
 // ==========================================
@@ -197,7 +225,7 @@ function AppContent() {
   const isActive = (path) => location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
 
   return (
-    <div className="site-shell flex flex-col min-h-screen">
+    <div className="site-shell flex flex-col min-h-screen relative">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap');`}</style>
       <FocusManager />
       <HashBridge />
@@ -262,9 +290,9 @@ function AppContent() {
       </nav>
 
       <main id="main-content" tabIndex="-1" className="focus:outline-none">
-        <a href="tel:+254799847727" className="fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full bg-[#1F2E27] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-transform hover:-translate-y-1">
-          <MessageCircle size={18} /><span>Contact Us</span>
-        </a>
+        
+        {/* GLOBAL FLOATING CONTACT WIDGET */}
+        <FloatingContactWidget />
 
         {location.pathname === "/" && (
           <div className="fixed bottom-5 left-5 z-[60] flex flex-col sm:flex-row gap-2 sm:gap-3">

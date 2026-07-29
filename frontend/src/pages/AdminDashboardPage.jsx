@@ -10,21 +10,21 @@ export default function AdminDashboardPage() {
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   
-  // NEW: Memorial Hub Management State
   const [memorials, setMemorials] = useState({});
-  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("orders");
-  
-  // NEW: Pitch-Saver Presentation Mode Flag
-  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState({ 
     title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: "" 
   });
+  const [showSizesModal, setShowSizesModal] = useState(false);
+  const [sizesProduct, setSizesProduct] = useState(null);
+  const [sizesList, setSizesList] = useState([]);
+  const [sizeForm, setSizeForm] = useState({ label: '', price_modifier: 0 });
+  const [editingSize, setEditingSize] = useState(null);
 
   const [replyText, setReplyText] = useState({});
 
@@ -33,13 +33,12 @@ export default function AdminDashboardPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     setError(null);
-    setIsPresentationMode(false);
     
-    // Always load local memorials from browser memory
+    // Load local memorials
     const localMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     setMemorials(localMemorials);
 
-    const token = localStorage.getItem("token") || "demo-token";
+    const token = localStorage.getItem("token") || "";
     
     try {
       const headers = { "Authorization": `Bearer ${token}` };
@@ -53,7 +52,7 @@ export default function AdminDashboardPage() {
       ]);
       
       if (!statsRes.ok || !ordersRes.ok || !paymentsRes.ok) {
-        throw new Error("API Offline");
+        throw new Error("Failed to authenticate or connect to API.");
       }
 
       setStats(await statsRes.json());
@@ -63,33 +62,14 @@ export default function AdminDashboardPage() {
       setReviews(await reviewsRes.json());
       
     } catch (err) { 
-      console.warn("Live API disconnected. Engaging Presentation Mode Fallback.");
-      
-      // THE PITCH SAVER: Automatically loads enterprise-grade dummy data so the presentation never fails
-      setIsPresentationMode(true);
-      
-      setStats({ total_users: 142, total_orders: 84, total_revenue: 500000, pending_payments: 3 });
-      
-      setOrders([
-        { id: 1042, created_at: new Date().toISOString(), user_email: "j.doe@example.com", items: [{id:1, quantity:1, product_title:"Executive Mahogany Casket"}], total_amount: 150000, status: "completed" },
-        { id: 1041, created_at: new Date(Date.now() - 86400000).toISOString(), user_email: "smith.family@example.com", items: [{id:2, quantity:2, product_title:"Sympathy Wreath"}], total_amount: 7000, status: "completed" }
-      ]);
-      
-      setPayments([
-        { id: "req_991", checkout_request_id: "ws_CO_09876", created_at: new Date().toISOString(), phone: "0712 345 678", amount: 150000, status: "completed" },
-        { id: "req_990", checkout_request_id: "ws_CO_09875", created_at: new Date(Date.now() - 3600000).toISOString(), phone: "0799 847 727", amount: 7000, status: "completed" },
-        { id: "req_989", checkout_request_id: "ws_CO_09874", created_at: new Date(Date.now() - 7200000).toISOString(), phone: "0722 111 222", amount: 2500, status: "failed" }
-      ]);
-
-      setProducts([
-        { id: 1, title: "Executive Mahogany", categoryId: "casket_list", price: 150000, discount_percent: 0, has_sizes: true },
-        { id: 2, title: "Classic Oak Casket", categoryId: "casket_list", price: 85000, discount_percent: 10, has_sizes: true }
-      ]);
-
-      setReviews([
-        { id: 1, product_title: "Funeral Planning Service", user_email: "amina.n@example.com", is_verified_buyer: true, created_at: new Date().toISOString(), comment: "The team made an overwhelming time feel calm and dignified.", admin_reply: null }
-      ]);
-      
+      console.error("Database Connection Error:", err);
+      setError("Failed to sync with the live database. Please check your connection.");
+      // Reset to strict zero values if the connection fails
+      setStats({ total_users: 0, total_orders: 0, total_revenue: 0, pending_payments: 0 });
+      setOrders([]);
+      setPayments([]);
+      setProducts([]);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -136,11 +116,6 @@ export default function AdminDashboardPage() {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (isPresentationMode) {
-      alert("System is currently in Presentation Mode. Product updates are simulated.");
-      setShowProductModal(false);
-      return;
-    }
 
     const token = localStorage.getItem("token");
     const imageArray = productForm.images.split(",").map(i => i.trim()).filter(Boolean);
@@ -168,12 +143,42 @@ export default function AdminDashboardPage() {
     } catch (err) { alert("Network error saving product."); }
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this product from the live catalog?")) return;
-    if (isPresentationMode) {
-      alert("System is in Presentation Mode. Deletion simulated.");
+  const handleCategoryChange = (value) => {
+    const VEHICLE_REQUIRED = [
+      'Auto-lowering gear',
+      'Casket gazebo tent',
+      'Public system for the grave yard site',
+      'Portrait stand',
+      'Church trolley',
+      'Graveside turf'
+    ];
+
+    let inclusions = productForm.inclusions || '';
+
+    if (value === 'hearses' || value === 'hearse' || value === 'vehicles') {
+      const existing = new Set((inclusions || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+      VEHICLE_REQUIRED.forEach(req => {
+        if (!existing.has(req.toLowerCase())) {
+          inclusions = inclusions ? `${inclusions}, ${req}` : req;
+        }
+      });
+      setProductForm({ ...productForm, category_id: value, inclusions, has_sound_system: productForm.has_sound_system });
       return;
     }
+
+    if (value === 'media' || value === 'videography') {
+      if (!inclusions.toLowerCase().includes('sound')) {
+        inclusions = inclusions ? `${inclusions}, Sound systems` : 'Sound systems';
+      }
+      setProductForm({ ...productForm, category_id: value, inclusions, has_sound_system: true });
+      return;
+    }
+
+    setProductForm({ ...productForm, category_id: value });
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm("Are you sure you want to remove this product from the live catalog?")) return;
 
     const token = localStorage.getItem("token");
     try {
@@ -184,15 +189,74 @@ export default function AdminDashboardPage() {
     } catch (err) { alert("Failed to delete product."); }
   };
 
+  // --- SIZES MANAGEMENT HANDLERS ---
+  const openSizesModal = async (product) => {
+    setSizesProduct(product);
+    setShowSizesModal(true);
+    setEditingSize(null);
+    setSizeForm({ label: '', price_modifier: 0 });
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/products/${product.id}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setSizesList(data.sizes || []);
+    } catch (err) {
+      setSizesList(product.sizes || []);
+    }
+  };
+
+  const handleSaveSize = async () => {
+    if (!sizesProduct) return;
+
+    const token = localStorage.getItem('token');
+    const payload = { label: sizeForm.label, price_modifier: Number(sizeForm.price_modifier) };
+
+    try {
+      let res;
+      if (editingSize) {
+        res = await fetch(`${API_URL}/api/admin/products/${sizesProduct.id}/sizes/${editingSize.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(`${API_URL}/api/admin/products/${sizesProduct.id}/sizes`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload)
+        });
+      }
+
+      if (res.ok) {
+        setEditingSize(null);
+        setSizeForm({ label: '', price_modifier: 0 });
+        const detail = await (await fetch(`${API_URL}/api/products/${sizesProduct.id}`)).json();
+        setSizesList(detail.sizes || []);
+        fetchAdminData();
+      } else {
+        alert('Failed to save size');
+      }
+    } catch (err) {
+      alert('Network error saving size');
+    }
+  };
+
+  const handleDeleteSize = async (sizeId) => {
+    if (!sizesProduct) return;
+    if (!window.confirm('Remove this size option?')) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/admin/products/${sizesProduct.id}/sizes/${sizeId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const detail = await (await fetch(`${API_URL}/api/products/${sizesProduct.id}`)).json();
+        setSizesList(detail.sizes || []);
+        fetchAdminData();
+      } else alert('Failed to delete size');
+    } catch (err) { alert('Network error deleting size'); }
+  };
+
   const handleSendReply = async (reviewId) => {
     const text = replyText[reviewId];
     if (!text) return;
-    
-    if (isPresentationMode) {
-      alert("System is in Presentation Mode. Reply simulated.");
-      setReplyText({ ...replyText, [reviewId]: "" });
-      return;
-    }
 
     const token = localStorage.getItem("token");
     try {
@@ -222,14 +286,14 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8F6F0] py-12 px-4 sm:px-6 lg:px-8">
       
-      {/* PRESENTATION MODE BANNER */}
-      {isPresentationMode && (
-        <div className="max-w-7xl mx-auto mb-6 bg-[#1F2E27] text-white p-4 rounded-lg shadow-xl flex items-center justify-between border border-[#A8895C]">
+      {/* ERROR BANNER */}
+      {error && (
+        <div className="max-w-7xl mx-auto mb-6 bg-[#FFF4F4] border border-[#FF4747] text-[#FF4747] p-4 rounded-lg shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <AlertCircle className="text-[#A8895C]" size={24} />
+            <AlertCircle size={24} />
             <div>
-              <p className="font-bold text-sm uppercase tracking-widest text-[#A8895C]">Presentation Mode Active</p>
-              <p className="text-xs opacity-80">Live APIs disconnected. Operating on local simulation data for demonstration purposes.</p>
+              <p className="font-bold text-sm uppercase tracking-widest">Connection Error</p>
+              <p className="text-xs">{error}</p>
             </div>
           </div>
         </div>
@@ -443,34 +507,42 @@ export default function AdminDashboardPage() {
                 <button onClick={openAddModal} className="bg-[#1F2E27] text-white px-5 py-3 rounded text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-[#A8895C] transition-colors"><Plus size={16}/> Add New Product</button>
               </div>
 
-              <div className="overflow-x-auto rounded border border-[#E8DFD1]">
-                <table className="w-full text-left text-sm text-[#3D3530]">
-                  <thead className="bg-[#F8F6F0] border-b border-[#E8DFD1] text-xs uppercase text-[#8F847C]">
-                    <tr><th className="p-4">ID</th><th className="p-4">Title</th><th className="p-4">Category</th><th className="p-4 text-right">Price</th><th className="p-4 text-center">Discount</th><th className="p-4 text-center">Actions</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E8DFD1]">
-                    {products.map(p => (
-                      <tr key={p.id} className="hover:bg-[#F8F6F0]/50">
-                        <td className="p-4 font-mono text-xs text-[#A8895C]">#{p.id}</td>
-                        <td className="p-4 font-semibold">{p.title}</td>
-                        <td className="p-4 text-xs uppercase">{p.categoryId}</td>
-                        <td className="p-4 font-bold text-right">KSh {p.price.toLocaleString()}</td>
-                        <td className="p-4 text-center">
-                          {p.discount_percent > 0 ? (
-                            <span className="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-1 rounded">{p.discount_percent}% OFF</span>
-                          ) : (
-                            <span className="text-[#8F847C] text-xs">-</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-center flex justify-center gap-2">
-                          <button onClick={() => openEditModal(p)} className="p-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"><Edit size={16}/></button>
-                          <button onClick={() => handleDeleteProduct(p.id)} className="p-2 bg-red-50 text-red-700 rounded hover:bg-red-100"><Trash2 size={16}/></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {products.length === 0 ? (
+                <div className="p-12 text-center text-[#716860]">
+                  <ShoppingBag size={48} className="mx-auto mb-4 opacity-20" />
+                  <p className="text-lg font-serif">Catalog is currently empty.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded border border-[#E8DFD1]">
+                  <table className="w-full text-left text-sm text-[#3D3530]">
+                    <thead className="bg-[#F8F6F0] border-b border-[#E8DFD1] text-xs uppercase text-[#8F847C]">
+                      <tr><th className="p-4">ID</th><th className="p-4">Title</th><th className="p-4">Category</th><th className="p-4 text-right">Price</th><th className="p-4 text-center">Discount</th><th className="p-4 text-center">Actions</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8DFD1]">
+                      {products.map(p => (
+                        <tr key={p.id} className="hover:bg-[#F8F6F0]/50">
+                          <td className="p-4 font-mono text-xs text-[#A8895C]">#{p.id}</td>
+                          <td className="p-4 font-semibold">{p.title}</td>
+                          <td className="p-4 text-xs uppercase">{p.categoryId}</td>
+                          <td className="p-4 font-bold text-right">KSh {p.price.toLocaleString()}</td>
+                          <td className="p-4 text-center">
+                            {p.discount_percent > 0 ? (
+                              <span className="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-1 rounded">{p.discount_percent}% OFF</span>
+                            ) : (
+                              <span className="text-[#8F847C] text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center flex justify-center gap-2">
+                            <button onClick={() => openEditModal(p)} className="p-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"><Edit size={16}/></button>
+                            <button onClick={() => openSizesModal(p)} className="p-2 bg-white border text-[#3D3530] rounded hover:bg-[#F8F6F0]" title="Manage sizes">Sizes</button>
+                            <button onClick={() => handleDeleteProduct(p.id)} className="p-2 bg-red-50 text-red-700 rounded hover:bg-red-100"><Trash2 size={16}/></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -582,7 +654,7 @@ export default function AdminDashboardPage() {
                 <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Discount (%)</label><input type="number" min="0" max="99" value={productForm.discount_percent} onChange={(e) => setProductForm({...productForm, discount_percent: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
                 <div>
                   <label className="block text-xs font-bold text-[#716860] uppercase mb-1">Category</label>
-                  <select value={productForm.category_id} onChange={(e) => setProductForm({...productForm, category_id: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm">
+                  <select value={productForm.category_id} onChange={(e) => handleCategoryChange(e.target.value)} className="w-full p-3 border border-[#E8DFD1] rounded text-sm">
                     <option value="casket_list">Caskets</option>
                     <option value="urns">Urns</option>
                     <option value="wreaths">Wreaths</option>
@@ -608,6 +680,19 @@ export default function AdminDashboardPage() {
                 </label>
               </div>
               
+              <div className="flex items-center gap-3 p-3 bg-[#F8F6F0] rounded border border-[#E8DFD1]">
+                <input 
+                  type="checkbox" 
+                  id="has_sound_system"
+                  checked={productForm.has_sound_system} 
+                  onChange={(e) => setProductForm({...productForm, has_sound_system: e.target.checked})} 
+                  className="w-4 h-4 accent-[#1F2E27] cursor-pointer"
+                />
+                <label htmlFor="has_sound_system" className="text-xs font-bold text-[#1F2E27] uppercase tracking-wider cursor-pointer">
+                  Include Sound Systems / Videography Options
+                </label>
+              </div>
+              
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Description</label><textarea rows="2" required value={productForm.desc} onChange={(e) => setProductForm({...productForm, desc: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm resize-none"></textarea></div>
               
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Package Inclusions (Comma-separated)</label><input type="text" placeholder="Auto-lowering gear, Gazebo tent, PA system" value={productForm.inclusions} onChange={(e) => setProductForm({...productForm, inclusions: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
@@ -616,6 +701,76 @@ export default function AdminDashboardPage() {
               
               <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors mt-4">Save Catalog Item</button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SIZES MANAGEMENT MODAL */}
+      {showSizesModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-[#E8DFD1] relative">
+            <button onClick={() => { setShowSizesModal(false); setSizesProduct(null); setSizesList([]); setEditingSize(null); setSizeForm({label:'',price_modifier:0}); }} className="absolute top-4 right-4 text-[#8F847C] hover:text-[#1F2E27]"><X size={20}/></button>
+            <h3 className="text-2xl font-serif text-[#1F2E27] mb-4">Manage Sizes for: {sizesProduct?.title}</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-sm font-bold text-[#716860] mb-2">Existing Sizes</h4>
+                <div className="space-y-2">
+                  {sizesList.length === 0 ? (
+                    <p className="text-sm text-[#716860] italic">No sizes defined for this product.</p>
+                  ) : (
+                    sizesList.map(s => (
+                      <div key={s.id} className="flex items-center justify-between p-3 border rounded">
+                        <div className="flex-1">
+                          {editingSize && editingSize.id === s.id ? (
+                            <div className="space-y-1">
+                              <input value={sizeForm.label} onChange={(e) => setSizeForm({...sizeForm, label: e.target.value})} className="w-full p-2 border border-[#E8DFD1] rounded text-sm mb-1" />
+                              <input type="number" value={sizeForm.price_modifier} onChange={(e) => setSizeForm({...sizeForm, price_modifier: e.target.value})} className="w-full p-2 border border-[#E8DFD1] rounded text-sm" />
+                            </div>
+                          ) : (
+                            <>
+                              <div className="font-semibold">{s.label}</div>
+                              <div className="text-xs text-[#716860]">Modifier: KSh {Number(s.price_modifier).toLocaleString()}</div>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          {editingSize && editingSize.id === s.id ? (
+                            <>
+                              <button onClick={() => handleSaveSize()} className="p-2 bg-emerald-50 text-emerald-700 rounded">Save</button>
+                              <button onClick={() => { setEditingSize(null); setSizeForm({label:'', price_modifier:0}); }} className="p-2 bg-gray-50 text-[#3D3530] rounded">Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => { setEditingSize(s); setSizeForm({ label: s.label, price_modifier: s.price_modifier }); }} className="p-2 bg-blue-50 text-blue-700 rounded"><Edit size={14}/></button>
+                              <button onClick={() => handleDeleteSize(s.id)} className="p-2 bg-red-50 text-red-700 rounded"><Trash2 size={14}/></button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-[#716860] mb-2">Add / Edit Size</h4>
+                <form onSubmit={(e) => { e.preventDefault(); handleSaveSize(); }} className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-[#716860] uppercase mb-1 block">Label</label>
+                    <input type="text" required value={sizeForm.label} onChange={(e) => setSizeForm({...sizeForm, label: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#716860] uppercase mb-1 block">Price Modifier (KSh)</label>
+                    <input type="number" required value={sizeForm.price_modifier} onChange={(e) => setSizeForm({...sizeForm, price_modifier: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="flex-1 bg-[#1F2E27] text-white py-2 rounded font-bold">{editingSize ? 'Save Changes' : 'Add Size'}</button>
+                    <button type="button" onClick={() => { setEditingSize(null); setSizeForm({label:'',price_modifier:0}); }} className="flex-1 border border-[#E8DFD1] py-2 rounded">Clear</button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       )}

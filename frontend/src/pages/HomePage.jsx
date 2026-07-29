@@ -313,7 +313,7 @@ export default function HomePage() {
                     </h4>
                     <p className="text-[#3D3530] text-sm leading-relaxed font-medium">
                       LAST PLANNER JULZ,<br />
-                      <span className="text-[#1F2E27] font-semibold">Ruiru, Kiambu County, Kenya</span>
+                      <span className="text-[#1F2E27] font-semibold">Nairobi County, Kenya</span>
                     </p>
                   </div>
                 </div>
