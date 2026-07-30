@@ -14,7 +14,21 @@ const categories = [
       { id: "urns", title: "Cremation Urns", desc: "Beautifully crafted vessels to preserve the ashes of your loved ones.", images: ["/images/urns/images(0).jpg"] }
     ]
   },
-  { id: "wreaths", title: "Floral Wreaths", desc: "Beautifully arranged fresh floral tributes to honor your loved one.", images: ["/images/wreaths/wreath1.jpeg"] },
+  { 
+    id: "wreaths", 
+    title: "Floral Wreaths", 
+    desc: "Beautifully arranged fresh floral tributes to honor your loved one.", 
+    images: ["/images/wreaths/wreath1.jpeg"],
+    subcategories: [
+      { id: "wreath_full_set", title: "Full Set", desc: "Complete and expansive floral arrangements.", images: ["/images/wreaths/wreath1.jpeg"] },
+      { id: "wreath_portrait_stand", title: "Portrait Stand", desc: "Specialized wreaths designed to frame portrait stands.", images: ["/images/wreaths/wreath6.jpeg"] },
+      { id: "wreath_double_set", title: "Double Set", desc: "Paired floral arrangements for a balanced tribute.", images: ["/images/wreaths/wreath14.jpeg"] },
+      { id: "wreath_halfset", title: "Halfset", desc: "Elegant partial floral tributes.", images: ["/images/wreaths/wreath9.jpeg"] },
+      { id: "wreath_customs", title: "Customs", desc: "Custom shapes and personalized floral designs.", images: ["/images/wreaths/wreath23.jpeg"] },
+      { id: "wreath_specials", title: "Specials", desc: "Specialized, unique floral tributes.", images: ["/images/wreaths/wreath15.jpeg"] },
+      { id: "wreath_standard", title: "Standard Wreaths", desc: "Classic circular and standing wreaths.", images: ["/images/wreaths/wreath7.jpeg"] }
+    ]
+  },
   { 
     id: "setup", 
     title: "Service Setup", 
@@ -32,7 +46,6 @@ const categories = [
 ];
 
 // --- 2. The Products ---
-// Export added here so ProductDetailPage can access it if the server is offline
 export const fallbackProducts = [
   // --- CASKETS ---
   { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
@@ -85,37 +98,37 @@ export const fallbackProducts = [
   { id: 166, categoryId: "urns", title: "Silver Teardrop Urn", desc: "Unique teardrop shape with intricate silver engraving.", price: 24000, images: ["/images/urns/images(15).jpg"] },
 
   // --- WREATHS ---
-  { id: 201, categoryId: "wreaths", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 18000, images: ["/images/wreaths/wreath1.jpeg"] },
-  { id: 202, categoryId: "wreaths", title: "Classic White & Green Ring", desc: "Beautifully arranged traditional circular wreath.", price: 8000, images: ["/images/wreaths/wreath2.jpeg"] },
-  { id: 203, categoryId: "wreaths", title: "Yellow & Blue Floral Dome", desc: "Vibrant yellow and blue dome floral mix.", price: 14000, images: ["/images/wreaths/wreath3.jpeg"] },
-  { id: 204, categoryId: "wreaths", title: "Elevated White Floral Dome", desc: "Elegant tall white floral display.", price: 16000, images: ["/images/wreaths/wreath4.jpeg"] },
-  { id: 205, categoryId: "wreaths", title: "Standing White Heart Tribute", desc: "Elevated white floral heart display on a stand.", price: 15000, images: ["/images/wreaths/wreath5.jpeg"] },
-  { id: 206, categoryId: "wreaths", title: "Hanging Floral Tribute", desc: "Unique suspended floral arrangement for high-impact visual tribute.", price: 25000, images: ["/images/wreaths/wreath6.jpeg"] },
-  { id: 207, categoryId: "wreaths", title: "Red & White Round Wreath", desc: "White base with striking red floral accents.", price: 8500, images: ["/images/wreaths/wreath7.jpeg"] },
-  { id: 208, categoryId: "wreaths", title: "Blue & Yellow Round Wreath", desc: "Vibrant circular tribute with contrasting blue and yellow colors.", price: 8500, images: ["/images/wreaths/wreath8.jpeg"] },
-  { id: 209, categoryId: "wreaths", title: "White & Green Floral Heart", desc: "Clean and pure white heart-shaped arrangement.", price: 12000, images: ["/images/wreaths/wreath9.jpeg"] },
-  { id: 210, categoryId: "wreaths", title: "Family Cross & Heart Floral Set", desc: "A beautifully coordinated cross and heart set.", price: 22000, images: ["/images/wreaths/wreath10.jpeg"] },
-  { id: 211, categoryId: "wreaths", title: "Pristine White Round Wreath", desc: "Classic dense arrangement in pure white blooms.", price: 8000, images: ["/images/wreaths/wreath11.jpeg"] },
-  { id: 212, categoryId: "wreaths", title: "Autumn Hue Round Tribute", desc: "Warm colored circular floral arrangement.", price: 8500, images: ["/images/wreaths/wreath12.jpeg"] },
-  { id: 213, categoryId: "wreaths", title: "White Cross with Red Center", desc: "Traditional cross arrangement with a vibrant center accent.", price: 14000, images: ["/images/wreaths/wreath13.jpeg"] },
-  { id: 214, categoryId: "wreaths", title: "Blue & White Floral Cushion", desc: "Beautifully arranged blue and white cushion tribute.", price: 12000, images: ["/images/wreaths/wreath14.jpeg"] },
-  { id: 215, categoryId: "wreaths", title: "Custom 'DAD' Floral Cushion", desc: "Circular wreath personalized with a 'DAD' centerpiece.", price: 10000, images: ["/images/wreaths/wreath15.jpeg"] },
-  { id: 216, categoryId: "wreaths", title: "White & Purple Crosses", desc: "Multiple cross arrangements with elegant purple accents.", price: 22000, images: ["/images/wreaths/wreath16.jpeg"] },
-  { id: 217, categoryId: "wreaths", title: "Custom 'MY LOVE' Floral Heart", desc: "Heart wreath boldly displaying 'MY LOVE'.", price: 14000, images: ["/images/wreaths/wreath17.jpeg"] },
-  { id: 218, categoryId: "wreaths", title: "Full White Casket Spray", desc: "Luxurious pure white floral spray designed to rest atop the casket.", price: 25000, images: ["/images/wreaths/wreath18.jpeg"] },
-  { id: 219, categoryId: "wreaths", title: "Trio of Standing Wreaths", desc: "Three coordinated standing circular wreaths.", price: 28000, images: ["/images/wreaths/wreath19.jpeg"] },
-  { id: 220, categoryId: "wreaths", title: "Classic White & Green Ring", desc: "A pristine white, densely packed floral ring.", price: 8000, images: ["/images/wreaths/wreath20.jpeg"] },
-  { id: 221, categoryId: "wreaths", title: "Solid Red Rose Heart", desc: "Stunning full red rose heart arrangement.", price: 15000, images: ["/images/wreaths/wreath21.jpeg"] },
-  { id: 222, categoryId: "wreaths", title: "White Heart with Red Border", desc: "A beautiful mixture of red outlining white roses.", price: 14000, images: ["/images/wreaths/wreath22.jpeg"] },
-  { id: 223, categoryId: "wreaths", title: "Symbolic Broken Heart Tribute", desc: "Striking broken heart floral arrangement in red and white.", price: 16000, images: ["/images/wreaths/wreath23.jpeg"] },
-  { id: 224, categoryId: "wreaths", title: "White & Red Casket Spray", desc: "A long, elegant spray of mixed roses for the casket.", price: 22000, images: ["/images/wreaths/wreath24.jpeg"] },
-  { id: 226, categoryId: "wreaths", title: "Large White Cross with Red Accent", desc: "An oversized standing cross with vibrant red details.", price: 15000, images: ["/images/wreaths/wreath26.jpeg"] },
-  { id: 227, categoryId: "wreaths", title: "White Heart with Crimson Trim", desc: "Detailed heart shape surrounded by deep red flowers.", price: 13000, images: ["/images/wreaths/wreath27.jpeg"] },
-  { id: 228, categoryId: "wreaths", title: "White & Green Heart Tribute", desc: "Pure white blooms arranged in a tight heart shape with greenery.", price: 12000, images: ["/images/wreaths/wreath28.jpg"] },
-  { id: 229, categoryId: "wreaths", title: "White & Blue Sympathy Basket", desc: "Elevated floral spray featuring bold blue accents.", price: 12000, images: ["/images/wreaths/wreath29.jpg"] },
-  { id: 230, categoryId: "wreaths", title: "Multi-Tribute Floral Package", desc: "A comprehensive multi-piece floral setup for the family.", price: 35000, images: ["/images/wreaths/wreath30.jpg"] },
-  { id: 231, categoryId: "wreaths", title: "Standing White Sympathy Spray", desc: "Tall standing basket arrangement for the graveside or chapel.", price: 16000, images: ["/images/wreaths/wreath31.jpg"] },
-  { id: 232, categoryId: "wreaths", title: "Large Red & White Casket Spray", desc: "Oversized, lush arrangement filled with fresh cut red and white flowers.", price: 26000, images: ["/images/wreaths/wreath32.jpg"] },
+  { id: 201, categoryId: "wreath_full_set", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 8000, images: ["/images/wreaths/wreath1.jpeg"] },
+  { id: 202, categoryId: "wreath_standard", title: "Classic White & Green Ring", desc: "Beautifully arranged traditional circular wreath.", price: 4000, images: ["/images/wreaths/wreath2.jpeg"] },
+  { id: 203, categoryId: "wreath_standard", title: "Yellow & Blue Floral Dome", desc: "Vibrant yellow and blue dome floral mix.", price: 14000, images: ["/images/wreaths/wreath3.jpeg"] },
+  { id: 204, categoryId: "wreath_standard", title: "Elevated White Floral Dome", desc: "Elegant tall white floral display.", price: 4000, images: ["/images/wreaths/wreath4.jpeg"] },
+  { id: 205, categoryId: "wreath_customs", title: "Standing White Heart Tribute", desc: "Elevated white floral heart display on a stand.", price: 4000, images: ["/images/wreaths/wreath5.jpeg"] },
+  { id: 206, categoryId: "wreath_portrait_stand", title: "Hanging Floral Tribute", desc: "Unique suspended floral arrangement for high-impact visual tribute.", price: 25000, images: ["/images/wreaths/wreath6.jpeg"] },
+  { id: 207, categoryId: "wreath_standard", title: "Red & White Round Wreath", desc: "White base with striking red floral accents.", price: 8500, images: ["/images/wreaths/wreath7.jpeg"] },
+  { id: 208, categoryId: "wreath_standard", title: "Blue & Yellow Round Wreath", desc: "Vibrant circular tribute with contrasting blue and yellow colors.", price: 8500, images: ["/images/wreaths/wreath8.jpeg"] },
+  { id: 209, categoryId: "wreath_halfset", title: "White & Green Floral Heart", desc: "Clean and pure white heart-shaped arrangement.", price: 4000, images: ["/images/wreaths/wreath9.jpeg"] },
+  { id: 210, categoryId: "wreath_full_set", title: "Family Cross & Heart Floral Set", desc: "A beautifully coordinated cross and heart set.", price: 22000, images: ["/images/wreaths/wreath10.jpeg"] },
+  { id: 211, categoryId: "wreath_standard", title: "Pristine White Round Wreath", desc: "Classic dense arrangement in pure white blooms.", price: 4000, images: ["/images/wreaths/wreath11.jpeg"] },
+  { id: 212, categoryId: "wreath_standard", title: "Autumn Hue Round Tribute", desc: "Warm colored circular floral arrangement.", price: 8500, images: ["/images/wreaths/wreath12.jpeg"] },
+  { id: 213, categoryId: "wreath_full_set", title: "White Cross with Red Center", desc: "Traditional cross arrangement with a vibrant center accent.", price: 14000, images: ["/images/wreaths/wreath13.jpeg"] },
+  { id: 214, categoryId: "wreath_double_set", title: "Double Set", desc: "Beautifully arranged blue and white cushion tribute.", price: 12000, images: ["/images/wreaths/wreath14.jpeg"] },
+  { id: 215, categoryId: "wreath_specials", title: "Custom 'DAD' Floral Cushion", desc: "Circular wreath personalized with a 'DAD' centerpiece.", price: 9000, images: ["/images/wreaths/wreath15.jpeg"] },
+  { id: 216, categoryId: "wreath_double_set", title: "Double Set", desc: "Multiple cross arrangements with elegant purple accents.", price: 22000, images: ["/images/wreaths/wreath16.jpeg"] },
+  { id: 217, categoryId: "wreath_specials", title: "Custom 'MY LOVE' Floral Heart", desc: "Heart wreath boldly displaying 'MY LOVE'.", price: 10000, images: ["/images/wreaths/wreath17.jpeg"] },
+  { id: 218, categoryId: "wreath_standard", title: "Premium White Floral Package", desc: "Complete white floral tribute featuring a luxurious casket spray, elevated floral dome, and classic ring.", price: 12000, images: ["/images/wreaths/wreath18.jpeg", "/images/wreaths/wreath4.jpeg", "/images/wreaths/wreath2.jpeg"] },
+  { id: 219, categoryId: "wreath_full_set", title: "Trio of Standing Wreaths", desc: "Three coordinated standing circular wreaths.", price: 28000, images: ["/images/wreaths/wreath19.jpeg"] },
+  { id: 220, categoryId: "wreath_standard", title: "Classic White & Green Ring", desc: "A pristine white, densely packed floral ring.", price: 4000, images: ["/images/wreaths/wreath20.jpeg"] },
+  { id: 221, categoryId: "wreath_customs", title: "Solid Red Rose Heart", desc: "Stunning full red rose heart arrangement.", price: 15000, images: ["/images/wreaths/wreath21.jpeg"] },
+  { id: 222, categoryId: "wreath_customs", title: "White Heart with Red Border", desc: "A beautiful mixture of red outlining white roses.", price: 14000, images: ["/images/wreaths/wreath22.jpeg"] },
+  { id: 223, categoryId: "wreath_customs", title: "Symbolic Broken Heart Tribute", desc: "Striking broken heart floral arrangement in red and white.", price: 16000, images: ["/images/wreaths/wreath23.jpeg"] },
+  { id: 224, categoryId: "wreath_standard", title: "White & Red Casket Spray", desc: "A long, elegant spray of mixed roses for the casket.", price: 22000, images: ["/images/wreaths/wreath24.jpeg"] },
+  { id: 226, categoryId: "wreath_specials", title: "Cross Wreath", desc: "An oversized standing cross with vibrant red details.", price: 4500, images: ["/images/wreaths/wreath26.jpeg"] },
+  { id: 227, categoryId: "wreath_customs", title: "White Heart with Crimson Trim", desc: "Detailed heart shape surrounded by deep red flowers.", price: 13000, images: ["/images/wreaths/wreath27.jpeg"] },
+  { id: 228, categoryId: "wreath_customs", title: "White & Green Heart Tribute", desc: "Pure white blooms arranged in a tight heart shape with greenery.", price: 4000, images: ["/images/wreaths/wreath28.jpg"] },
+  { id: 229, categoryId: "wreath_standard", title: "White & Blue Sympathy Basket", desc: "Elevated floral spray featuring bold blue accents.", price: 12000, images: ["/images/wreaths/wreath29.jpg"] },
+  { id: 230, categoryId: "wreath_full_set", title: "Multi-Tribute Floral Package", desc: "A comprehensive multi-piece floral setup for the family.", price: 35000, images: ["/images/wreaths/wreath30.jpg"] },
+  { id: 231, categoryId: "wreath_full_set", title: "Standing White Sympathy Spray", desc: "Tall standing basket arrangement for the graveside or chapel.", price: 4000, images: ["/images/wreaths/wreath31.jpg"] },
+  { id: 232, categoryId: "wreath_full_set", title: "Large Red & White Casket Spray", desc: "Oversized, lush arrangement filled with fresh cut red and white flowers.", price: 26000, images: ["/images/wreaths/wreath32.jpg"] },
 
   // --- LOWERING GEARS & SETUP ---
   { id: 300, categoryId: "lowering_gears", title: "Executive Placement Setup ", desc: "Complete elegant lowering service setup.", price: 25000, images: ["/images/lowering-gears/setup10(0).jpeg", "/images/lowering-gears/setup10(1).jpeg"] },

@@ -9,9 +9,10 @@ import uuid
 import io
 import qrcode
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -73,32 +74,106 @@ def generate_qr_code(memorial_url):
     return img_byte_arr.getvalue()
 
 def generate_eulogy_pdf(eulogy, memorial_url):
+    raw_text = eulogy.personality
+    metadata = {}
+    story_text = raw_text
+    
+    # 1. PARSE THE METADATA FROM THE FRONTEND
+    match = re.search(r'\[PRODUCTION METADATA\](.*?)\[/PRODUCTION METADATA\]', raw_text, re.DOTALL)
+    if match:
+        meta_block = match.group(1)
+        for line in meta_block.strip().split('\n'):
+            if ':' in line:
+                key, val = line.split(':', 1)
+                metadata[key.strip()] = val.strip()
+        # Remove the metadata block so it doesn't print in the PDF
+        story_text = raw_text.replace(match.group(0), '').strip()
+
+    # 2. MAP FRONTEND TEMPLATES TO PDF COLOR THEMES
+    template_name = metadata.get("Template", "Executive Minimal")
+    themes = {
+        "Executive Minimal": {"bg": "#F8F6F0", "text": "#1F2E27", "accent": "#A8895C"},
+        "Blue Rose Border": {"bg": "#E8F0F8", "text": "#172A3A", "accent": "#4A90E2"}, 
+        "Dark Golden Flora": {"bg": "#1F2E27", "text": "#F8F6F0", "accent": "#D4AF37"}, 
+        "Classic Parchment": {"bg": "#F4ECD8", "text": "#3D3530", "accent": "#8F744D"} 
+    }
+    theme = themes.get(template_name, themes["Executive Minimal"])
+
+    # 3. MAP FRONTEND FONTS TO PDF STANDARD FONTS
+    font_name = metadata.get("Font", "Classic Serif")
+    base_font, base_font_bold, base_font_italic = "Times-Roman", "Times-Bold", "Times-Italic"
+    
+    if "Modern" in font_name:
+        base_font, base_font_bold, base_font_italic = "Helvetica", "Helvetica-Bold", "Helvetica-Oblique"
+    elif "Typewriter" in font_name:
+        base_font, base_font_bold, base_font_italic = "Courier", "Courier-Bold", "Courier-Oblique"
+
+    # Scale the web font size slightly down for print
+    font_size = int(metadata.get("Size", "16").replace("px", ""))
+    pdf_font_size = max(10, min(16, font_size * 0.75))
+
+    # 4. SETUP DOCUMENT & BACKGROUND PAINTER
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
+    
+    def paint_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColorHex(theme["bg"])
+        canvas.rect(0, 0, letter[0], letter[1], fill=True, stroke=False)
+        canvas.restoreState()
+
+    # 5. DEFINE PDF TYPOGRAPHY STYLES
     styles = getSampleStyleSheet()
+    
+    cover_title = ParagraphStyle('CoverTitle', fontName=base_font_bold, fontSize=32, leading=38, textColor=colors.HexColor(theme["text"]), alignment=TA_CENTER, spaceAfter=20)
+    cover_subtitle = ParagraphStyle('CoverSubtitle', fontName=base_font_italic, fontSize=12, textColor=colors.HexColor(theme["accent"]), alignment=TA_CENTER, spaceAfter=30, textTransform='uppercase')
+    cover_dates = ParagraphStyle('CoverDates', fontName=base_font_bold, fontSize=12, textColor=colors.HexColor(theme["text"]), alignment=TA_CENTER, spaceAfter=50)
+    
+    chapter_title = ParagraphStyle('ChapterTitle', fontName=base_font_bold, fontSize=pdf_font_size + 4, textColor=colors.HexColor(theme["text"]), alignment=TA_LEFT, spaceAfter=10, textTransform='uppercase')
+    body_text = ParagraphStyle('BodyText', fontName=base_font, fontSize=pdf_font_size, leading=pdf_font_size * 1.6, textColor=colors.HexColor(theme["text"]), alignment=TA_LEFT, spaceAfter=15)
+
     story = []
 
-    title_style = ParagraphStyle('EulogyTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=24, textColor=colors.HexColor('#1F2E27'), alignment=1, spaceAfter=10)
-    subtitle_style = ParagraphStyle('EulogySubtitle', parent=styles['Normal'], fontName='Helvetica-Oblique', fontSize=12, textColor=colors.HexColor('#A8895C'), alignment=1, spaceAfter=20)
-    body_style = ParagraphStyle('EulogyBody', parent=styles['BodyText'], fontName='Helvetica', fontSize=11, leading=16, textColor=colors.HexColor('#3D3530'), spaceAfter=12)
+    # --- BUILD PAGE 1: THE COVER ---
+    story.append(Spacer(1, 120)) 
+    story.append(Paragraph("In Loving Memory Of", cover_subtitle))
+    story.append(Paragraph(eulogy.deceased_name, cover_title))
+    
+    story.append(Paragraph(f"<font color='{theme['accent']}'>________________________</font>", cover_dates))
+    
+    dates_text = f"{eulogy.birth_year[:4] if eulogy.birth_year else 'YYYY'} — {eulogy.passing_year[:4] if eulogy.passing_year else 'YYYY'}"
+    story.append(Paragraph(dates_text, cover_dates))
+    
+    story.append(PageBreak()) 
 
-    story.append(Paragraph("IN LOVING MEMORY OF", subtitle_style))
-    story.append(Paragraph(eulogy.deceased_name.upper(), title_style))
-    story.append(Spacer(1, 15))
+    # --- BUILD PAGES 2+: THE CHAPTERS ---
+    chapters = re.split(r'([A-Z\s&]+):', story_text)
+    
+    for i in range(1, len(chapters), 2):
+        chap_heading = chapters[i].strip()
+        chap_content = chapters[i+1].strip() if i+1 < len(chapters) else ""
+        
+        if chap_heading and chap_content:
+            story.append(Paragraph(chap_heading, chapter_title))
+            
+            for p in chap_content.split('\n'):
+                if p.strip():
+                    story.append(Paragraph(p.strip().replace('<', '&lt;').replace('>', '&gt;'), body_text))
+            
+            story.append(Spacer(1, 20))
 
-    paragraphs = eulogy.personality.split('\n')
-    for p in paragraphs:
-        if p.strip():
-            story.append(Paragraph(p.strip(), body_style))
-            story.append(Spacer(1, 6))
-
-    story.append(Spacer(1, 20))
+    # --- BUILD FINAL PAGE: QR CODE ---
+    story.append(Spacer(1, 30))
+    story.append(Paragraph(f"<font color='{theme['accent']}'>________________________</font>", cover_dates))
+    story.append(Paragraph("Digital Memorial Space", chapter_title))
+    story.append(Paragraph("Scan the code below with your mobile device to visit the interactive digital tribute, view memories, and leave your condolences.", body_text))
+    
     qr_bytes = generate_qr_code(memorial_url)
     qr_buffer = io.BytesIO(qr_bytes)
     story.append(RLImage(qr_buffer, width=120, height=120))
-    story.append(Paragraph("Scan to view full digital memorial", subtitle_style))
 
-    doc.build(story)
+    # Render Document
+    doc.build(story, onFirstPage=paint_background, onLaterPages=paint_background)
     buffer.seek(0)
     return buffer.getvalue()
 
@@ -501,7 +576,6 @@ def create_eulogy():
     try:
         user = User.query.get(user_id)
         
-        # Link this eulogy to the very last M-Pesa STK push requested by this user
         latest_tx = PaymentTransaction.query.filter_by(email=user.email).order_by(PaymentTransaction.created_at.desc()).first()
         checkout_id = latest_tx.checkout_request_id if latest_tx else None
 
