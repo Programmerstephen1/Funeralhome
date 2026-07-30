@@ -159,11 +159,23 @@ class Eulogy(db.Model):
     __tablename__ = "eulogies"
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     deceased_name = db.Column(db.String(150), nullable=False)
-    birth_year = db.Column(db.String(4), nullable=True)
-    passing_year = db.Column(db.String(4), nullable=True)
+    
+    # CRITICAL FIX: Increased length from 4 to 20 to accept full "YYYY-MM-DD" dates
+    birth_year = db.Column(db.String(20), nullable=True)
+    passing_year = db.Column(db.String(20), nullable=True)
+    
     occupation = db.Column(db.String(150), nullable=True)
     interests = db.Column(db.String(255), nullable=True)
     personality = db.Column(db.Text, nullable=False)
+    
+    # --- NEW ENGINE COLUMNS ---
+    recipient_email = db.Column(db.String(120), nullable=True)
+    template_id = db.Column(db.String(50), nullable=True)
+    checkout_request_id = db.Column(db.String(100), unique=True, nullable=True)
+    payment_status = db.Column(db.String(20), default='pending') # 'pending', 'paid', 'failed'
+    mpesa_receipt = db.Column(db.String(50), nullable=True)
+    # --------------------------
+    
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -176,9 +188,11 @@ class Eulogy(db.Model):
             "occupation": self.occupation,
             "interests": self.interests,
             "personality": self.personality,
+            "recipient_email": self.recipient_email,
+            "template_id": self.template_id,
+            "payment_status": self.payment_status,
             "created_at": self.created_at.isoformat()
         }
-
 class Consultation(db.Model):
     __tablename__ = "consultations"
     id = db.Column(db.Integer, primary_key=True)

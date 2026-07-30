@@ -6,6 +6,12 @@ import logging
 import re
 import os
 import uuid 
+import io
+import qrcode
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 from functools import wraps
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -50,6 +56,92 @@ def admin_required(fn):
             return jsonify({"error": "Admin access required for this action."}), 403
         return fn(*args, **kwargs)
     return wrapper
+
+# ==========================================
+# --- EULOGY PDF & QR CODE ENGINE ---
+# ==========================================
+
+def generate_qr_code(memorial_url):
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=4)
+    qr.add_data(memorial_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#1F2E27", back_color="white")
+    
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    return img_byte_arr.getvalue()
+
+def generate_eulogy_pdf(eulogy, memorial_url):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    styles = getSampleStyleSheet()
+    story = []
+
+    title_style = ParagraphStyle('EulogyTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=24, textColor=colors.HexColor('#1F2E27'), alignment=1, spaceAfter=10)
+    subtitle_style = ParagraphStyle('EulogySubtitle', parent=styles['Normal'], fontName='Helvetica-Oblique', fontSize=12, textColor=colors.HexColor('#A8895C'), alignment=1, spaceAfter=20)
+    body_style = ParagraphStyle('EulogyBody', parent=styles['BodyText'], fontName='Helvetica', fontSize=11, leading=16, textColor=colors.HexColor('#3D3530'), spaceAfter=12)
+
+    story.append(Paragraph("IN LOVING MEMORY OF", subtitle_style))
+    story.append(Paragraph(eulogy.deceased_name.upper(), title_style))
+    story.append(Spacer(1, 15))
+
+    paragraphs = eulogy.personality.split('\n')
+    for p in paragraphs:
+        if p.strip():
+            story.append(Paragraph(p.strip(), body_style))
+            story.append(Spacer(1, 6))
+
+    story.append(Spacer(1, 20))
+    qr_bytes = generate_qr_code(memorial_url)
+    qr_buffer = io.BytesIO(qr_bytes)
+    story.append(RLImage(qr_buffer, width=120, height=120))
+    story.append(Paragraph("Scan to view full digital memorial", subtitle_style))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+def send_eulogy_email(eulogy, memorial_url, mail_instance):
+    from flask_mail import Message
+    try:
+        msg = Message(
+            subject=f"Digital Eulogy & QR Code - In Memory of {eulogy.deceased_name}",
+            sender=("Last Planner Julz Hub", current_app.config.get('MAIL_USERNAME')),
+            recipients=[eulogy.recipient_email]
+        )
+        
+        msg.body = f"""Dear Family & Friends,
+
+Thank you for trusting Last Planner Julz with honoring {eulogy.deceased_name}.
+
+Your M-Pesa payment has been verified successfully. 
+
+ATTACHED TO THIS EMAIL:
+1. Eulogy_Document.pdf - The complete formatted memorial eulogy.
+2. Memorial_QRCode.png - Unique QR code for printing on funeral programs, cards, or headstones.
+
+Digital Memorial Link:
+{memorial_url}
+
+When attendees scan the attached QR code with their mobile phones, they will instantly be taken to this online tribute.
+
+"With you when you need us the most."
+
+Warm regards,
+Last Planner Julz Funeral Home
+"""
+        qr_bytes = generate_qr_code(memorial_url)
+        pdf_bytes = generate_eulogy_pdf(eulogy, memorial_url)
+
+        msg.attach("Memorial_QRCode.png", "image/png", qr_bytes)
+        msg.attach(f"{eulogy.deceased_name.replace(' ', '_')}_Eulogy.pdf", "application/pdf", pdf_bytes)
+
+        mail_instance.send(msg)
+        logger.info(f"[SUCCESS] Eulogy assets emailed to {eulogy.recipient_email}")
+    except Exception as e:
+        logger.error(f"[ERROR] Eulogy email delivery failed: {str(e)}")
+
 
 # --- AUTHENTICATION ROUTES ---
 
@@ -407,6 +499,12 @@ def create_eulogy():
     payload = request.get_json() or {}
     
     try:
+        user = User.query.get(user_id)
+        
+        # Link this eulogy to the very last M-Pesa STK push requested by this user
+        latest_tx = PaymentTransaction.query.filter_by(email=user.email).order_by(PaymentTransaction.created_at.desc()).first()
+        checkout_id = latest_tx.checkout_request_id if latest_tx else None
+
         new_eulogy = Eulogy(
             deceased_name=payload.get("deceased_name"),
             birth_year=payload.get("birth_year"),
@@ -414,6 +512,10 @@ def create_eulogy():
             occupation=payload.get("occupation"),
             interests=payload.get("interests"),
             personality=payload.get("personality"),
+            recipient_email=payload.get("recipient_email"),
+            template_id=payload.get("template_id"),
+            payment_status=payload.get("payment_status", "pending"), 
+            checkout_request_id=checkout_id,
             user_id=user_id
         )
         
@@ -433,10 +535,8 @@ def create_eulogy():
 @api.route("/api/eulogies/<eulogy_id>", methods=["GET"])
 def get_public_eulogy(eulogy_id):
     eulogy = Eulogy.query.get(eulogy_id)
-    
     if not eulogy:
         return jsonify({"error": "Eulogy not found"}), 404
-        
     return jsonify(eulogy.to_dict()), 200
 
 
@@ -697,23 +797,43 @@ def mpesa_callback():
         callback_data = data.get("Body", {}).get("stkCallback", {})
         result_code = callback_data.get("ResultCode")
         
-        try:
-            checkout_id = callback_data.get("CheckoutRequestID")
-            if checkout_id:
-                tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
-                if tx:
-                    if not customer_email and tx.email:
-                        customer_email = tx.email
-                    tx.status = 'completed' if result_code == 0 else 'failed'
-                    db.session.commit()
-        except Exception:
-            logger.debug("No transaction mapping found for callback or DB error")
+        checkout_id = callback_data.get("CheckoutRequestID")
+        tx = None
+        
+        # 1. Update Payment Transaction Table
+        if checkout_id:
+            tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
+            if tx:
+                if not customer_email and tx.email:
+                    customer_email = tx.email
+                tx.status = 'completed' if result_code == 0 else 'failed'
+                db.session.commit()
 
+        # 2. Check if this payment was for a Eulogy Order
+        eulogy = None
+        if checkout_id:
+            eulogy = Eulogy.query.filter_by(checkout_request_id=checkout_id).first()
+
+        # 3. Handle Success (Payment Went Through!)
         if result_code == 0:
             metadata = callback_data.get("CallbackMetadata", {}).get("Item", [])
             receipt_no = next((item["Value"] for item in metadata if item["Name"] == "MpesaReceiptNumber"), "N/A")
             amount_paid = next((item["Value"] for item in metadata if item["Name"] == "Amount"), "N/A")
             
+            # --- EULOGY ENGINE TRIGGER ---
+            if eulogy:
+                eulogy.payment_status = 'paid'
+                eulogy.mpesa_receipt = receipt_no
+                db.session.commit()
+                
+                # Fetch base URL from env, default to local preview port
+                domain = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+                memorial_url = f"{domain}/memorial/{eulogy.id}"
+                
+                # Draw PDF, build QR, and email it!
+                send_eulogy_email(eulogy, memorial_url, mail)
+            
+            # --- STANDARD RECEIPT TRIGGER ---
             if customer_email:
                 try:
                     msg = Message(
@@ -756,10 +876,18 @@ def mpesa_callback():
                     mail.send(msg)
                 except Exception as mail_err:
                     logger.error(f"[MAIL ERROR] Automated receipt transmission faulted: {mail_err}")
-            
+        
+        # 4. Handle Failure (Insufficient Funds, Cancelled, etc)
+        else:
+            if eulogy:
+                eulogy.payment_status = 'failed'
+                db.session.commit()
+            logger.info(f"Payment failed/cancelled. ResultCode: {result_code}")
+
         return jsonify({"ResultCode": 0, "ResultDesc": "Callback processed successfully"}), 200
 
     except Exception as e:
+        logger.exception("Callback processing failed")
         return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed", "error": str(e)}), 500
 
 
