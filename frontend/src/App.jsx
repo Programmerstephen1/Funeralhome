@@ -6,6 +6,7 @@ import { ShoppingCart, CalendarDays, MessageCircle, Shield, MapPin, Phone, Mail,
 // --- MAIN PAGES ---
 import HomePage from "./pages/HomePage";
 import PlanAheadPage from "./pages/PlanAheadPage";
+import PackagesPage from "./pages/packagespage";
 import ObituaryListPage from "./pages/ObituaryListPage";
 
 // --- CATALOG & COMMERCE ---
@@ -308,6 +309,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HomePage {...sharedProps} />} />
           <Route path="/plan" element={<PlanAheadPage {...sharedProps} />} />
+          <Route path="/packages" element={<PackagesPage />} />
           <Route path="/obituaries" element={<ObituaryListPage {...sharedProps} />} />
           
           <Route path="/catalog" element={<CatalogPage {...sharedProps} />} />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, ShieldCheck, HeartHandshake, Sparkles, FileText, Clock3 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronDown, ChevronUp, ShieldCheck, HeartHandshake, Sparkles, FileText, Clock3, ArrowRightCircle } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button, Card } from "../components";
 
@@ -8,10 +9,9 @@ export default function PlanAheadPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [serverHealth, setServerHealth] = useState(null); // null | 'ok' | 'error'
+  const [serverHealth, setServerHealth] = useState(null);
   const [serverUrlChecked, setServerUrlChecked] = useState(null);
-  
-  // Track the form inputs
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,27 +30,31 @@ export default function PlanAheadPage() {
     },
     {
       q: "Can I change my plan later?",
-      a: "Yes, absolutely. Your pre-planned arrangements are entirely flexible. We understand that life circumstances and preferences change, so you can update your service details, designated representatives, or final wishes at any time without penalty.",
+      a: "Yes, absolutely. Your pre-planned arrangements are entirely flexible. We understand that life circumstances and preferences change, so you can update your service details, designated representatives, or final wishes at any time.",
     },
     {
-      q: "Is pre-planning expensive?",
-      a: "Documenting your wishes with us is completely free. If you choose to pre-fund your plan, it can actually save money in the long run. Pre-funding allows you to lock in today's prices, protecting your family from future inflation.",
+      q: "What are the costs associated with planning?",
+      a: "To engage our professional planning and orchestration services, a dedicated planning fee applies. We require an upfront payment of 10% of the total estimated planning fee to commence the logistics and coordination of your event. Pre-funding your selected services alongside this can help lock in today's prices and protect your family from future inflation.",
     },
     {
       q: "How do I start the process?",
-      a: "You can begin simply by scheduling a free, no-obligation consultation using the button below. One of our directors will guide you through the available options at your own pace, ensuring every detail aligns with your personal values.",
+      a: "You can begin by scheduling a consultation using the contact options below. One of our directors will guide you through the available options at your own pace, ensuring every detail aligns with your personal values.",
     },
   ];
 
   const processSteps = [
     { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences.", icon: HeartHandshake },
-    { title: "Review Options", desc: "Explore our thoughtfully designed packages — from essential to comprehensive. Each package clearly lists what’s included (service coordination, selected merchandise, floral options, media coverage, and catering levels), with transparent pricing and optional add-ons so you can easily compare value and choose what fits your family’s needs.", icon: Sparkles },
+    { 
+      title: "Review Options", 
+      desc: "Explore our thoughtfully designed signature packages.", 
+      icon: Sparkles,
+      isLink: true 
+    },
     { title: "Document Preferences", desc: "Provide personal details, family information, and specific requests.", icon: FileText },
-    { title: "Finalize Plan", desc: "Review your complete plan and make any adjustments.", icon: ShieldCheck },
-    { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and respected.", icon: Clock3 },
+    { title: "Finalize Plan", desc: "Review your complete plan and finalize the 10% planning fee deposit.", icon: ShieldCheck },
+    { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and our team is handling the logistics.", icon: Clock3 },
   ];
 
-  // Update state when user types
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,7 +71,6 @@ export default function PlanAheadPage() {
     return errors;
   };
 
-  // Submit to Flask API
   const handleConsultationSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
@@ -83,19 +86,14 @@ export default function PlanAheadPage() {
       const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
       const requestUrl = `${apiBase}/api/consultations`;
 
-      // Helpful debug output for deployed environments
-      console.info("[PlanAhead] Submitting consultation to:", requestUrl);
-
       const response = await fetch(requestUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       let data = {};
-      try { data = await response.json(); } catch (e) { /* non-json responses */ }
+      try { data = await response.json(); } catch (e) { }
 
       if (response.ok) {
         toast.success(data.message || "Request received successfully. We will follow up with you shortly.", { id: toastId });
@@ -103,54 +101,41 @@ export default function PlanAheadPage() {
         setFormData({ name: "", email: "", phone: "", questions: "" });
       } else {
         const serverMessage = data.message || data.error || (await response.text().catch(() => ""));
-        console.warn("[PlanAhead] Consultation failed", response.status, serverMessage);
         toast.error(`Server error (${response.status}): ${serverMessage || 'Unable to send your request right now.'}`, { id: toastId });
       }
     } catch (error) {
-      // Network / CORS / SSL errors land here
-      console.error("[PlanAhead] Submission Error:", error);
       const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
-      const requestUrl = `${apiBase}/api/consultations`;
-      toast.error(`Network error when contacting ${requestUrl}: ${error.message || error}`, { id: toastId });
+      toast.error(`Network error when contacting ${apiBase}: ${error.message || error}`, { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Check server health when modal opens so deployed users see clear diagnostics
   React.useEffect(() => {
     if (!isModalOpen) return;
-
     let mounted = true;
     (async () => {
       try {
         const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
         const healthUrl = `${apiBase}/api/health`;
         setServerUrlChecked(healthUrl);
-        console.info("[PlanAhead] Checking server health:", healthUrl);
         const res = await fetch(healthUrl, { method: "GET" });
         if (!mounted) return;
-        if (res.ok) {
-          setServerHealth('ok');
-        } else {
-          setServerHealth('error');
-        }
+        if (res.ok) setServerHealth('ok');
+        else setServerHealth('error');
       } catch (err) {
         if (!mounted) return;
-        console.warn('[PlanAhead] Health check failed', err);
         setServerHealth('error');
       }
     })();
-
     return () => { mounted = false; };
   }, [isModalOpen]);
 
   return (
     <div className="bg-[#F8F6F0] relative min-h-screen">
-      {/* Toast Notification Component */}
       <Toaster position="top-center" reverseOrder={false} />
 
-      {/* --- HIGHLIGHTED BACKGROUND SECTION --- */}
+      {/* --- HERO SECTION --- */}
       <section 
         className="relative border-b border-[#E8DFD1] bg-cover bg-center bg-no-repeat pb-16 pt-20"
         style={{ backgroundImage: "url('/images/background().jpg')" }}
@@ -161,9 +146,15 @@ export default function PlanAheadPage() {
           <div className="mb-12 rounded-[2rem] border border-[#E8DFD1] bg-white/90 p-8 shadow-[0_20px_70px_rgba(31,46,39,0.08)] md:p-10">
             <div className="mb-16 text-center">
               <p className="section-eyebrow">Pre-planning</p>
-              <h1 className="mb-6 text-4xl font-serif font-semibold text-[#1F2E27] md:text-5xl">
+              <h1 className="mb-4 text-4xl font-serif font-semibold text-[#1F2E27] md:text-5xl">
                 Plan Ahead with Confidence
               </h1>
+              
+              {/* EYE-CATCHING MANTRA */}
+              <p className="text-[#A8895C] italic font-serif text-2xl md:text-3xl mb-8 tracking-wide drop-shadow-sm">
+                "With you when you need us the most."
+              </p>
+
               <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#3D3530]">
                 Take control of your legacy and ease the burden on your loved ones. Pre-planning gives you profound peace of mind and a calm path forward.
               </p>
@@ -176,9 +167,11 @@ export default function PlanAheadPage() {
               <div className="grid gap-6 md:grid-cols-5">
                 {processSteps.map((step, i) => {
                   const Icon = step.icon;
-                  return (
-                    <div key={i} className="group flex cursor-pointer flex-col items-center rounded-[1.25rem] border border-[#E8DFD1] bg-[#F8F6F0] p-5 text-center transition-all hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-md">
-                      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#A8895C] text-xl font-bold text-white shadow-lg hover-wobble">
+                  
+                  // The core content of the card
+                  const CardContent = (
+                    <>
+                      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#A8895C] text-xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform">
                         {i + 1}
                       </div>
                       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#A8895C] shadow-sm">
@@ -187,9 +180,34 @@ export default function PlanAheadPage() {
                       <h3 className="mb-3 text-sm font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
                         {step.title}
                       </h3>
-                      <p className="px-2 text-xs leading-relaxed text-[#3D3530]">
+                      <p className="px-2 text-xs leading-relaxed text-[#3D3530] mb-4">
                         {step.desc}
                       </p>
+                      
+                      {/* RIGHT-POINTING ARROW FIXED */}
+                      {step.isLink && (
+                        <div className="mt-auto flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#A8895C] group-hover:text-[#1F2E27] transition-colors">
+                          View Packages <ArrowRightCircle size={16} />
+                        </div>
+                      )}
+                    </>
+                  );
+
+                  // If it's the "Review Options" step, wrap the entire box in a <Link>
+                  return step.isLink ? (
+                    <Link 
+                      key={i} 
+                      to="/packages"
+                      className="group relative flex cursor-pointer flex-col items-center rounded-[1.25rem] border border-[#E8DFD1] bg-[#F8F6F0] p-5 text-center transition-all hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-md"
+                    >
+                      {CardContent}
+                    </Link>
+                  ) : (
+                    <div 
+                      key={i} 
+                      className="group relative flex cursor-default flex-col items-center rounded-[1.25rem] border border-[#E8DFD1] bg-[#F8F6F0] p-5 text-center transition-all hover:-translate-y-1 hover:border-[#A8895C] hover:shadow-md"
+                    >
+                      {CardContent}
                     </div>
                   );
                 })}
@@ -198,10 +216,9 @@ export default function PlanAheadPage() {
           </div>
         </div>
       </section>
-      {/* --- END HIGHLIGHTED SECTION --- */}
 
       <div className="site-container py-16">
-        {/* Benefits */}
+        {/* --- BENEFITS SECTION --- */}
         <section className="mb-16 rounded-[1.5rem] border border-[#D8CFBC] bg-[#EFEAE0] p-8 shadow-sm md:p-12">
           <h2 className="mb-8 text-3xl font-serif font-semibold text-[#1F2E27]">
             Benefits of Pre-Planning
@@ -221,7 +238,7 @@ export default function PlanAheadPage() {
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* --- FAQ SECTION --- */}
         <section className="mb-20">
           <h2 className="text-3xl font-serif font-semibold text-[#1F2E27] mb-8">
             Frequently Asked Questions
@@ -252,14 +269,15 @@ export default function PlanAheadPage() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* --- CTA SECTION --- */}
         <section className="rounded-[1.5rem] border border-[#E8DFD1] bg-white p-10 text-center shadow-sm md:p-12">
           <p className="section-eyebrow">Personalized support</p>
           <h2 className="mb-4 text-3xl font-serif font-semibold text-[#1F2E27]">
             Ready to Plan Ahead?
           </h2>
-          <p className="mb-8 text-lg text-[#3D3530]">
-            Our specialized team is ready to assist and guide you at your own pace with dignified care and clear options.
+          <p className="mb-8 text-lg text-[#3D3530] max-w-3xl mx-auto">
+            Our specialized team is ready to assist and guide you at your own pace. <br className="hidden md:block" /> 
+            <strong className="text-[#1F2E27]">Please note:</strong> To initiate our formal event orchestration and planning services, an upfront payment of 10% of the total estimated planning fee is required.
           </p>
           <div onClick={() => setIsModalOpen(true)} className="inline-block">
             <Button variant="primary" size="lg" className="px-8 py-4 text-lg shadow-md transition-all hover:shadow-lg">
@@ -269,7 +287,7 @@ export default function PlanAheadPage() {
         </section>
       </div>
 
-      {/* Consultation Modal Overlay */}
+      {/* --- CONSULTATION MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-[#F8F6F0] rounded-lg p-8 max-w-md w-full shadow-2xl border border-[#D8CFBC]">
@@ -281,7 +299,6 @@ export default function PlanAheadPage() {
             </p>
             
             <form onSubmit={handleConsultationSubmit} className="space-y-5" noValidate>
-              {/* API health / diagnostics shown to user for easier troubleshooting */}
               {serverUrlChecked && (
                 <div className="mb-2 flex items-center justify-between rounded border border-[#E8DFD1] bg-white p-3 text-sm">
                   <div className="flex-1">

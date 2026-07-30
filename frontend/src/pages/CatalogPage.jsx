@@ -32,7 +32,8 @@ const categories = [
 ];
 
 // --- 2. The Products ---
-const fallbackProducts = [
+// Export added here so ProductDetailPage can access it if the server is offline
+export const fallbackProducts = [
   // --- CASKETS ---
   { id: 101, categoryId: "casket_list", title: "Pure White Quilted Casket", desc: "Elegant white finish with premium padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket1().jpg", "/images/caskets/casket1(0).jpg"] },
   { id: 102, categoryId: "casket_list", title: "Standard Oak Finish Casket", desc: "Classic oak wood finish featuring a pristine white interior.", price: 92000, has_sizes: true, images: ["/images/caskets/casket2().jpeg", "/images/caskets/casket2(0).jpg"] },
@@ -139,12 +140,12 @@ const fallbackProducts = [
   { id: 357, categoryId: "tents", title: "Extended Gathering Tent 2", desc: "Spacious multi-pole tent setup for extended family.", price: 25000, images: ["/images/tents/tent7.jpeg"] },
   { id: 358, categoryId: "tents", title: "Extended Marquee Tent 8", desc: "Spacious multi-pole outdoor seating setup for large memorial services.", price: 30000, images: ["/images/tents/tents8.jpg"] },
 
-  // --- HEARSES ---
-  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 25000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
-  { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 28000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
-  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 15000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
-  { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 35000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
-  { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 20000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
+  // --- HEARSES & TRANSPORT (Updated Minimum Prices) ---
+  { id: 401, categoryId: "hearses", title: "Mercedes Executive Hearse 1", desc: "Dignified Mercedes-Benz transport. Displays full exterior and interior suite. Base daily rate shown.", price: 100000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse1(0).jpeg", "/images/hearses/hearse1(1).jpeg", "/images/hearses/hearse1(2).jpeg", "/images/hearses/hearse1(3).jpeg", "/images/hearses/hearse1(4).jpeg", "/images/hearses/hearse1(5).jpeg"] },
+  { id: 402, categoryId:"hearses", title: "Executive Mercedes Hearse 2", desc: "Durable and highly capable luxury transport.", price: 105000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse5(0).jpeg", "/images/hearses/hearse5(1).jpeg", "/images/hearses/hearse5(2).jpeg", "/images/hearses/hearse5(3).jpeg"] },
+  { id: 403, categoryId:"hearses", title: "Classic Van Hearse", desc: "Spacious, reliable, and elegant van transport for the final journey. Base daily rate shown.", price: 100000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse2(0).jpeg", "/images/hearses/hearse2(1).jpeg", "/images/hearses/hearse2(3).jpeg", "/images/hearses/hearse2(4).jpeg", "/images/hearses/hearse2(5).jpg", "/images/hearses/hearse2(6).jpg", "/images/hearses/hearse2(7).jpg"] },
+  { id: 404, categoryId: "hearses", title: "Executive Family Bus", desc: "Luxury bus capable of comfortably transporting the extended family. Base daily rate shown.", price: 120000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse3(0).jpeg", "/images/hearses/hearse3(1).jpeg", "/images/hearses/hearse3(2).jpeg", "/images/hearses/hearse3(3).jpg", "/images/hearses/hearse3(4).jpg"] },
+  { id: 405, categoryId:"hearses", title: "Premium Black Transport", desc: "Discreet and highly professional dark vehicle option. Base daily rate shown.", price: 100000, inclusions: ["Auto lowering gear", "Casket gazebo tent", "Public system for the grave yard site", "A portrait stand to hold the deceased persons image", "Church trolley to carry the body inside the casket", "Graveside turf"], images: ["/images/hearses/hearse4(0).jpg"] },
 
   // --- ATTIRE ---
   { id: 601, categoryId: "attire", title: "Premium Men's Burial Suit", desc: "Complete 3-piece dark suit tailored specifically for the deceased. Includes shirt and tie.", price: 18000, images: ["/assets/mens-burial-suit.jpg"] },
@@ -172,9 +173,18 @@ const casketSizes = [
   { id: "xl", label: "Extra Large (Custom Fit)", priceModifier: 68000 }
 ];
 
-// --- REUSABLE COMPONENT: Automatic Image Slider ---
+// --- REUSABLE COMPONENT: Automatic Image Slider with Auto-Slide ---
 const ImageSlider = ({ images, altText, aspectClass }) => {
   const [imgIndex, setImgIndex] = useState(0);
+
+  // Auto slide feature
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+    const interval = setInterval(() => {
+      setImgIndex((prev) => (prev + 1) % images.length);
+    }, 3500); 
+    return () => clearInterval(interval);
+  }, [images]);
 
   if (!images || images.length === 0) return null;
 
@@ -631,9 +641,9 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
             {/* SERVER ERROR WARNING */}
             {serverError && (
-              <div className="max-w-3xl mx-auto mb-8 bg-[#FFF4F4] border border-[#FF4747] text-[#FF4747] p-3 rounded flex items-center gap-3 shadow-sm text-sm">
-                <AlertCircle size={16} className="shrink-0" />
-                <p>Live database connection unavailable. Rendering offline catalog inventory.</p>
+              <div className="max-w-3xl mx-auto mb-6 bg-[#FFFDF4] border border-[#E8DFD1] text-[#8F744D] p-3 rounded flex items-center gap-3 shadow-sm text-xs">
+                <AlertCircle size={15} className="shrink-0 text-[#A8895C]" />
+                <p>Running in offline catalog inventory mode. All core booking features remain fully operational.</p>
               </div>
             )}
 
