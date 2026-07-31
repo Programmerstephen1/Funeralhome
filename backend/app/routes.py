@@ -14,7 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from functools import wraps
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_file
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
@@ -74,11 +74,10 @@ def generate_qr_code(memorial_url):
     return img_byte_arr.getvalue()
 
 def generate_eulogy_pdf(eulogy, memorial_url):
-    raw_text = eulogy.personality
+    raw_text = eulogy.personality or ""
     metadata = {}
     story_text = raw_text
     
-    # 1. PARSE THE METADATA FROM THE FRONTEND
     match = re.search(r'\[PRODUCTION METADATA\](.*?)\[/PRODUCTION METADATA\]', raw_text, re.DOTALL)
     if match:
         meta_block = match.group(1)
@@ -86,10 +85,8 @@ def generate_eulogy_pdf(eulogy, memorial_url):
             if ':' in line:
                 key, val = line.split(':', 1)
                 metadata[key.strip()] = val.strip()
-        # Remove the metadata block so it doesn't print in the PDF
         story_text = raw_text.replace(match.group(0), '').strip()
 
-    # 2. MAP FRONTEND TEMPLATES TO PDF COLOR THEMES
     template_name = metadata.get("Template", "Executive Minimal")
     themes = {
         "Executive Minimal": {"bg": "#F8F6F0", "text": "#1F2E27", "accent": "#A8895C"},
@@ -99,7 +96,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
     }
     theme = themes.get(template_name, themes["Executive Minimal"])
 
-    # 3. MAP FRONTEND FONTS TO PDF STANDARD FONTS
     font_name = metadata.get("Font", "Classic Serif")
     base_font, base_font_bold, base_font_italic = "Times-Roman", "Times-Bold", "Times-Italic"
     
@@ -108,11 +104,9 @@ def generate_eulogy_pdf(eulogy, memorial_url):
     elif "Typewriter" in font_name:
         base_font, base_font_bold, base_font_italic = "Courier", "Courier-Bold", "Courier-Oblique"
 
-    # Scale the web font size slightly down for print
     font_size = int(metadata.get("Size", "16").replace("px", ""))
     pdf_font_size = max(10, min(16, font_size * 0.75))
 
-    # 4. SETUP DOCUMENT & BACKGROUND PAINTER
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
     
@@ -122,7 +116,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
         canvas.rect(0, 0, letter[0], letter[1], fill=True, stroke=False)
         canvas.restoreState()
 
-    # 5. DEFINE PDF TYPOGRAPHY STYLES
     styles = getSampleStyleSheet()
     
     cover_title = ParagraphStyle('CoverTitle', fontName=base_font_bold, fontSize=32, leading=38, textColor=colors.HexColor(theme["text"]), alignment=TA_CENTER, spaceAfter=20)
@@ -134,7 +127,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
 
     story = []
 
-    # --- BUILD PAGE 1: THE COVER ---
     story.append(Spacer(1, 120)) 
     story.append(Paragraph("In Loving Memory Of", cover_subtitle))
     story.append(Paragraph(eulogy.deceased_name, cover_title))
@@ -146,7 +138,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
     
     story.append(PageBreak()) 
 
-    # --- BUILD PAGES 2+: THE CHAPTERS ---
     chapters = re.split(r'([A-Z\s&]+):', story_text)
     
     for i in range(1, len(chapters), 2):
@@ -162,7 +153,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
             
             story.append(Spacer(1, 20))
 
-    # --- BUILD FINAL PAGE: QR CODE ---
     story.append(Spacer(1, 30))
     story.append(Paragraph(f"<font color='{theme['accent']}'>________________________</font>", cover_dates))
     story.append(Paragraph("Digital Memorial Space", chapter_title))
@@ -172,7 +162,6 @@ def generate_eulogy_pdf(eulogy, memorial_url):
     qr_buffer = io.BytesIO(qr_bytes)
     story.append(RLImage(qr_buffer, width=120, height=120))
 
-    # Render Document
     doc.build(story, onFirstPage=paint_background, onLaterPages=paint_background)
     buffer.seek(0)
     return buffer.getvalue()
@@ -614,6 +603,32 @@ def get_public_eulogy(eulogy_id):
     return jsonify(eulogy.to_dict()), 200
 
 
+# --- NEW: DIRECT PDF DOWNLOAD ENDPOINT FOR QR SCAN ATTENDEES ---
+@api.route("/api/eulogies/<eulogy_id>/download", methods=["GET"])
+def download_eulogy_pdf(eulogy_id):
+    eulogy = Eulogy.query.get(eulogy_id)
+    if not eulogy:
+        return jsonify({"error": "Eulogy record not found"}), 404
+
+    try:
+        domain = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        memorial_url = f"{domain}/memorial/{eulogy.id}"
+        
+        pdf_bytes = generate_eulogy_pdf(eulogy, memorial_url)
+        safe_name = secure_filename(eulogy.deceased_name.replace(" ", "_")) or "Memorial"
+        filename = f"{safe_name}_Eulogy_Program.pdf"
+        
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"[DOWNLOAD ERROR] PDF generation failed for Eulogy #{eulogy_id}: {str(e)}")
+        return jsonify({"error": "Failed to build PDF document for download."}), 500
+
+
 # ==========================================
 # --- ENTERPRISE CATALOG API ROUTES ---
 # ==========================================
@@ -809,6 +824,7 @@ def health_check():
 # --- M-PESA PAYMENTS ROUTES ---
 
 @api.route("/api/payments/stkpush", methods=["POST"])
+@jwt_required()
 def stk_push():
     payload = request.get_json() or {}
     amount = payload.get("amount")
@@ -874,7 +890,6 @@ def mpesa_callback():
         checkout_id = callback_data.get("CheckoutRequestID")
         tx = None
         
-        # 1. Update Payment Transaction Table
         if checkout_id:
             tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
             if tx:
@@ -883,31 +898,25 @@ def mpesa_callback():
                 tx.status = 'completed' if result_code == 0 else 'failed'
                 db.session.commit()
 
-        # 2. Check if this payment was for a Eulogy Order
         eulogy = None
         if checkout_id:
             eulogy = Eulogy.query.filter_by(checkout_request_id=checkout_id).first()
 
-        # 3. Handle Success (Payment Went Through!)
         if result_code == 0:
             metadata = callback_data.get("CallbackMetadata", {}).get("Item", [])
             receipt_no = next((item["Value"] for item in metadata if item["Name"] == "MpesaReceiptNumber"), "N/A")
             amount_paid = next((item["Value"] for item in metadata if item["Name"] == "Amount"), "N/A")
             
-            # --- EULOGY ENGINE TRIGGER ---
             if eulogy:
                 eulogy.payment_status = 'paid'
                 eulogy.mpesa_receipt = receipt_no
                 db.session.commit()
                 
-                # Fetch base URL from env, default to local preview port
                 domain = os.getenv('FRONTEND_URL', 'http://localhost:5173')
                 memorial_url = f"{domain}/memorial/{eulogy.id}"
                 
-                # Draw PDF, build QR, and email it!
                 send_eulogy_email(eulogy, memorial_url, mail)
             
-            # --- STANDARD RECEIPT TRIGGER ---
             if customer_email:
                 try:
                     msg = Message(
@@ -951,7 +960,6 @@ def mpesa_callback():
                 except Exception as mail_err:
                     logger.error(f"[MAIL ERROR] Automated receipt transmission faulted: {mail_err}")
         
-        # 4. Handle Failure (Insufficient Funds, Cancelled, etc)
         else:
             if eulogy:
                 eulogy.payment_status = 'failed'
@@ -1032,6 +1040,63 @@ def request_consultation():
     except Exception as e:
         return jsonify({"error": str(e), "message": "Consultation request received, but delivery could not be completed right now."}), 200
 
+# ==========================================
+# --- USER PROFILE & ACCOUNT ENDPOINTS ---
+# ==========================================
+
+@api.route("/api/user/profile", methods=["GET"])
+@jwt_required()
+def get_user_profile():
+    user = User.query.get(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+        
+    return jsonify({
+        "email": user.email,
+        "first_name": getattr(user, 'first_name', ''),
+        "last_name": getattr(user, 'last_name', ''),
+        "phone": getattr(user, 'phone', ''),
+        "profile_picture": getattr(user, 'profile_picture', ''),
+        "is_verified": user.is_verified
+    }), 200
+
+@api.route("/api/user/profile", methods=["PUT"])
+@jwt_required()
+def update_user_profile():
+    user = User.query.get(get_jwt_identity())
+    data = request.get_json() or {}
+    
+    if 'first_name' in data: user.first_name = data['first_name']
+    if 'last_name' in data: user.last_name = data['last_name']
+    if 'phone' in data: user.phone = data['phone']
+    if 'profile_picture' in data: user.profile_picture = data['profile_picture']
+    
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully!"}), 200
+
+@api.route("/api/user/password", methods=["PUT"])
+@jwt_required()
+def update_user_password():
+    user = User.query.get(get_jwt_identity())
+    data = request.get_json() or {}
+    new_password = data.get("password", "")
+    
+    if len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters long."}), 400
+        
+    user.set_password(new_password)
+    db.session.commit()
+    return jsonify({"message": "Security credentials updated successfully!"}), 200
+
+@api.route("/api/user/account", methods=["DELETE"])
+@jwt_required()
+def delete_user_account():
+    user = User.query.get(get_jwt_identity())
+    
+    # Optional: Delete associated eulogies/orders here if strict cleanup is required
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "Account and all associated data permanently deleted."}), 200
 
 def register_routes(app):
     from flask_cors import CORS
