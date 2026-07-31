@@ -55,6 +55,9 @@ export default function SettingsPage() {
   const [imgError, setImgError] = useState(false);   
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  // --- PRO-GRADE INSTANT PREVIEW STATE ---
+  const [localPreview, setLocalPreview] = useState(null);
+
   // --- CROPPER STATES ---
   const [imageToCrop, setImageToCrop] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -135,7 +138,6 @@ export default function SettingsPage() {
     }
   };
 
-  // 1. User selects a photo, we read it and open the modal
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const reader = new FileReader();
@@ -144,19 +146,23 @@ export default function SettingsPage() {
         setImageToCrop(reader.result);
       });
     }
-    e.target.value = null; // reset input
+    e.target.value = null; 
   };
 
   const onCropComplete = (croppedArea, croppedPixels) => {
     setCroppedAreaPixels(croppedPixels);
   };
 
-  // 2. User clicks "Apply & Upload" from the modal
   const handleUploadCroppedImage = async () => {
     try {
       setUploading(true);
       const croppedBlob = await getCroppedImg(imageToCrop, croppedAreaPixels);
-      setImageToCrop(null); // Close modal
+      
+      // PRO-GRADE FIX: Generate instant local preview URL from memory to bypass loading delays
+      const instantLocalUrl = URL.createObjectURL(croppedBlob);
+      setLocalPreview(instantLocalUrl);
+      setImgError(false); 
+      setImageToCrop(null); 
       
       const formData = new FormData();
       formData.append("file", croppedBlob, "profile_pic.jpg");
@@ -169,17 +175,20 @@ export default function SettingsPage() {
       const data = await res.json();
       
       if (res.ok) {
-        setImgError(false); 
         setProfile({ ...profile, profile_picture: data.image_url });
         
-        // Broadcast the update so App.jsx instantly updates the navbar
-        window.dispatchEvent(new CustomEvent('profilePictureUpdated', { detail: data.image_url }));
+        // Pass both the real server URL and the instant local URL to the Navbar
+        window.dispatchEvent(new CustomEvent('profilePictureUpdated', { 
+          detail: { serverUrl: data.image_url, localUrl: instantLocalUrl } 
+        }));
         
-        showMessage("success", "Profile picture uploaded! Click 'Save Profile Changes' below to apply.");
+        showMessage("success", "Profile picture uploaded! Click 'Save Profile Changes' below to fully apply.");
       } else {
+        setLocalPreview(null); // Revert preview on failure
         showMessage("error", data.error || "Failed to upload image.");
       }
     } catch (err) {
+      setLocalPreview(null);
       showMessage("error", "Network error. Failed to process image.");
     } finally {
       setUploading(false);
@@ -210,14 +219,17 @@ export default function SettingsPage() {
     }
   };
 
+  // Determine what image source to display in the UI
+  const displaySrc = localPreview || (profile.profile_picture ? getImageUrl(profile.profile_picture) : null);
+
   if (loading) return <div className="min-h-screen bg-[#F8F6F0] p-12 text-center text-[#716860] font-bold uppercase tracking-widest text-sm">Loading data...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] py-10 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#F8F6F0] py-12 px-4 sm:px-6 relative">
       
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(15px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeSlideUp { animation: fadeSlideUp 0.3s ease-out forwards; }
@@ -267,20 +279,10 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         
-        {/* Dynamic Header */}
-        <div className="mb-8 flex items-center justify-between border-b border-[#E8DFD1] pb-6">
-          <div>
-            <h1 className="text-3xl font-serif text-[#1F2E27] font-bold">
-              {activeTab === 'profile' ? "Profile Details" : "Account Settings"}
-            </h1>
-            <p className="text-sm text-[#716860] mt-1">{profile.email}</p>
-          </div>
-        </div>
-
         {message.text && (
-          <div className={`mb-8 p-4 rounded-xl flex items-center gap-3 font-bold text-sm shadow-sm animate-fadeSlideUp ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 font-bold text-sm shadow-sm animate-fadeSlideUp ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {message.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
             {message.text}
           </div>
@@ -288,23 +290,23 @@ export default function SettingsPage() {
 
         {/* --- PROFILE VIEW --- */}
         {activeTab === 'profile' && (
-          <div className="bg-white border border-[#E8DFD1] rounded-2xl p-6 md:p-8 shadow-sm animate-fadeSlideUp">
-            <div className="flex items-center gap-3 mb-6 border-b border-[#F8F6F0] pb-4">
-              <User className="text-[#A8895C]" />
-              <h2 className="text-xl font-serif text-[#1F2E27] font-bold">Personal Information</h2>
+          <div className="bg-white border border-[#E8DFD1] rounded-2xl p-8 shadow-sm animate-fadeSlideUp">
+            
+            <div className="flex items-center gap-3 mb-8">
+              <User className="text-[#A8895C]" size={24} />
+              <h2 className="text-2xl font-serif text-[#1F2E27] font-bold">Profile Details</h2>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8 bg-[#F8F6F0] p-5 rounded-xl border border-[#E8DFD1]">
-              
-              <div className="w-24 h-24 rounded-full bg-white border border-[#E8DFD1] overflow-hidden flex items-center justify-center shrink-0 shadow-sm relative">
+            <div className="flex items-center gap-6 mb-8">
+              <div className="w-24 h-24 rounded-full bg-[#EFEAE0] border border-[#E8DFD1] overflow-hidden flex items-center justify-center shrink-0 shadow-sm relative">
                 {uploading && (
                   <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-[1px]">
                     <div className="w-6 h-6 border-2 border-[#A8895C] border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
-                {profile.profile_picture && !imgError ? (
+                {displaySrc && !imgError ? (
                   <img 
-                    src={getImageUrl(profile.profile_picture)} 
+                    src={displaySrc} 
                     alt="Profile" 
                     className="w-full h-full object-cover" 
                     onError={() => setImgError(true)} 
@@ -313,18 +315,17 @@ export default function SettingsPage() {
                   <span className="text-3xl font-bold text-[#A8895C] uppercase">{profile.first_name?.[0] || profile.email?.[0] || 'U'}</span>
                 )}
               </div>
-              
               <div>
-                <label className="cursor-pointer inline-flex bg-white border border-[#E8DFD1] px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest text-[#1F2E27] hover:bg-[#EFEAE0] transition-colors items-center gap-2 shadow-sm mb-2">
+                <label className="cursor-pointer inline-flex bg-white border border-[#E8DFD1] px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest text-[#1F2E27] hover:bg-[#F8F6F0] transition-colors items-center gap-2 shadow-sm mb-2">
                   <Camera size={14} /> {uploading ? "Processing..." : "Change Photo"}
                   <input type="file" className="hidden" accept="image/*" onChange={handleFileSelect} disabled={uploading} />
                 </label>
-                <p className="text-xs text-[#716860]">Upload a professional JPG or PNG. Max size 2MB.</p>
+                <p className="text-[10px] text-[#716860] uppercase tracking-wider font-semibold">JPG, PNG. Max 2MB.</p>
               </div>
             </div>
 
-            <form onSubmit={handleProfileSave} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <form onSubmit={handleProfileSave} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">First Name</label>
                   <input type="text" value={profile.first_name} onChange={(e) => setProfile({...profile, first_name: e.target.value})} className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium text-[#1F2E27]" />
@@ -338,7 +339,6 @@ export default function SettingsPage() {
               <div>
                 <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Email Address</label>
                 <input type="email" value={profile.email} disabled className="w-full p-3.5 border border-[#E8DFD1] bg-[#F8F6F0] text-[#716860] rounded-xl outline-none cursor-not-allowed font-medium" />
-                <p className="text-[10px] text-[#A8895C] mt-1.5 font-bold uppercase tracking-wider">Verified Primary Email</p>
               </div>
 
               <div>
@@ -346,7 +346,7 @@ export default function SettingsPage() {
                 <input type="tel" value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium text-[#1F2E27]" />
               </div>
 
-              <div className="pt-4 border-t border-[#F8F6F0]">
+              <div className="pt-2">
                 <button disabled={saving || uploading} type="submit" className="w-full flex items-center justify-center gap-2 bg-[#1F2E27] text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-[#A8895C] transition-colors shadow-md disabled:opacity-70">
                   <Save size={16} /> {saving ? "Saving..." : "Save Profile Changes"}
                 </button>
@@ -357,37 +357,20 @@ export default function SettingsPage() {
 
         {/* --- ACCOUNT SETTINGS VIEW --- */}
         {activeTab === 'account' && (
-          <div className="space-y-8 animate-fadeSlideUp">
+          <div className="space-y-6 animate-fadeSlideUp">
             
-            {/* 1. PLAN & USAGE CARD */}
-            <div className="bg-white border border-[#E8DFD1] rounded-2xl p-6 md:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6 border-b border-[#F8F6F0] pb-4">
-                <CreditCard className="text-[#A8895C]" />
-                <h2 className="text-xl font-serif text-[#1F2E27] font-bold">Plan & Usage</h2>
+            <div className="bg-white border border-[#E8DFD1] rounded-2xl p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+                <Shield className="text-[#A8895C]" size={24} />
+                <h2 className="text-2xl font-serif text-[#1F2E27] font-bold">Sign-In & Security</h2>
               </div>
               
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#F8F6F0] border border-[#E8DFD1] p-5 rounded-xl gap-4">
+              <form onSubmit={handlePasswordSave} className="space-y-5">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-[#1F2E27]">Standard Tier</span>
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full">Active</span>
-                  </div>
-                  <p className="text-xs text-[#716860]">Basic memorial hosting and eulogy drafting capabilities.</p>
+                  <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">New Password</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
                 </div>
-              </div>
-            </div>
-
-            {/* 2. SECURITY CARD */}
-            <div className="bg-white border border-[#E8DFD1] rounded-2xl p-6 md:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6 border-b border-[#F8F6F0] pb-4">
-                <Shield className="text-[#A8895C]" />
-                <h2 className="text-xl font-serif text-[#1F2E27] font-bold">Sign-In & Security</h2>
-              </div>
-              <form onSubmit={handlePasswordSave} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Create New Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Must be at least 6 characters" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
-                </div>
+                
                 <div className="pt-2">
                   <button disabled={saving} type="submit" className="w-full flex items-center justify-center gap-2 bg-white border border-[#E8DFD1] text-[#1F2E27] px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-[#F8F6F0] transition-colors shadow-sm disabled:opacity-70">
                     <Shield size={16} /> Update Password
@@ -396,12 +379,12 @@ export default function SettingsPage() {
               </form>
             </div>
 
-            {/* 3. DANGER ZONE CARD */}
-            <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-2xl p-6 md:p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-4 border-b border-red-100 pb-4">
+            <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-2xl p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
                 <AlertTriangle className="text-[#DC2626]" size={24} />
                 <h2 className="text-2xl font-serif text-[#DC2626] font-bold">Danger Zone</h2>
               </div>
+              
               <p className="text-sm text-[#DC2626] mb-6 font-medium leading-relaxed">
                 Permanently delete your account and everything you own. You will lose access to all related content and files.
               </p>

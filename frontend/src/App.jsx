@@ -131,7 +131,9 @@ function AppContent() {
   // --- GLOBAL STATE ---
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "true");
+  
   const [userProfilePic, setUserProfilePic] = useState(localStorage.getItem("userProfilePic") || "");
+  const [localProfilePic, setLocalProfilePic] = useState(null); // PRO-GRADE: Stores instant local preview
   const [imgError, setImgError] = useState(false);
   
   const isLoggedIn = !!userEmail;
@@ -164,18 +166,20 @@ function AppContent() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  // Sync avatar when updated in SettingsPage
+  // Sync avatar when updated in SettingsPage via our Custom Event
   useEffect(() => {
     const handleProfileUpdate = (e) => {
-      setUserProfilePic(e.detail);
-      localStorage.setItem("userProfilePic", e.detail);
+      const { serverUrl, localUrl } = e.detail;
+      if (localUrl) setLocalProfilePic(localUrl); // Instant update via local Blob
+      
+      setUserProfilePic(serverUrl);
+      localStorage.setItem("userProfilePic", serverUrl);
       setImgError(false);
     };
     window.addEventListener('profilePictureUpdated', handleProfileUpdate);
     return () => window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
   }, []);
 
-  // Fetch profile on load to ensure avatar is current
   useEffect(() => {
     if (isLoggedIn) {
       const token = localStorage.getItem("token");
@@ -234,6 +238,7 @@ function AppContent() {
     setUserEmail(null);
     setIsAdmin(false);
     setUserProfilePic("");
+    setLocalProfilePic(null);
     setCart([]);
     setServiceBookings([]);
     setIsPortalOpen(false);
@@ -291,6 +296,9 @@ function AppContent() {
     return username.charAt(0).toUpperCase() + username.slice(1);
   };
 
+  // Determine navbar avatar (prioritize the instant local preview if it exists)
+  const displayNavPic = localProfilePic || (userProfilePic ? getImageUrl(userProfilePic) : null);
+
   return (
     <div className="site-shell flex flex-col min-h-screen relative">
       <style>{`
@@ -345,8 +353,8 @@ function AppContent() {
                     className="flex items-center justify-center focus:outline-none transition-transform hover:scale-105"
                   >
                     <div className="w-8 h-8 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-transparent focus-within:ring-[#1F2E27] overflow-hidden">
-                      {userProfilePic && !imgError ? (
-                        <img src={getImageUrl(userProfilePic)} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                      {displayNavPic && !imgError ? (
+                        <img src={displayNavPic} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
                       ) : (
                         userEmail ? userEmail[0].toUpperCase() : "U"
                       )}
@@ -359,8 +367,8 @@ function AppContent() {
                       <div className="flex items-center justify-between px-3 py-2 bg-white rounded-xl mb-2">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-lg font-bold overflow-hidden">
-                            {userProfilePic && !imgError ? (
-                              <img src={getImageUrl(userProfilePic)} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                            {displayNavPic && !imgError ? (
+                              <img src={displayNavPic} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
                             ) : (
                               userEmail ? userEmail[0].toUpperCase() : "U"
                             )}
