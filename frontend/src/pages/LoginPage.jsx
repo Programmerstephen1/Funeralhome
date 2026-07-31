@@ -11,14 +11,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Read environment variables directly from Vite
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID;
 
   // --- CATCH SSO REDIRECT TOKENS ---
   useEffect(() => {
-    // 1. Check for Hash (Facebook/Google implicit flow)
     const hash = window.location.hash;
     if (hash && hash.includes("access_token=")) {
       const params = new URLSearchParams(hash.substring(1));
@@ -29,17 +27,15 @@ export default function LoginPage() {
       }
     }
     
-    // 2. Check for Query Params (X / Twitter PKCE auth code flow)
     const search = window.location.search;
     if (search && search.includes("code=") && search.includes("state=twitter")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
       
-      // THE FIX: Use sessionStorage to lock this exact code so it never double-fires
       const processedCode = sessionStorage.getItem("twitter_auth_code");
       
       if (code && processedCode !== code) {
-        sessionStorage.setItem("twitter_auth_code", code); // Lock it!
+        sessionStorage.setItem("twitter_auth_code", code); 
         
         processSocialLogin("twitter", { 
             code: code, 
@@ -47,7 +43,6 @@ export default function LoginPage() {
             redirect_uri: `${window.location.origin}${window.location.pathname}` 
         });
         
-        // Clean the URL immediately so a refresh doesn't trigger it again
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -63,7 +58,15 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadData),
       });
-      const data = await response.json();
+      
+      // PRO-GRADE FIX: Safely parse JSON so it doesn't crash on 500 HTML errors
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        throw new Error("Server returned an invalid response. Check backend terminal for crash logs.");
+      }
+
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userEmail", data.email);
@@ -74,7 +77,8 @@ export default function LoginPage() {
         setError(data.message || `${provider} authentication failed.`);
       }
     } catch (err) {
-      setError(`Network error during ${provider} login.`);
+      console.error(err);
+      setError(err.message || `Network error during ${provider} login.`);
     } finally {
       setLoading(false);
     }
@@ -93,7 +97,12 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        throw new Error("Server crashed. Please check your backend terminal.");
+      }
 
       if (response.ok) {
         localStorage.setItem("token", data.token);
@@ -111,7 +120,8 @@ export default function LoginPage() {
         setError(data.message || "Invalid email or password.");
       }
     } catch (err) {
-      setError("Network error. Please ensure the server is running.");
+      console.error(err);
+      setError(err.message || "Network error. Please ensure the server is running.");
     } finally {
       setLoading(false);
     }
@@ -123,7 +133,6 @@ export default function LoginPage() {
     onError: () => setError("Google authentication was cancelled or failed.")
   });
 
-  // --- FACEBOOK SSO LOGIN ---
   const handleFacebookLogin = () => {
     if (!FB_APP_ID || FB_APP_ID === "your_facebook_app_id_here") {
       setError("Facebook API Key has not been configured by the administrator yet.");
@@ -133,7 +142,6 @@ export default function LoginPage() {
     window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile`;
   };
 
-  // --- X (TWITTER) SSO LOGIN (PRO-GRADE PKCE FLOW) ---
   const handleTwitterLogin = () => {
     if (!TWITTER_CLIENT_ID || TWITTER_CLIENT_ID === "your_twitter_client_id_here") {
       setError("X (Twitter) API Key has not been configured by the administrator yet.");

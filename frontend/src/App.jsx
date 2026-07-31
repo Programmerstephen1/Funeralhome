@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { ShoppingCart, CalendarDays, MessageCircle, Shield, MapPin, Phone, Mail, X, MessageSquare } from "lucide-react"; 
+import { ShoppingCart, CalendarDays, MessageCircle, Shield, Phone, X, MessageSquare, LogOut, BookOpen, User, Settings } from "lucide-react"; 
 
 // --- MAIN PAGES ---
 import HomePage from "./pages/HomePage";
@@ -41,6 +41,10 @@ import FamilyAndFriendsPage from "./pages/FamilyAndFriendsPage";
 import FamilyTreePage from "./pages/FamilyTreePage";
 import LiveJournalPage from "./pages/LiveJournalPage";
 import WriteEulogyPage from "./pages/WriteEulogyPage";
+
+// --- NEW PUBLIC DIGITAL TRIBUTE & SETTINGS ---
+import DigitalTribute from "./pages/DigitalTribute";
+import SettingsPage from "./pages/SettingsPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -127,14 +131,21 @@ function AppContent() {
   // --- GLOBAL STATE ---
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "true");
+  const [userProfilePic, setUserProfilePic] = useState(localStorage.getItem("userProfilePic") || "");
+  const [imgError, setImgError] = useState(false);
+  
   const isLoggedIn = !!userEmail;
 
   const [cart, setCart] = useState(() => getSavedCart(userEmail));
   const [serviceBookings, setServiceBookings] = useState(() => getSavedBookings(userEmail));
   const [toast, setToast] = useState("");
+  
+  const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const portalRef = useRef(null);
 
   const cartCount = useMemo(() => cart.reduce((total, item) => total + (item.quantity || 1), 0), [cart]);
   const bookingCount = useMemo(() => serviceBookings.length, [serviceBookings]);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   // --- EFFECT HOOKS ---
   useEffect(() => {
@@ -153,13 +164,43 @@ function AppContent() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  // Sync avatar when updated in SettingsPage
+  useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      setUserProfilePic(e.detail);
+      localStorage.setItem("userProfilePic", e.detail);
+      setImgError(false);
+    };
+    window.addEventListener('profilePictureUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profilePictureUpdated', handleProfileUpdate);
+  }, []);
+
+  // Fetch profile on load to ensure avatar is current
+  useEffect(() => {
+    if (isLoggedIn) {
+      const token = localStorage.getItem("token");
+      fetch(`${API_URL}/api/user/profile`, { headers: { "Authorization": `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.profile_picture) {
+            setUserProfilePic(data.profile_picture);
+            localStorage.setItem("userProfilePic", data.profile_picture);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isLoggedIn, API_URL]);
+
   useEffect(() => {
     const syncLoginState = () => {
       const currentStoredEmail = localStorage.getItem("userEmail");
       const currentStoredAdmin = localStorage.getItem("isAdmin") === "true";
+      const currentPic = localStorage.getItem("userProfilePic");
+      
       if (currentStoredEmail !== userEmail) {
         setUserEmail(currentStoredEmail);
         setIsAdmin(currentStoredAdmin);
+        setUserProfilePic(currentPic || "");
         setCart(getSavedCart(currentStoredEmail));
         setServiceBookings(getSavedBookings(currentStoredEmail));
       }
@@ -174,17 +215,36 @@ function AppContent() {
     document.title = title;
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (portalRef.current && !portalRef.current.contains(event.target)) {
+        setIsPortalOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // --- HANDLERS ---
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("isAdmin");
+    localStorage.removeItem("userProfilePic");
     setUserEmail(null);
     setIsAdmin(false);
+    setUserProfilePic("");
     setCart([]);
     setServiceBookings([]);
+    setIsPortalOpen(false);
     setToast("You have been signed out.");
     navigate("/");
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_URL}${url}`;
   };
 
   const addToCart = (product) => {
@@ -225,9 +285,22 @@ function AppContent() {
   const sharedProps = { userEmail, cart, addToCart, bookRental, serviceBookings, removeRental, updateQuantity, removeFromCart };
   const isActive = (path) => location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
 
+  const getDisplayName = (email) => {
+    if (!email) return "User";
+    const username = email.split("@")[0];
+    return username.charAt(0).toUpperCase() + username.slice(1);
+  };
+
   return (
     <div className="site-shell flex flex-col min-h-screen relative">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap');
+        @keyframes fadeInDropdown {
+          from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fadeInDropdown { animation: fadeInDropdown 0.2s ease-out forwards; }
+      `}</style>
       <FocusManager />
       <HashBridge />
 
@@ -252,12 +325,6 @@ function AppContent() {
             <Link to="/plan" className={`transition-opacity ${isActive("/plan") ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}>Plan Ahead</Link>
             <Link to="/catalog" className={`transition-opacity ${isActive("/catalog") ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}>Catalog</Link>
             
-            {isAdmin && (
-              <Link to="/admin" className={`flex items-center gap-1 transition-opacity ${isActive("/admin") ? "border-b border-[#A8895C] text-[#A8895C]" : "border-b border-transparent text-[#A8895C] hover:opacity-80"} pb-1 font-bold`}>
-                 <Shield size={14}/> Admin
-              </Link>
-            )}
-
             {!isLoggedIn && (
               <>
                 <Link to="/login" className={`transition-opacity ${isActive("/login") ? "border-b border-[#A8895C] text-[#1F2E27]" : "border-b border-transparent hover:opacity-80"} pb-1`}>Sign In</Link>
@@ -270,19 +337,102 @@ function AppContent() {
                 <ShoppingCart size={20} />
                 {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-[#1F2E27] text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
               </Link>
-              <Link to="/bookings" className="relative text-[#A8895C] hover:text-[#1F2E27] transition-colors rounded-sm">
-                <CalendarDays size={20} />
-                {bookingCount > 0 && <span className="absolute -top-2 -right-2 bg-[#A8895C] text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">{bookingCount}</span>}
-              </Link>
-
+              
               {isLoggedIn && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#A8895C] flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                    {userEmail ? userEmail[0].toUpperCase() : "U"}
-                  </div>
-                  <button onClick={handleLogout} className="text-[#A8895C] hover:text-[#1F2E27] border-b border-transparent pb-1 transition-colors">
-                    Logout
+                <div className="relative" ref={portalRef}>
+                  <button 
+                    onClick={() => setIsPortalOpen(!isPortalOpen)}
+                    className="flex items-center justify-center focus:outline-none transition-transform hover:scale-105"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-transparent focus-within:ring-[#1F2E27] overflow-hidden">
+                      {userProfilePic && !imgError ? (
+                        <img src={getImageUrl(userProfilePic)} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                      ) : (
+                        userEmail ? userEmail[0].toUpperCase() : "U"
+                      )}
+                    </div>
                   </button>
+
+                  {isPortalOpen && (
+                    <div className="absolute right-0 mt-3 w-80 bg-white border border-[#E8DFD1] rounded-[1.25rem] shadow-2xl overflow-hidden z-50 animate-fadeInDropdown p-2">
+                      
+                      <div className="flex items-center justify-between px-3 py-2 bg-white rounded-xl mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-lg font-bold overflow-hidden">
+                            {userProfilePic && !imgError ? (
+                              <img src={getImageUrl(userProfilePic)} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                            ) : (
+                              userEmail ? userEmail[0].toUpperCase() : "U"
+                            )}
+                          </div>
+                          <div className="flex flex-col text-left">
+                            <span className="text-sm font-bold text-[#1F2E27] truncate max-w-[120px]">{getDisplayName(userEmail)}</span>
+                            <span className="text-[11px] font-medium text-[#716860]">user</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span className="text-[10px] text-emerald-700 font-bold tracking-wide">Active</span>
+                        </div>
+                      </div>
+
+                      <div className="px-3 pb-2 text-[10px] font-bold text-[#716860] uppercase tracking-widest border-b border-[#F8F6F0] mb-2 text-left">
+                        Account
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <Link 
+                          to="/settings?tab=profile" 
+                          onClick={() => setIsPortalOpen(false)} 
+                          className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F8F6F0] transition-colors group text-left"
+                        >
+                          <User size={18} className="text-[#716860] group-hover:text-[#1F2E27] mt-0.5 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-[#1F2E27]">Profile details</span>
+                            <span className="text-[11px] text-[#716860] leading-tight mt-0.5">Name, photo, email, and phone</span>
+                          </div>
+                        </Link>
+                        
+                        <Link 
+                          to="/settings?tab=account" 
+                          onClick={() => setIsPortalOpen(false)} 
+                          className="flex items-start gap-3 p-3 rounded-xl hover:bg-[#F8F6F0] transition-colors group text-left"
+                        >
+                          <Settings size={18} className="text-[#716860] group-hover:text-[#1F2E27] mt-0.5 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-[#1F2E27]">Account settings</span>
+                            <span className="text-[11px] text-[#716860] leading-tight mt-0.5">Password, plan, and memorial controls</span>
+                          </div>
+                        </Link>
+                        
+                        {isAdmin && (
+                          <Link 
+                            to="/admin" 
+                            onClick={() => setIsPortalOpen(false)} 
+                            className="flex items-start gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-colors group text-left"
+                          >
+                            <Shield size={18} className="text-emerald-600 mt-0.5 shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-emerald-700">Admin Command</span>
+                              <span className="text-[11px] text-emerald-600/80 leading-tight mt-0.5">Manage products, orders, and users</span>
+                            </div>
+                          </Link>
+                        )}
+
+                        <button 
+                          onClick={handleLogout} 
+                          className="flex items-start gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors group w-full text-left mt-1"
+                        >
+                          <LogOut size={18} className="text-red-500 mt-0.5 shrink-0" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-red-600">Sign out</span>
+                            <span className="text-[11px] text-red-500/80 leading-tight mt-0.5">End this dashboard session</span>
+                          </div>
+                        </button>
+                      </div>
+
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -291,43 +441,31 @@ function AppContent() {
       </nav>
 
       <main id="main-content" tabIndex="-1" className="focus:outline-none">
-        
-        {/* GLOBAL FLOATING CONTACT WIDGET */}
         <FloatingContactWidget />
-
         {location.pathname === "/" && (
           <div className="fixed bottom-5 left-5 z-[60] flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Link to="/terms" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]">
-              <Shield size={14} className="text-[#A8895C]" /> Terms
-            </Link>
-            <Link to="/privacy" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]">
-              <Shield size={14} className="text-[#A8895C]" /> Privacy
-            </Link>
+            <Link to="/terms" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]"><Shield size={14} className="text-[#A8895C]" /> Terms</Link>
+            <Link to="/privacy" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]"><Shield size={14} className="text-[#A8895C]" /> Privacy</Link>
           </div>
         )}
-
         <Routes>
           <Route path="/" element={<HomePage {...sharedProps} />} />
           <Route path="/plan" element={<PlanAheadPage {...sharedProps} />} />
           <Route path="/packages" element={<PackagesPage />} />
           <Route path="/obituaries" element={<ObituaryListPage {...sharedProps} />} />
-          
           <Route path="/catalog" element={<CatalogPage {...sharedProps} />} />
           <Route path="/catalog/:id" element={<DynamicRouteWrapper Component={CatalogPage} sharedProps={sharedProps} />} />
           <Route path="/product/:id" element={<ProductPage {...sharedProps} />} /> 
           <Route path="/section/:id" element={<DynamicRouteWrapper Component={SectionPage} sharedProps={sharedProps} />} />
-          
           <Route path="/cart" element={<CartPage {...sharedProps} />} />
           <Route path="/checkout" element={<CheckoutPage {...sharedProps} />} />
           <Route path="/booking-checkout" element={<BookingCheckoutPage {...sharedProps} />} />
           <Route path="/thankyou" element={<ThankYouPage {...sharedProps} />} />
           <Route path="/bookings" element={<ProtectedRoute userEmail={userEmail}><BookingsPage {...sharedProps} /></ProtectedRoute>} />
-
-          {isAdmin && (
-            <Route path="/admin" element={<AdminDashboardPage />} />
-          )}
-
+          {isAdmin && <Route path="/admin" element={<AdminDashboardPage />} />}
           <Route path="/memorial" element={<MemorialOverviewPage {...sharedProps} />} />
+          <Route path="/memorial/download/:eulogyId" element={<DigitalTribute />} />
+          <Route path="/settings" element={<ProtectedRoute userEmail={userEmail}><SettingsPage /></ProtectedRoute>} />
           <Route path="/memorial/:id" element={<DynamicRouteWrapper Component={MemorialOverviewPage} sharedProps={sharedProps} />} />
           <Route path="/overview/:id" element={<DynamicRouteWrapper Component={OverviewPage} sharedProps={sharedProps} />} />
           <Route path="/wall/:id" element={<DynamicRouteWrapper Component={MemorialWallPage} sharedProps={sharedProps} />} />
@@ -339,7 +477,6 @@ function AppContent() {
           <Route path="/tree/:id" element={<DynamicRouteWrapper Component={FamilyTreePage} sharedProps={sharedProps} />} />
           <Route path="/journal/:id" element={<DynamicRouteWrapper Component={LiveJournalPage} sharedProps={sharedProps} />} />
           <Route path="/eulogy/:id" element={<ProtectedRoute userEmail={userEmail}><DynamicRouteWrapper Component={WriteEulogyPage} sharedProps={sharedProps} /></ProtectedRoute>} />
-          
           <Route path="/login" element={<LoginPage {...sharedProps} />} />
           <Route path="/register" element={<RegisterPage {...sharedProps} />} />
           <Route path="/verify" element={<EmailVerificationPage {...sharedProps} />} />
@@ -347,7 +484,6 @@ function AppContent() {
           <Route path="/reset-password" element={<ResetPasswordPage {...sharedProps} />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
-          
           <Route path="*" element={<HomePage {...sharedProps} />} />
         </Routes>
       </main>

@@ -178,6 +178,13 @@ export default function WriteEulogyPage({ dynamicId }) {
   const handlePaymentAndSubmit = async (e) => {
     e.preventDefault();
     
+    // PRO-GRADE FIX: Force Authorization before allowing the request to proceed
+    const token = localStorage.getItem("token");
+    if (!token) {
+        setErrors({ payment: "Account Required: Please log in or create an account to publish this tribute." });
+        return;
+    }
+
     const newErrors = {};
     if (!phone) newErrors.payment = "Please provide an M-Pesa phone number.";
     if (!formData.recipient_email) newErrors.recipient_email = "Email is required for PDF delivery.";
@@ -191,7 +198,6 @@ export default function WriteEulogyPage({ dynamicId }) {
 
     const currentTemplate = availableTemplates[activeTemplateIndex];
     const currentFont = availableFonts[activeFontIndex];
-    const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("userEmail") || "guest@example.com";
 
     // Build the payload
@@ -223,7 +229,7 @@ export default function WriteEulogyPage({ dynamicId }) {
       });
 
       if (!paymentResponse.ok) {
-        throw new Error("Insufficient funds or M-Pesa prompt failed.");
+        throw new Error("Insufficient funds, unauthorized, or M-Pesa prompt failed.");
       }
 
       // 2. If Payment OK, Save as Success
@@ -244,7 +250,7 @@ export default function WriteEulogyPage({ dynamicId }) {
       console.warn("Payment failed, entering pending state:", error.message);
       
       try {
-        // Attempt to save to backend as a draft (if API allows)
+        // Attempt to save to backend as a draft
         await fetch(`${API_URL}/api/eulogies`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },

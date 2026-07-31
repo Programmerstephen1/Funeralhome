@@ -11,6 +11,9 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // PRO-GRADE ADDITION: State to track Terms & Privacy agreement
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
@@ -18,7 +21,6 @@ export default function RegisterPage() {
 
   // --- CATCH SSO REDIRECT TOKENS ---
   useEffect(() => {
-    // 1. Check for Hash (Facebook/Google implicit flow)
     const hash = window.location.hash;
     if (hash && hash.includes("access_token=")) {
       const params = new URLSearchParams(hash.substring(1));
@@ -29,17 +31,15 @@ export default function RegisterPage() {
       }
     }
     
-    // 2. Check for Query Params (X / Twitter PKCE auth code flow)
     const search = window.location.search;
     if (search && search.includes("code=") && search.includes("state=twitter")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
       
-      // THE FIX: Use sessionStorage to lock this exact code so it never double-fires
       const processedCode = sessionStorage.getItem("twitter_auth_code_reg");
       
       if (code && processedCode !== code) {
-        sessionStorage.setItem("twitter_auth_code_reg", code); // Lock it!
+        sessionStorage.setItem("twitter_auth_code_reg", code); 
         
         processSocialLogin("twitter", { 
             code: code, 
@@ -47,7 +47,6 @@ export default function RegisterPage() {
             redirect_uri: `${window.location.origin}${window.location.pathname}` 
         });
         
-        // Clean the URL immediately
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -63,7 +62,14 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadData),
       });
-      const data = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        throw new Error("Server returned an invalid response. Check backend terminal for crash logs.");
+      }
+
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userEmail", data.email);
@@ -74,7 +80,8 @@ export default function RegisterPage() {
         setError(data.message || `${provider} authentication failed.`);
       }
     } catch (err) {
-      setError(`Network error during ${provider} registration.`);
+      console.error(err);
+      setError(err.message || `Network error during ${provider} registration.`);
     } finally {
       setLoading(false);
     }
@@ -85,8 +92,15 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    // VALIDATION CHECKS
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters long."); return; }
+    
+    // PRO-GRADE FIX: Block registration if terms are not accepted
+    if (!agreedToTerms) { 
+        setError("You must agree to the Terms of Service and Privacy Policy to register."); 
+        return; 
+    }
 
     setLoading(true);
     try {
@@ -95,7 +109,13 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        throw new Error("Server crashed. Please check your backend terminal.");
+      }
 
       if (response.ok) {
         localStorage.setItem("pendingVerificationEmail", email);
@@ -104,7 +124,8 @@ export default function RegisterPage() {
         setError(data.message || "Registration failed.");
       }
     } catch (err) {
-      setError("Network error. Please ensure the server is running.");
+      console.error(err);
+      setError(err.message || "Network error. Please ensure the server is running.");
     } finally {
       setLoading(false);
     }
@@ -116,7 +137,6 @@ export default function RegisterPage() {
     onError: () => setError("Google authentication was cancelled or failed.")
   });
 
-  // --- FACEBOOK SSO ---
   const handleFacebookLogin = () => {
     if (!FB_APP_ID || FB_APP_ID === "your_facebook_app_id_here") {
       setError("Facebook API Key has not been configured by the administrator yet.");
@@ -126,7 +146,6 @@ export default function RegisterPage() {
     window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile`;
   };
 
-  // --- X (TWITTER) SSO (PRO-GRADE PKCE FLOW) ---
   const handleTwitterLogin = () => {
     if (!TWITTER_CLIENT_ID || TWITTER_CLIENT_ID === "your_twitter_client_id_here") {
       setError("X (Twitter) API Key has not been configured by the administrator yet.");
@@ -183,7 +202,37 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full flex justify-center py-4 px-4 border border-transparent rounded text-sm font-bold uppercase tracking-widest text-white bg-[#1F2E27] hover:bg-[#A8895C] transition-colors shadow-md">
+          {/* PRO-GRADE ADDITION: Legal Agreement Checkbox */}
+          <div className="flex items-start gap-3 mt-4 mb-2">
+            <div className="flex items-center h-5 mt-0.5">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="w-4 h-4 border-[#E8DFD1] rounded text-[#A8895C] focus:ring-[#A8895C] accent-[#A8895C] cursor-pointer"
+              />
+            </div>
+            <div className="text-xs text-[#716860] leading-tight">
+              <label htmlFor="terms" className="cursor-pointer">
+                I agree to the Last Planner Julz{" "}
+                <Link to="/terms" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                  Privacy Policy
+                </Link>.
+              </label>
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full flex justify-center py-4 px-4 border border-transparent rounded text-sm font-bold uppercase tracking-widest text-white bg-[#1F2E27] hover:bg-[#A8895C] transition-colors shadow-md disabled:opacity-70"
+          >
             {loading ? "Creating Account..." : "Register"}
           </button>
         </form>

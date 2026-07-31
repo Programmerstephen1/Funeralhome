@@ -6,22 +6,22 @@ export default function EmailVerificationPage({ userEmail }) {
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef([]);
 
+  // PRO-GRADE FIX: Safely retrieve the email whether they are logged in or just registered
+  const activeEmail = userEmail || localStorage.getItem("pendingVerificationEmail");
+
   const handleChange = (index, value) => {
-    // Only allow numbers
     if (!/^[0-9]*$/.test(value)) return;
 
     const newCode = [...code];
     newCode[index] = value.slice(-1);
     setCode(newCode);
 
-    // Auto-advance to the next input
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Auto-backspace to the previous input
     if (e.key === "Backspace" && index > 0 && code[index] === "") {
       inputRefs.current[index - 1].focus();
     }
@@ -30,23 +30,27 @@ export default function EmailVerificationPage({ userEmail }) {
   const handleVerify = async () => {
     const finalCode = code.join("");
     if (finalCode.length === 6) {
+      if (!activeEmail) {
+        alert("Session expired. Please log in or register again.");
+        return window.location.hash = "#register";
+      }
+
       setIsVerifying(true);
       try {
         const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
         const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userEmail, code: finalCode }),
+          // FIX: Now securely sends the activeEmail instead of a null prop
+          body: JSON.stringify({ email: activeEmail, code: finalCode }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Success! Route them to the Memorial Hub
           window.location.hash = "#memorial"; 
         } else {
           alert(`Verification failed: ${data.message}`);
-          // Clear inputs on failure so they can try again
           setCode(["", "", "", "", "", ""]);
           inputRefs.current[0].focus();
         }
@@ -62,8 +66,7 @@ export default function EmailVerificationPage({ userEmail }) {
   };
 
   const handleResend = async () => {
-    const emailToUse = userEmail || localStorage.getItem("userEmail");
-    if (!emailToUse) return alert("No email found. Please register again.");
+    if (!activeEmail) return alert("No email found. Please register again.");
 
     const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
@@ -71,7 +74,7 @@ export default function EmailVerificationPage({ userEmail }) {
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailToUse }),
+        body: JSON.stringify({ email: activeEmail }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -101,7 +104,7 @@ export default function EmailVerificationPage({ userEmail }) {
           Enter the 6-digit code we sent to
         </p>
         <p className="text-[#A8895C] font-semibold mt-1">
-          {userEmail || "your email address"}
+          {activeEmail || "your email address"}
         </p>
       </div>
 
