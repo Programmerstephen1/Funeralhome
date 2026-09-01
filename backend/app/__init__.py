@@ -11,16 +11,34 @@ load_dotenv()
 db = SQLAlchemy()
 mail = Mail() 
 
+
+def validate_required_env(app):
+    warnings = []
+    if not os.environ.get('SECRET_KEY'):
+        warnings.append('SECRET_KEY')
+    if not os.environ.get('JWT_SECRET_KEY'):
+        warnings.append('JWT_SECRET_KEY')
+    if not os.environ.get('MAIL_USERNAME') or not os.environ.get('MAIL_PASSWORD'):
+        warnings.append('MAIL_USERNAME/MAIL_PASSWORD')
+
+    if warnings:
+        print(f"WARNING: Missing production settings: {', '.join(warnings)}")
+
+
 def create_app():
     frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'dist'))
     
     app = Flask(__name__, static_folder=frontend_dist, static_url_path='')
     
     allowed_origins = [
-        "https://your-frontend-name.onrender.com", 
+        os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/'),
         "http://localhost:5173",
-        "http://localhost:4173" 
+        "http://localhost:4173",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:4173",
     ]
+    allowed_origins = [origin for origin in allowed_origins if origin]
+    app.config['CORS_ALLOWED_ORIGINS'] = allowed_origins
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     raw_db_url = os.environ.get('DATABASE_URL')
@@ -69,6 +87,8 @@ def create_app():
     app.config['MAIL_DEBUG'] = True 
     mss = os.environ.get('MAIL_SUPPRESS_SEND', '')
     app.config['MAIL_SUPPRESS_SEND'] = str(mss).strip().lower() in ('1', 'true', 'yes')
+
+    validate_required_env(app)
 
     if app.config['MAIL_SUPPRESS_SEND']:
         print("WARNING: MAIL_SUPPRESS_SEND is enabled. OTP and receipt emails will not be sent.")

@@ -17,9 +17,14 @@ export default function BookingsPage({ serviceBookings = [], removeRental }) {
         <h2 className="mb-4 text-2xl font-serif text-[#1F2E27]">No service requests yet</h2>
         <p className="mb-8 max-w-md text-center text-[#3D3530]">You haven't requested any vehicles or support services yet. Browse our transport and setup options to begin a thoughtful arrangement.</p>
         
-        <a href="#catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">
-          Browse Services
-        </a>
+        <div className="flex flex-wrap justify-center gap-3">
+          <a href="#catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">
+            Browse Services
+          </a>
+          <a href="#cart" className="rounded-full border border-[#E8DFD1] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#3D3530] transition-all hover:border-[#A8895C] hover:text-[#1F2E27]">
+            View Cart
+          </a>
+        </div>
       </div>
     );
   }

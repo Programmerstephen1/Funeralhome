@@ -2,8 +2,9 @@
  * API Service Layer
  */
 
-// PRO-GRADE FIX: Dynamically falls back to localhost if not on Render
-const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+import { getApiBaseUrl } from "./config";
+
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiService {
   constructor(baseUrl = API_BASE_URL) {
@@ -30,12 +31,21 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      const contentType = response.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const payload = isJson ? await response.json().catch(() => null) : await response.text().catch(() => "");
+
       if (!response.ok) {
         if (response.status === 401) this.logout();
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API error: ${response.status}`);
+        const message = payload && typeof payload === "object" ? payload.message || payload.error : payload;
+        throw new Error(message || `API error: ${response.status}`);
       }
-      return await response.json();
+
+      if (!isJson) {
+        return payload;
+      }
+
+      return payload ?? {};
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
       throw error;

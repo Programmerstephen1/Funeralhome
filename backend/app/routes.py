@@ -7,7 +7,9 @@ import re
 import os
 import uuid 
 import io
+import time
 import qrcode
+from collections import defaultdict
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -25,8 +27,46 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 api = Blueprint("api", __name__)
+RATE_LIMIT_STORE = defaultdict(list)
+
+
+def send_mail_message(msg, mail_instance=None):
+    from . import mail as default_mail
+
+    mail_instance = mail_instance or default_mail
+
+    if current_app.config.get("MAIL_SUPPRESS_SEND"):
+        logger.info("Email delivery skipped because MAIL_SUPPRESS_SEND is enabled.")
+        return True
+
+    if not current_app.config.get("MAIL_USERNAME") or not current_app.config.get("MAIL_PASSWORD"):
+        logger.warning("Email delivery skipped because mail credentials are not configured.")
+        return False
+
+    try:
+        mail_instance.send(msg)
+        return True
+    except Exception as exc:
+        logger.exception("Email delivery failed")
+        logger.error(str(exc))
+        return False
 
 # --- SECURITY MIDDLEWARE ---
+
+def rate_limit(max_requests=5, window_seconds=60):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            client_key = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown')
+            now = time.time()
+            history = RATE_LIMIT_STORE[client_key]
+            history[:] = [ts for ts in history if now - ts < window_seconds]
+            if len(history) >= max_requests:
+                return jsonify({"message": "Too many attempts. Please wait a moment and try again."}), 429
+            history.append(now)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def require_safaricom_ip(f):
     @wraps(f)
@@ -169,6 +209,10 @@ def generate_eulogy_pdf(eulogy, memorial_url):
 def send_eulogy_email(eulogy, memorial_url, mail_instance):
     from flask_mail import Message
     try:
+        if not eulogy.recipient_email:
+            logger.warning("Skipping eulogy email because no recipient address was supplied.")
+            return
+
         msg = Message(
             subject=f"Digital Eulogy & QR Code - In Memory of {eulogy.deceased_name}",
             sender=("Last Planner Julz Hub", current_app.config.get('MAIL_USERNAME')),
@@ -201,15 +245,21 @@ Last Planner Julz Funeral Home
         msg.attach("Memorial_QRCode.png", "image/png", qr_bytes)
         msg.attach(f"{eulogy.deceased_name.replace(' ', '_')}_Eulogy.pdf", "application/pdf", pdf_bytes)
 
-        mail_instance.send(msg)
-        logger.info(f"[SUCCESS] Eulogy assets emailed to {eulogy.recipient_email}")
+        success = send_mail_message(msg, mail_instance)
+        if success:
+            logger.info(f"[SUCCESS] Eulogy assets emailed to {eulogy.recipient_email}")
+        else:
+            logger.warning(f"[WARN] Eulogy email delivery skipped or failed for {eulogy.recipient_email}")
     except Exception as e:
         logger.error(f"[ERROR] Eulogy email delivery failed: {str(e)}")
+        return False
+    return True
 
 
 # --- AUTHENTICATION ROUTES ---
 
 @api.route("/api/auth/register", methods=["POST"])
+@rate_limit(max_requests=5, window_seconds=60)
 def register():
     from flask_mail import Message
     from . import mail
@@ -264,7 +314,7 @@ def register():
           </div>
         </div>
         """
-        mail.send(msg)
+        send_mail_message(msg, mail)
     except Exception as e:
         logger.error(f"Failed to send welcome OTP email: {e}")
 
@@ -272,10 +322,14 @@ def register():
 
 
 @api.route("/api/auth/login", methods=["POST"])
+@rate_limit(max_requests=10, window_seconds=60)
 def login():
     payload = request.get_json() or {}
     email = (payload.get("email") or "").strip().lower()
     password = payload.get("password") or ""
+
+    if not email or not password:
+        return jsonify({"message": "Email and password are required."}), 400
 
     user = User.query.filter_by(email=email).first()
 
@@ -428,6 +482,7 @@ def twitter_login():
 
 
 @api.route("/api/auth/send-otp", methods=["POST"])
+@rate_limit(max_requests=5, window_seconds=60)
 def send_otp():
     from flask_mail import Message
     from . import mail
@@ -474,7 +529,7 @@ def send_otp():
           </div>
         </div>
         """
-        mail.send(msg)
+        send_mail_message(msg, mail)
         return jsonify({"message": "OTP sent successfully"}), 200
 
     except Exception as e:
@@ -502,6 +557,7 @@ def verify_otp():
 
 
 @api.route("/api/auth/reset-password", methods=["POST"])
+@rate_limit(max_requests=5, window_seconds=60)
 def reset_password():
     payload = request.get_json() or {}
     email = (payload.get("email") or "").strip().lower()
@@ -837,10 +893,14 @@ def stk_push():
     if not re.fullmatch(r"\d{10,12}", phone.replace("+", "")):
         return jsonify({"error": "Enter a valid phone number for M-Pesa."}), 400
 
-    result = generate_stk_push_payload(amount, phone, email)
+    try:
+        result = generate_stk_push_payload(amount, phone, email)
+    except Exception as exc:
+        logger.exception("STK push payload generation failed")
+        return jsonify({"error": "Payment processing error", "message": "We could not start the payment request right now."}), 500
     
     if "error" in result:
-        return jsonify(result), 500
+        return jsonify({"error": "Payment processing error", "message": result.get("message", "We could not start the payment request right now.")}), 500
 
     try:
         checkout_id = result.get("checkout_request_id")
@@ -956,7 +1016,7 @@ def mpesa_callback():
                         </div>
                     </div>
                     """
-                    mail.send(msg)
+                    send_mail_message(msg, mail)
                 except Exception as mail_err:
                     logger.error(f"[MAIL ERROR] Automated receipt transmission faulted: {mail_err}")
         
@@ -1033,7 +1093,7 @@ def request_consultation():
                 </div>
             </div>
             """
-            mail.send(msg)
+            send_mail_message(msg, mail)
 
         return jsonify({"message": "Consultation request sent successfully!"}), 200
 
@@ -1100,5 +1160,6 @@ def delete_user_account():
 
 def register_routes(app):
     from flask_cors import CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    allowed_origins = app.config.get("CORS_ALLOWED_ORIGINS", ["*"])
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
     app.register_blueprint(api)

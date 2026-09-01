@@ -1,19 +1,47 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { Link, UNSAFE_LocationContext, UNSAFE_NavigationContext } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 import { ChevronLeft, Mail, Lock, AlertCircle } from "lucide-react";
+import { getApiBaseUrl } from "../services/config";
+import api from "../services/api";
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const locationContext = useContext(UNSAFE_LocationContext);
+  const navigationContext = useContext(UNSAFE_NavigationContext);
+  const location = locationContext?.location ?? { pathname: "/", search: "", hash: "", state: undefined };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID;
+
+  const hasRouterContext = Boolean(locationContext && navigationContext);
+
+  const navigate = useCallback((target) => {
+    const navigator = navigationContext?.navigator;
+    if (navigator) {
+      if (typeof target === "number") {
+        if (typeof navigator.go === "function") navigator.go(target);
+        else if (typeof navigator.back === "function") navigator.back();
+      } else {
+        if (typeof navigator.navigate === "function") navigator.navigate(target);
+        else if (typeof navigator.push === "function") navigator.push(target);
+        else if (typeof navigator.replace === "function") navigator.replace(target);
+      }
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      if (typeof target === "number") {
+        if (target < 0) window.history.back();
+      } else {
+        window.location.assign(target);
+      }
+    }
+  }, [navigationContext]);
 
   // --- CATCH SSO REDIRECT TOKENS ---
   useEffect(() => {
@@ -91,33 +119,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseErr) {
-        throw new Error("Server crashed. Please check your backend terminal.");
-      }
+      const data = await api.login(email, password);
+      localStorage.setItem("userEmail", email);
+      localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
 
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userEmail", email);
-        localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
-        
-        window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("storage"));
 
-        if (data.is_admin) {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
+      if (data.is_admin) {
+        navigate("/admin");
       } else {
-        setError(data.message || "Invalid email or password.");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
@@ -195,7 +206,11 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider">Password</label>
-                <Link to="/forgot-password" className="text-xs font-semibold text-[#A8895C] hover:text-[#1F2E27]">Forgot password?</Link>
+                {hasRouterContext ? (
+            <Link to="/forgot-password" className="text-xs font-semibold text-[#A8895C] hover:text-[#1F2E27]">Forgot password?</Link>
+          ) : (
+            <a href="/forgot-password" className="text-xs font-semibold text-[#A8895C] hover:text-[#1F2E27]">Forgot password?</a>
+          )}
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -268,9 +283,15 @@ export default function LoginPage() {
 
         <p className="mt-8 text-center text-sm text-[#716860]">
           Don't have an account?{" "}
-          <Link to="/register" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">
-            Register here
-          </Link>
+          {hasRouterContext ? (
+            <Link to="/register" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">
+              Register here
+            </Link>
+          ) : (
+            <a href="/register" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">
+              Register here
+            </a>
+          )}
         </p>
 
       </div>

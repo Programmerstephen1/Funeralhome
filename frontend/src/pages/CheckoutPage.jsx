@@ -178,9 +178,13 @@ export default function CheckoutPage({ cart }) {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#F8F6F0]">
-        <h2 className="text-2xl font-serif text-[#1F2E27] mb-4">No items to checkout.</h2>
-        <Link to="/catalog" className="text-[#A8895C] underline hover:text-[#1F2E27] uppercase tracking-widest text-sm">Return to Catalog</Link>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#F8F6F0] px-4 py-16 text-center">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#E8DFD1] bg-white shadow-sm">
+          <ShieldCheck className="text-[#A8895C]" size={32} />
+        </div>
+        <h2 className="mb-4 text-2xl font-serif text-[#1F2E27]">Nothing is ready for checkout yet</h2>
+        <p className="mb-8 max-w-md text-sm leading-relaxed text-[#3D3530]">Add a few arrangements to your cart first, then we’ll guide you through the secure booking and payment step.</p>
+        <Link to="/catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">Return to Catalog</Link>
       </div>
     );
   }

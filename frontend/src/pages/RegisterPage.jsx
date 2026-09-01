@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { Link, UNSAFE_LocationContext, UNSAFE_NavigationContext } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 import { ChevronLeft, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
+import { getApiBaseUrl } from "../services/config";
+import api from "../services/api";
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const locationContext = useContext(UNSAFE_LocationContext);
+  const navigationContext = useContext(UNSAFE_NavigationContext);
+  const location = locationContext?.location ?? { pathname: "/", search: "", hash: "", state: undefined };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -15,9 +18,34 @@ export default function RegisterPage() {
   // PRO-GRADE ADDITION: State to track Terms & Privacy agreement
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID;
+
+  const hasRouterContext = Boolean(locationContext && navigationContext);
+
+  const navigate = useCallback((target) => {
+    const navigator = navigationContext?.navigator;
+    if (navigator) {
+      if (typeof target === "number") {
+        if (typeof navigator.go === "function") navigator.go(target);
+        else if (typeof navigator.back === "function") navigator.back();
+      } else {
+        if (typeof navigator.push === "function") navigator.push(target);
+        else if (typeof navigator.replace === "function") navigator.replace(target);
+        else if (typeof navigator.navigate === "function") navigator.navigate(target);
+      }
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      if (typeof target === "number") {
+        if (target < 0) window.history.back();
+      } else {
+        window.location.assign(target);
+      }
+    }
+  }, [navigationContext]);
 
   // --- CATCH SSO REDIRECT TOKENS ---
   useEffect(() => {
@@ -104,25 +132,10 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseErr) {
-        throw new Error("Server crashed. Please check your backend terminal.");
-      }
-
-      if (response.ok) {
-        localStorage.setItem("pendingVerificationEmail", email);
-        navigate("/verify");
-      } else {
-        setError(data.message || "Registration failed.");
-      }
+      await api.register(email, password);
+      await api.sendOtp(email);
+      localStorage.setItem("pendingVerificationEmail", email);
+      navigate("/verify");
     } catch (err) {
       console.error(err);
       setError(err.message || "Network error. Please ensure the server is running.");
@@ -217,13 +230,25 @@ export default function RegisterPage() {
             <div className="text-xs text-[#716860] leading-tight">
               <label htmlFor="terms" className="cursor-pointer">
                 I agree to the Last Planner Julz{" "}
-                <Link to="/terms" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
-                  Terms of Service
-                </Link>{" "}
+                {hasRouterContext ? (
+                  <Link to="/terms" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                    Terms of Service
+                  </Link>
+                ) : (
+                  <a href="/terms" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                    Terms of Service
+                  </a>
+                )}{" "}
                 and{" "}
-                <Link to="/privacy" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
-                  Privacy Policy
-                </Link>.
+                {hasRouterContext ? (
+                  <Link to="/privacy" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                    Privacy Policy
+                  </Link>
+                ) : (
+                  <a href="/privacy" target="_blank" className="font-bold text-[#A8895C] hover:text-[#1F2E27] underline transition-colors">
+                    Privacy Policy
+                  </a>
+                )}.
               </label>
             </div>
           </div>
@@ -262,7 +287,11 @@ export default function RegisterPage() {
         </div>
 
         <p className="mt-8 text-center text-sm text-[#716860]">
-          Already have an account? <Link to="/login" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">Sign in</Link>
+          Already have an account? {hasRouterContext ? (
+            <Link to="/login" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">Sign in</Link>
+          ) : (
+            <a href="/login" className="font-bold text-[#A8895C] hover:text-[#1F2E27]">Sign in</a>
+          )}
         </p>
 
       </div>

@@ -1,52 +1,53 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { ShoppingCart, CalendarDays, MessageCircle, Shield, Phone, X, MessageSquare, LogOut, BookOpen, User, Settings } from "lucide-react"; 
 
 // --- MAIN PAGES ---
-import HomePage from "./pages/HomePage";
-import PlanAheadPage from "./pages/PlanAheadPage";
-import PackagesPage from "./pages/packagespage";
-import ObituaryListPage from "./pages/ObituaryListPage";
+const HomePage = lazy(() => import("./pages/HomePage"));
+const PlanAheadPage = lazy(() => import("./pages/PlanAheadPage"));
+const PackagesPage = lazy(() => import("./pages/packagespage"));
+const ObituaryListPage = lazy(() => import("./pages/ObituaryListPage"));
 
 // --- CATALOG & COMMERCE ---
-import CatalogPage from "./pages/CatalogPage"; 
-import ProductPage from "./pages/ProductPage"; 
-import SectionPage from "./pages/SectionPage";
-import CartPage from "./pages/CartPage"; 
-import CheckoutPage from "./pages/CheckoutPage";
-import BookingCheckoutPage from "./pages/BookingCheckoutPage"; 
-import ThankYouPage from "./pages/ThankYouPage";
-import BookingsPage from "./pages/BookingsPage";
+const CatalogPage = lazy(() => import("./pages/CatalogPage"));
+const ProductPage = lazy(() => import("./pages/ProductPage"));
+const SectionPage = lazy(() => import("./pages/SectionPage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const BookingCheckoutPage = lazy(() => import("./pages/BookingCheckoutPage"));
+const ThankYouPage = lazy(() => import("./pages/ThankYouPage"));
+const BookingsPage = lazy(() => import("./pages/BookingsPage"));
 
 // --- ADMIN ---
-import AdminDashboardPage from "./pages/AdminDashboardPage";
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 
 // --- AUTHENTICATION ---
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import EmailVerificationPage from "./pages/EmailVerificationPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const EmailVerificationPage = lazy(() => import("./pages/EmailVerificationPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 
 // --- MEMORIAL HUB ---
-import MemorialOverviewPage from "./pages/MemorialOverviewPage";
-import OverviewPage from "./pages/OverviewPage";
-import MemorialWallPage from "./pages/MemorialWallPage";
-import MemorialPagesPage from "./pages/MemorialPagesPage";
-import GalleryPage from "./pages/GalleryPage";
-import VisitorFlowersPage from "./pages/VisitorFlowersPage";
-import VisitorCandlesPage from "./pages/VisitorCandlesPage";
-import FamilyAndFriendsPage from "./pages/FamilyAndFriendsPage";
-import FamilyTreePage from "./pages/FamilyTreePage";
-import LiveJournalPage from "./pages/LiveJournalPage";
-import WriteEulogyPage from "./pages/WriteEulogyPage";
+const MemorialOverviewPage = lazy(() => import("./pages/MemorialOverviewPage"));
+const OverviewPage = lazy(() => import("./pages/OverviewPage"));
+const MemorialWallPage = lazy(() => import("./pages/MemorialWallPage"));
+const MemorialPagesPage = lazy(() => import("./pages/MemorialPagesPage"));
+const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const VisitorFlowersPage = lazy(() => import("./pages/VisitorFlowersPage"));
+const VisitorCandlesPage = lazy(() => import("./pages/VisitorCandlesPage"));
+const FamilyAndFriendsPage = lazy(() => import("./pages/FamilyAndFriendsPage"));
+const FamilyTreePage = lazy(() => import("./pages/FamilyTreePage"));
+const LiveJournalPage = lazy(() => import("./pages/LiveJournalPage"));
+const WriteEulogyPage = lazy(() => import("./pages/WriteEulogyPage"));
 
 // --- NEW PUBLIC DIGITAL TRIBUTE & SETTINGS ---
-import DigitalTribute from "./pages/DigitalTribute";
-import SettingsPage from "./pages/SettingsPage";
+const DigitalTribute = lazy(() => import("./pages/DigitalTribute"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
@@ -456,7 +457,8 @@ function AppContent() {
             <Link to="/privacy" className="flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-4 py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#716860] border border-[#E8DFD1] shadow-lg transition-all hover:-translate-y-1 hover:text-[#1F2E27] hover:border-[#A8895C]"><Shield size={14} className="text-[#A8895C]" /> Privacy</Link>
           </div>
         )}
-        <Routes>
+        <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center p-6"><LoadingSpinner /></div>}>
+          <Routes>
           <Route path="/" element={<HomePage {...sharedProps} />} />
           <Route path="/plan" element={<PlanAheadPage {...sharedProps} />} />
           <Route path="/packages" element={<PackagesPage />} />
@@ -494,6 +496,7 @@ function AppContent() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="*" element={<HomePage {...sharedProps} />} />
         </Routes>
+        </Suspense>
       </main>
     </div>
   );

@@ -47,9 +47,14 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#A8895C]">Your planning cart</p>
           <h2 className="mb-4 text-3xl font-serif text-[#1F2E27]">Your booking cart is ready for your next selection</h2>
           <p className="mb-8 max-w-xl text-base leading-relaxed text-[#3D3530]">Browse our curated memorial catalog to add caskets, wreaths, transport, and service setups to your arrangement with clarity and confidence.</p>
-          <a href="#catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">
-            Return to Catalog
-          </a>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a href="#catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">
+              Return to Catalog
+            </a>
+            <a href="#bookings" className="rounded-full border border-[#E8DFD1] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#3D3530] transition-all hover:border-[#A8895C] hover:text-[#1F2E27]">
+              View Requests
+            </a>
+          </div>
         </div>
       </div>
     );
