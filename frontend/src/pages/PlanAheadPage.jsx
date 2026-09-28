@@ -43,7 +43,7 @@ export default function PlanAheadPage() {
   ];
 
   const processSteps = [
-    { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences.", icon: HeartHandshake },
+    { title: "Schedule Consultation", desc: "Meet with our planning specialists to discuss your wishes and preferences. A planning fee applies, with a 10% deposit required to begin planning.", icon: HeartHandshake },
     { 
       title: "Review Options", 
       desc: "Explore our thoughtfully designed signature packages.", 
