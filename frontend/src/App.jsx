@@ -44,7 +44,7 @@ const WriteEulogyPage = lazy(() => import("./pages/WriteEulogyPage"));
 
 // --- NEW PUBLIC DIGITAL TRIBUTE & SETTINGS ---
 const DigitalTribute = lazy(() => import("./pages/DigitalTribute"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SettingsPage = lazy(() => import("./pages/Settingspage"));
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
