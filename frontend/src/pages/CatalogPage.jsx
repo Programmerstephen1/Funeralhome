@@ -58,24 +58,24 @@ export const fallbackProducts = [
   { id: 109, categoryId: "casket_list", title: "Brown VIP casket", desc: "Deep dark finish for a commanding presence.", price: 100000, has_sizes: true, images: ["/images/caskets/casket9.jpeg"] },
   { id: 110, categoryId: "casket_list", title: "Pearl White Bamboo Casket", desc: "Glossy pure white body finished with silver handles.", price: 95000, has_sizes: true, images: ["/images/caskets/casket10(1).jpeg", "/images/caskets/casket10.jpeg"] },
   { id: 112, categoryId: "casket_list", title: "Sleek white casket", desc: "Minimalist white casket with gold-tone hardware.", price: 130000, has_sizes: true, images: ["/images/caskets/casket12.jpeg"] },
-  { id: 113, categoryId: "casket_list", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 92000, has_sizes: true, images: ["/images/caskets/casket13.jpeg"] },
-  { id: 114, categoryId: "casket_list", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 110000, has_sizes: true, images: ["/images/caskets/casket14.jpeg"] },
+  { id: 113, categoryId: "casket_list", title: "Standard Cedar Casket", desc: "Affordable and elegant solid cedar box.", price: 120000, has_sizes: true, images: ["/images/caskets/casket13.jpeg"] },
+  { id: 114, categoryId: "casket_list", title: "Deep Mahogany Casket", desc: "Rich mahogany with soft white lining.", price: 180000, has_sizes: true, images: ["/images/caskets/casket14.jpeg"] },
   { id: 115, categoryId: "casket_list", title: "Pure White Domed Casket", desc: "Elegant domed lid pure white design.", price: 96000, has_sizes: true, images: ["/images/caskets/casket15.jpeg"] },
-  { id: 116, categoryId: "casket_list", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 98000, has_sizes: true, images: ["/images/caskets/casket16.jpeg"] },
-  { id: 117, categoryId: "casket_list", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 99000, has_sizes: true, images: ["/images/caskets/casket17.jpeg"] },
+  { id: 116, categoryId: "casket_list", title: "Classic Light Oak Casket", desc: "Traditional light oak build with polished handles.", price: 110000, has_sizes: true, images: ["/images/caskets/casket16.jpeg"] },
+  { id: 117, categoryId: "casket_list", title: "Polished Oak Casket", desc: "High gloss finished oak with sturdy grip bars.", price: 120000, has_sizes: true, images: ["/images/caskets/casket17.jpeg"] },
   { id: 118, categoryId: "casket_list", title: "Solid Oak Heritage Casket", desc: "Heavy-duty solid oak construction with a natural grain.", price: 115000, has_sizes: true, images: ["/images/caskets/casket18(0).jpg", "/images/caskets/casket18.jpg" ] },
   { id: 119, categoryId: "casket_list", title: "Serenity Blue Interior Casket", desc: "Clean white exterior revealing a peaceful blue and white padded interior.", price: 95000, has_sizes: true, images: ["/images/caskets/casket19(0).jpg", "/images/caskets/casket19(1).jpg", "/images/caskets/casket19(2).jpg", "/images/caskets/casket19(3).jpg", "/images/caskets/casket19(4).jpg"] },
   { id: 120, categoryId: "casket_list", title: "Premium Wood Glass-Top Casket", desc: "Solid wood construction featuring a full-length glass viewing panel.", price: 125000, has_sizes: true, images: ["/images/caskets/casket20().jpg", "/images/caskets/casket20(0).jpg", "/images/caskets/casket20(1).jpg", "/images/caskets/casket20(2).jpg"] },
-  { id: 121, categoryId: "casket_list", title: "White & Gold Trim Casket", desc: "Pristine white finish accented with elegant gold-tone border bands.", price: 105000, has_sizes: true, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
-  { id: 122, categoryId: "casket_list", title: "Classic White Domed Casket", desc: "Traditional domed lid with premium white finish.", price: 92000, has_sizes: true, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
-  { id: 123, categoryId: "casket_list", title: "Pristine White Metal Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 125000, has_sizes: true, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
-  { id: 124, categoryId: "casket_list", title: "Obsidian Black Metal Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 135000, has_sizes: true, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
-  { id: 125, categoryId: "casket_list", title: "Walnut Executive Metal Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 130000, has_sizes: true, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
-  { id: 126, categoryId: "casket_list", title: "Glossy Black Casket", desc: "Highly polished black finish for a modern look.", price: 118000, has_sizes: true, images: ["/images/caskets/casket26.jpeg"] },
+  { id: 121, categoryId: "casket_list", title: "White & Gold Trim Casket", desc: "Pristine white finish accented with elegant gold-tone border bands.", price: 80000, has_sizes: true, images: ["/images/caskets/casket21().jpeg", "/images/caskets/casket21(0).jpeg"] },
+  { id: 122, categoryId: "casket_list", title: "Classic White Domed Casket", desc: "Traditional domed lid with premium white finish.", price: 80000, has_sizes: true, images: ["/images/caskets/casket22(0).jpg", "/images/caskets/casket22(1).jpg"] },
+  { id: 123, categoryId: "casket_list", title: "Pristine White Jonathan Casket", desc: "Durable metal construction featuring a pure white gloss.", price: 75000, has_sizes: true, images: ["/images/caskets/casket23().jpg", "/images/caskets/casket23(0).jpeg", "/images/caskets/casket23(1).jpg", "/images/caskets/casket23(2).jpg"] },
+  { id: 124, categoryId: "casket_list", title: "Obsidian Black Casket", desc: "Sleek, dark metallic finish for an executive, profound resting place.", price: 135000, has_sizes: true, images: ["/images/caskets/casket24().jpg", "/images/caskets/casket24(0).jpg", "/images/caskets/casket24(1).jpg", "/images/caskets/casket24(2).jpg", "/images/caskets/casket24(3).jpeg"] },
+  { id: 125, categoryId: "casket_list", title: "Walnut Executive Casket", desc: "Dark polished metallic design with sturdy grip handles.", price: 130000, has_sizes: true, images: ["/images/caskets/casket25().jpg", "/images/caskets/casket25(0).jpg", "/images/caskets/casket25(1).jpg"] },
+  { id: 126, categoryId: "casket_list", title: "VIP Glossy Casket", desc: "Highly polished black finish for a modern look.", price: 80000, has_sizes: true, images: ["/images/caskets/casket26.jpeg"] },
   { id: 127, categoryId: "casket_list", title: "Cream Velvet Interior Casket", desc: "Light exterior finish paired with a luxurious cream velvet interior.", price: 108000, has_sizes: true, images: ["/images/caskets/casket27().jpg", "/images/caskets/casket27(0).jpg", "/images/caskets/casket27(1).jpg"] },
   { id: 128, categoryId: "casket_list", title: "Premium Dark Oak Casket", desc: "High-grade oak with a deep stain and intricate handles.", price: 115000, has_sizes: true, images: ["/images/caskets/casket28().jpeg"] },
-  { id: 129, categoryId: "casket_list", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 125000, has_sizes: true, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
-  { id: 130, categoryId: "casket_list", title: "Half-Glass Wooden Casket", desc: "High-end wooden design featuring a split glass viewing lid.", price: 128000, has_sizes: true, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
+  { id: 129, categoryId: "casket_list", title: "Mahogany Elegance Casket", desc: "Beautifully carved high-gloss mahogany wood.", price: 180000, has_sizes: true, images: ["/images/caskets/casket29().jpeg", "/images/caskets/casket29(0).jpeg"] },
+  { id: 130, categoryId: "casket_list", title: "Half-Glass Wooden Casket", desc: "High-end wooden design featuring a split glass viewing lid.", price: 130000, has_sizes: true, images: ["/images/caskets/casket30().jpeg", "/images/caskets/casket30(0).jpeg", "/images/caskets/casket30(1).jpeg"] },
 
   // --- URNS ---
   { id: 151, categoryId: "urns", title: "Classic Marble Box Urn", desc: "Solid cultured marble in a deep burgundy finish.", price: 18000, images: ["/images/urns/images(0).jpg"] },
@@ -96,33 +96,34 @@ export const fallbackProducts = [
   { id: 166, categoryId: "urns", title: "Silver Teardrop Urn", desc: "Unique teardrop shape with intricate silver engraving.", price: 24000, images: ["/images/urns/images(15).jpg"] },
 
   // --- WREATHS ---
-  { id: 201, categoryId: "wreath_full_set", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 8000, images: ["/images/wreaths/wreath1.jpeg"] },
+  { id: 201, categoryId: "wreath_full_set", title: "Dual White Hearts on Stand", desc: "Two elegant heart-shaped floral displays on a shared stand.", price: 30000, images: ["/images/wreaths/wreath1.jpeg"] },
   { id: 202, categoryId: "wreath_standard", title: "Classic White & Green Ring", desc: "Beautifully arranged traditional circular wreath.", price: 4000, images: ["/images/wreaths/wreath2.jpeg"] },
   { id: 203, categoryId: "wreath_standard", title: "Yellow & Blue Floral Dome", desc: "Vibrant yellow and blue dome floral mix.", price: 14000, images: ["/images/wreaths/wreath3.jpeg"] },
   { id: 204, categoryId: "wreath_standard", title: "Elevated White Floral Dome", desc: "Elegant tall white floral display.", price: 4000, images: ["/images/wreaths/wreath4.jpeg"] },
-  { id: 205, categoryId: "wreath_customs", title: "Standing White Heart Tribute", desc: "Elevated white floral heart display on a stand.", price: 4000, images: ["/images/wreaths/wreath5.jpeg"] },
-  { id: 206, categoryId: "wreath_portrait_stand", title: "Hanging Floral Tribute", desc: "Unique suspended floral arrangement for high-impact visual tribute.", price: 25000, images: ["/images/wreaths/wreath6.jpeg"] },
+  { id: 205, categoryId: "wreath_customs", title: "Standing White Heart Tribute", desc: "Elevated white floral heart display on a stand.", price: 12000, images: ["/images/wreaths/wreath5.jpeg"] },
+  { id: 206, categoryId: "wreath_portrait_stand", title: "Hanging Floral Tribute", desc: "Unique suspended floral arrangement for high-impact visual tribute.", price: 18000, images: ["/images/wreaths/wreath6.jpeg"] },
   { id: 207, categoryId: "wreath_standard", title: "Red & White Round Wreath", desc: "White base with striking red floral accents.", price: 8500, images: ["/images/wreaths/wreath7.jpeg"] },
   { id: 208, categoryId: "wreath_standard", title: "Blue & Yellow Round Wreath", desc: "Vibrant circular tribute with contrasting blue and yellow colors.", price: 8500, images: ["/images/wreaths/wreath8.jpeg"] },
   { id: 209, categoryId: "wreath_halfset", title: "White & Green Floral Heart", desc: "Clean and pure white heart-shaped arrangement.", price: 4000, images: ["/images/wreaths/wreath9.jpeg"] },
-  { id: 210, categoryId: "wreath_full_set", title: "Family Cross & Heart Floral Set", desc: "A beautifully coordinated cross and heart set.", price: 22000, images: ["/images/wreaths/wreath10.jpeg"] },
+  { id: 210, categoryId: "wreath_full_set", title: "Family Cross", desc: "A beautifully coordinated cross and heart set.", price: 18000, images: ["/images/wreaths/wreath10.jpeg"] },
   { id: 211, categoryId: "wreath_standard", title: "Pristine White Round Wreath", desc: "Classic dense arrangement in pure white blooms.", price: 4000, images: ["/images/wreaths/wreath11.jpeg"] },
   { id: 212, categoryId: "wreath_standard", title: "Autumn Hue Round Tribute", desc: "Warm colored circular floral arrangement.", price: 8500, images: ["/images/wreaths/wreath12.jpeg"] },
-  { id: 213, categoryId: "wreath_full_set", title: "White Cross with Red Center", desc: "Traditional cross arrangement with a vibrant center accent.", price: 14000, images: ["/images/wreaths/wreath13.jpeg"] },
-  { id: 214, categoryId: "wreath_double_set", title: "Double Set", desc: "Beautifully arranged blue and white cushion tribute.", price: 12000, images: ["/images/wreaths/wreath14.jpeg"] },
+  { id: 213, categoryId: "wreath_full_set", title: "White Cross with Red Center", desc: "Traditional cross arrangement with a vibrant center accent.", price: 15000, images: ["/images/wreaths/wreath13.jpeg"] },
+  { id: 214, categoryId: "wreath_double_set", title: "Blue & White Floral Cushion", desc: "Beautifully arranged blue and white cushion tribute.", price: 35000, images: ["/images/wreaths/wreath14.jpeg"] },
   { id: 215, categoryId: "wreath_specials", title: "Custom 'DAD' Floral Cushion", desc: "Circular wreath personalized with a 'DAD' centerpiece.", price: 9000, images: ["/images/wreaths/wreath15.jpeg"] },
-  { id: 216, categoryId: "wreath_double_set", title: "Double Set", desc: "Multiple cross arrangements with elegant purple accents.", price: 22000, images: ["/images/wreaths/wreath16.jpeg"] },
+  { id: 216, categoryId: "wreath_double_set", title: "White & Purple Crosses", desc: "Multiple cross arrangements with elegant purple accents.", price: 25000, images: ["/images/wreaths/wreath16.jpeg"] },
   { id: 217, categoryId: "wreath_specials", title: "Custom 'MY LOVE' Floral Heart", desc: "Heart wreath boldly displaying 'MY LOVE'.", price: 10000, images: ["/images/wreaths/wreath17.jpeg"] },
   { id: 218, categoryId: "wreath_standard", title: "Premium White Floral Package", desc: "Complete white floral tribute featuring a luxurious casket spray, elevated floral dome, and classic ring.", price: 12000, images: ["/images/wreaths/wreath18.jpeg", "/images/wreaths/wreath4.jpeg", "/images/wreaths/wreath2.jpeg"] },
-  { id: 219, categoryId: "wreath_full_set", title: "Trio of Standing Wreaths", desc: "Three coordinated standing circular wreaths.", price: 28000, images: ["/images/wreaths/wreath19.jpeg"] },
+  { id: 219, categoryId: "wreath_full_set", title: "Trio of Standing Wreaths", desc: "Three coordinated standing circular wreaths.", price: 40000, images: ["/images/wreaths/wreath19.jpeg"] },
+  { id: 225, categoryId: "wreath_specials", title: "Symphoney", desc: "Symphoney floral tribute.", price: 10000, images: ["/images/wreaths/wreath25.jpeg"] },
   { id: 220, categoryId: "wreath_standard", title: "Classic White & Green Ring", desc: "A pristine white, densely packed floral ring.", price: 4000, images: ["/images/wreaths/wreath20.jpeg"] },
-  { id: 221, categoryId: "wreath_customs", title: "Solid Red Rose Heart", desc: "Stunning full red rose heart arrangement.", price: 15000, images: ["/images/wreaths/wreath21.jpeg"] },
+  { id: 221, categoryId: "wreath_customs", title: "Solid Red Rose Heart", desc: "Stunning full red rose heart arrangement.", price: 23000, images: ["/images/wreaths/wreath21.jpeg"] },
   { id: 222, categoryId: "wreath_customs", title: "White Heart with Red Border", desc: "A beautiful mixture of red outlining white roses.", price: 14000, images: ["/images/wreaths/wreath22.jpeg"] },
   { id: 223, categoryId: "wreath_customs", title: "Symbolic Broken Heart Tribute", desc: "Striking broken heart floral arrangement in red and white.", price: 16000, images: ["/images/wreaths/wreath23.jpeg"] },
   { id: 224, categoryId: "wreath_standard", title: "White & Red Casket Spray", desc: "A long, elegant spray of mixed roses for the casket.", price: 22000, images: ["/images/wreaths/wreath24.jpeg"] },
   { id: 226, categoryId: "wreath_specials", title: "Cross Wreath", desc: "An oversized standing cross with vibrant red details.", price: 4500, images: ["/images/wreaths/wreath26.jpeg"] },
-  { id: 227, categoryId: "wreath_customs", title: "White Heart with Crimson Trim", desc: "Detailed heart shape surrounded by deep red flowers.", price: 13000, images: ["/images/wreaths/wreath27.jpeg"] },
-  { id: 228, categoryId: "wreath_customs", title: "White & Green Heart Tribute", desc: "Pure white blooms arranged in a tight heart shape with greenery.", price: 4000, images: ["/images/wreaths/wreath28.jpg"] },
+  { id: 227, categoryId: "wreath_customs", title: "White Heart with Crimson Trim", desc: "Detailed heart shape surrounded by deep red flowers.", price: 21000, images: ["/images/wreaths/wreath27.jpeg"] },
+  { id: 228, categoryId: "wreath_customs", title: "White & Green Heart Tribute", desc: "Pure white blooms arranged in a tight heart shape with greenery.", price: 20000, images: ["/images/wreaths/wreath28.jpg"] },
   { id: 229, categoryId: "wreath_standard", title: "White & Blue Sympathy Basket", desc: "Elevated floral spray featuring bold blue accents.", price: 12000, images: ["/images/wreaths/wreath29.jpg"] },
   { id: 230, categoryId: "wreath_full_set", title: "Multi-Tribute Floral Package", desc: "A comprehensive multi-piece floral setup for the family.", price: 35000, images: ["/images/wreaths/wreath30.jpg"] },
   { id: 231, categoryId: "wreath_full_set", title: "Standing White Sympathy Spray", desc: "Tall standing basket arrangement for the graveside or chapel.", price: 4000, images: ["/images/wreaths/wreath31.jpg"] },
@@ -142,13 +143,10 @@ export const fallbackProducts = [
   { id: 310, categoryId: "lowering_gears", title: "Executive Walkway 2", desc: "Long red carpet runner for family access.", price: 18000, images: ["/images/lowering-gears/setup17.jpeg"] },
 
   // --- TENTS ---
-  { id: 351, categoryId: "tents", title: "Standard Pagoda Tent 1", desc: "High-peak white tent ideal for family seating.", price: 10000, images: ["/images/tents/tent1.jpeg"] },
-  { id: 352, categoryId: "tents", title: "Standard Pagoda Tent 2", desc: "Medium-sized white tent for outdoor gatherings.", price: 10000, images: ["/images/tents/tent2.jpeg"] },
-  { id: 353, categoryId: "tents", title: "Premium Marquee Tent", desc: "Spacious clear-span marquee tent for large gatherings and VIPs.", price: 50000, images: ["/images/tents/tent3.jpeg"] },
+  { id: 351, categoryId: "tents", title: "Standard Pagola Tent", desc: "High-peak white tent for family seating and outdoor gatherings.", price: 10000, images: ["/images/tents/tent1.jpeg", "/images/tents/tent2.jpeg"] },
+  { id: 353, categoryId: "tents", title: "Premium Marquee Tent", desc: "Spacious clear-span marquee tent for large gatherings and VIPs.", price: 800000, images: ["/images/tents/tent3.jpeg", "/images/lowering-gears/setup10(0).jpeg", "/images/lowering-gears/setup10(1).jpeg"] },
   { id: 354, categoryId: "tents", title: "Graveside Red Carpet Tent", desc: "Specialized tent placement featuring a dignified red carpet.", price: 15000, images: ["/images/tents/tent4.jpeg"] },
-  { id: 355, categoryId: "tents", title: "Basic Gazebo Shade", desc: "Simple pop-up tent for utility, overflow, or minimal shade.", price: 5000, images: ["/images/tents/tent5.jpeg"] },
-  { id: 356, categoryId: "tents", title: "Extended Gathering Tent 1", desc: "Large open-air structure for shielding large groups.", price: 25000, images: ["/images/tents/tent6.jpeg"] },
-  { id: 357, categoryId: "tents", title: "Extended Gathering Tent 2", desc: "Spacious multi-pole tent setup for extended family.", price: 25000, images: ["/images/tents/tent7.jpeg"] },
+  { id: 356, categoryId: "tents", title: "Extended Gathering Tent", desc: "Large open-air structure for shielding large groups.", price: 250000, images: ["/images/tents/tent6.jpeg", "/images/hearses/hearse5(3).jpeg"] },
   { id: 358, categoryId: "tents", title: "Extended Marquee Tent 8", desc: "Spacious multi-pole outdoor seating setup for large memorial services.", price: 30000, images: ["/images/tents/tents8.jpg"] },
 
   // --- HEARSES & TRANSPORT (Updated Minimum Prices) ---
@@ -403,13 +401,16 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         return res.json();
       })
       .then(data => {
-        // INJECTION: Force merge the hardcoded inclusions into the live database response
         const mergedData = data.map(liveItem => {
           const fallbackMatch = fallbackProducts.find(fp => fp.id === liveItem.id);
+          const normalizedItem = liveItem.categoryId === "wreaths" && fallbackMatch
+            ? { ...liveItem, categoryId: fallbackMatch.categoryId }
+            : liveItem;
+
           if (fallbackMatch && fallbackMatch.inclusions && (!liveItem.inclusions || liveItem.inclusions.length === 0)) {
-            return { ...liveItem, inclusions: fallbackMatch.inclusions };
+            return { ...normalizedItem, inclusions: fallbackMatch.inclusions };
           }
-          return liveItem;
+          return normalizedItem;
         });
         setLiveCatalogItems(mergedData);
         setServerError(false);
