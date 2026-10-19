@@ -1,6 +1,9 @@
+import { getApiBaseUrl } from "../services/config";
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Check, Star, ShieldCheck, Box, Route as RouteIcon, MapPin, Fuel, ShoppingCart, CheckCircle } from "lucide-react";
+import { ChevronLeft, Check, Star, ShieldCheck, Box, MapPin, ShoppingCart, CheckCircle } from "lucide-react";
+import { showLocalImageFallback } from "../utils/media";
+import { getLocalDateInputValue } from "../config/business";
 
 // --- FALLBACK DATA WITH INCLUSIONS & UPDATED HEARSE PRICING ---
 const fallbackProducts = [
@@ -91,12 +94,12 @@ const fallbackProducts = [
   { id: 301, categoryId: "lowering_gears", title: "Graveside AstroTurf Setup", desc: "Lowering gear accompanied by premium artificial grass.", price: 20000, images: ["/images/lowering-gears/setup.jpeg"] },
   { id: 302, categoryId: "lowering_gears", title: "Standard Lowering Device 1", desc: "Heavy-duty metal lowering gear mechanism.", price: 15000, images: ["/images/lowering-gears/setup1.jpeg"] },
   { id: 303, categoryId: "lowering_gears", title: "Standard Lowering Device 2", desc: "Durable gear with sturdy green straps.", price: 15000, images: ["/images/lowering-gears/setup2.jpeg"] },
-  { id: 304, categoryId: "lowering_gears", title: "Standard Lowering Device 3", desc: "Metal framework gear for stable descents.", price: 15000, images: ["/images/lowering-gears/setup3.jpeg","/images/lowering-gears/setup5.jpeg"] }, 
-  { id: 305, categoryId: "lowering_gears", title: "Executive Placement Setup 4", desc: "Elegant lowering gear wrapped in green.", price: 25000, images: ["/images/lowering-gears/setup11.jpeg"] }, 
-  { id: 306, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 5", desc: "Service setup featuring a red carpet walkway.", price: 35000, images: ["/images/lowering-gears/setup12.jpeg"] }, 
-  { id: 307, categoryId: "lowering_gears", title: "Executive Walkway", desc: "Premium graveside runner placement.", price: 18000, images: ["/images/lowering-gears/setup18.jpeg", "/images/lowering-gears/setup19.jpeg", "/images/lowering-gears/setup20.jpeg", "/images/lowering-gears/setup18.jpeg"] }, 
+  { id: 304, categoryId: "lowering_gears", title: "Standard Lowering Device 3", desc: "Metal framework gear for stable descents.", price: 15000, images: ["/images/lowering-gears/setup3.jpeg","/images/lowering-gears/setup5.jpeg"] },
+  { id: 305, categoryId: "lowering_gears", title: "Executive Placement Setup 4", desc: "Elegant lowering gear wrapped in green.", price: 25000, images: ["/images/lowering-gears/setup11.jpeg"] },
+  { id: 306, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 5", desc: "Service setup featuring a red carpet walkway.", price: 35000, images: ["/images/lowering-gears/setup12.jpeg"] },
+  { id: 307, categoryId: "lowering_gears", title: "Executive Walkway", desc: "Premium graveside runner placement.", price: 18000, images: ["/images/lowering-gears/setup18.jpeg", "/images/lowering-gears/setup19.jpeg", "/images/lowering-gears/setup20.jpeg", "/images/lowering-gears/setup18.jpeg"] },
   { id: 308, categoryId: "lowering_gears", title: "VIP Red Carpet Setup", desc: "Complete outdoor red carpet experience.", price: 35000, images: ["/images/lowering-gears/setup14.jpeg"] },
-  { id: 309, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 2", desc: "Red carpet setup leading to the tent.", price: 35000, images: ["/images/lowering-gears/setup16.jpeg"] }, 
+  { id: 309, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 2", desc: "Red carpet setup leading to the tent.", price: 35000, images: ["/images/lowering-gears/setup16.jpeg"] },
   { id: 310, categoryId: "lowering_gears", title: "Executive Walkway 2", desc: "Long red carpet runner for family access.", price: 18000, images: ["/images/lowering-gears/setup17.jpeg"] },
 
   // --- TENTS ---
@@ -148,11 +151,12 @@ export default function ProductPage({ addToCart, bookRental }) {
 
   // Configuration States
   const [casketSizeIndex, setCasketSizeIndex] = useState(6); // Normal Size Default (Index 6)
-  const [rentalDetails, setRentalDetails] = useState({ 
-    pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" 
+  const [rentalDetails, setRentalDetails] = useState({
+    pickup: "", dropoff: "", pickupDate: "", returnDate: "", time: ""
   });
+  const [rentalFormError, setRentalFormError] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -195,7 +199,7 @@ export default function ProductPage({ addToCart, bookRental }) {
         const nextIndex = (currentIndex + 1) % product.images.length;
         return product.images[nextIndex];
       });
-    }, 3500); 
+    }, 3500);
     return () => clearInterval(interval);
   }, [product]);
 
@@ -221,17 +225,16 @@ export default function ProductPage({ addToCart, bookRental }) {
 
   const isCasket = product.has_sizes || product.categoryId === "casket_list";
   const isHearse = product.categoryId === "hearses";
-  
+
   const discountPercent = product.discount_percent || 0;
   const originalPrice = discountPercent > 0 ? (product.price / (1 - discountPercent / 100)) : product.price;
 
   // DYNAMIC PRICE CALCULATION
   let finalPrice = product.price;
-  
+
   if (isCasket) {
     finalPrice = product.price + casketSizes[casketSizeIndex].priceModifier;
   } else if (isHearse) {
-    const baseDailyRate = product.price;
     let days = 1;
     if (rentalDetails.pickupDate && rentalDetails.returnDate) {
       const start = new Date(rentalDetails.pickupDate);
@@ -239,26 +242,15 @@ export default function ProductPage({ addToCart, bookRental }) {
       const timeDiff = end.getTime() - start.getTime();
       if (timeDiff > 0) days = Math.ceil(timeDiff / (1000 * 3600 * 24));
     }
-    const totalBasePrice = baseDailyRate * days;
-
-    let distanceCharge = 0;
-    const distance = Number(rentalDetails.estimatedDistance) || 0;
-    if (rentalDetails.mileagePlan === "limited") {
-      const allowedDistance = 150 * days;
-      if (distance > allowedDistance) distanceCharge = (distance - allowedDistance) * 120;
-    } else if (rentalDetails.mileagePlan === "unlimited") {
-      distanceCharge = 8000 * days; 
-    }
-
-    let fuelCharge = 0;
-    if (rentalDetails.fuelPolicy === "pre_purchased") {
-        fuelCharge = 12500;
-    }
-    
-    finalPrice = totalBasePrice + distanceCharge + fuelCharge;
+    finalPrice = product.price * days;
   }
 
   const handleAction = (isBuyNow) => {
+    if (isHearse && !isFormValid) {
+      setRentalFormError("Complete the transport details below to add this request or check availability.");
+      document.querySelector("#product-rental-logistics input:invalid")?.focus();
+      return;
+    }
     let itemToAdd = { ...product, price: finalPrice };
 
     if (isCasket) {
@@ -277,15 +269,15 @@ export default function ProductPage({ addToCart, bookRental }) {
 
     setRecentlyAdded(true);
     setTimeout(() => setRecentlyAdded(false), 2000);
-    
+
     if (isBuyNow) {
-      window.location.hash = "#cart";
+      window.location.hash = isHearse ? "#booking-checkout" : "#cart";
     }
   };
 
   let isFormValid = true;
   if (isHearse) {
-    if (rentalDetails.pickup === "" || rentalDetails.dropoff === "" || rentalDetails.pickupDate === "" || rentalDetails.returnDate === "" || rentalDetails.estimatedDistance <= 0) {
+    if (rentalDetails.pickup === "" || rentalDetails.dropoff === "" || rentalDetails.pickupDate === "" || rentalDetails.returnDate === "" || rentalDetails.time === "" || rentalDetails.returnDate < rentalDetails.pickupDate) {
       isFormValid = false;
     }
   }
@@ -293,7 +285,7 @@ export default function ProductPage({ addToCart, bookRental }) {
   return (
     <div className="bg-[#F8F6F0] min-h-screen py-12">
       <div className="site-container max-w-6xl mx-auto px-4">
-        
+
         <div className="mb-8">
           <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold transition-colors">
             <ChevronLeft size={16} /> Back to Results
@@ -305,7 +297,7 @@ export default function ProductPage({ addToCart, bookRental }) {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="bg-white border border-[#E8DFD1] rounded-xl p-4 aspect-square flex items-center justify-center overflow-hidden shadow-sm transition-opacity duration-500 ease-in-out">
-              <img src={mainImage} alt={product.title} className="w-full h-full object-contain" onError={(e) => { e.target.src = "https://via.placeholder.com/600x600?text=Photo+Pending" }} />
+              <img src={mainImage} alt={product.title} className="w-full h-full object-contain" onError={showLocalImageFallback} />
             </div>
 
             {/* UPGRADED: Multi-Angle Thumbnail Boxes */}
@@ -332,11 +324,11 @@ export default function ProductPage({ addToCart, bookRental }) {
               {product.categoryId?.replace(/_/g, " ")}
             </span>
             <h1 className="text-3xl lg:text-4xl font-serif text-[#1F2E27] mb-4">{product.title}</h1>
-            
+
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#E8DFD1]">
               <div className="flex flex-col">
                 <span className="text-4xl font-bold text-[#1F2E27]">
-                  KSh {finalPrice.toLocaleString()} {isHearse && <span className="text-sm text-[#8F847C] font-normal tracking-wide">/ calculated</span>}
+                  KSh {finalPrice.toLocaleString()} {isHearse && <span className="text-sm text-[#8F847C] font-normal tracking-wide">/ base estimate</span>}
                 </span>
                 {discountPercent > 0 && (
                    <span className="text-sm text-[#8F847C] line-through mt-1">
@@ -371,12 +363,12 @@ export default function ProductPage({ addToCart, bookRental }) {
                 </h4>
                 <div className="space-y-3">
                   {casketSizes.map((size, index) => {
-                    const priceModifierText = size.priceModifier === 0 
-                      ? "Base Price" 
-                      : size.priceModifier > 0 
-                        ? `+ KSh ${size.priceModifier.toLocaleString()}` 
+                    const priceModifierText = size.priceModifier === 0
+                      ? "Base Price"
+                      : size.priceModifier > 0
+                        ? `+ KSh ${size.priceModifier.toLocaleString()}`
                         : `- KSh ${Math.abs(size.priceModifier).toLocaleString()}`;
-                        
+
                     return (
                       <label key={size.id} className={`flex items-center justify-between p-4 rounded border cursor-pointer transition-all ${casketSizeIndex === index ? "bg-[#F8F6F0] border-[#A8895C] shadow-sm" : "border-[#E8DFD1] hover:bg-[#F8F6F0]"}`}>
                         <div className="flex items-center gap-3">
@@ -393,70 +385,61 @@ export default function ProductPage({ addToCart, bookRental }) {
 
             {/* EMBEDDED RENTAL ENGINE */}
             {isHearse && (
-              <div className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 space-y-8 shadow-sm">
+              <div id="product-rental-logistics" className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 space-y-8 shadow-sm">
                  <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider flex items-center gap-2 border-b border-[#F8F6F0] pb-4">
                   <MapPin size={16} className="text-[#A8895C]"/> Logistics Configuration
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Location</label>
-                    <input type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.pickup} onChange={(e) => setRentalDetails({...rentalDetails, pickup: e.target.value})} />
+                    <input required type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.pickup} onChange={(e) => { setRentalDetails({...rentalDetails, pickup: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Destination (Burial Site)</label>
-                    <input type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.dropoff} onChange={(e) => setRentalDetails({...rentalDetails, dropoff: e.target.value})} />
+                    <input required type="text" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.dropoff} onChange={(e) => { setRentalDetails({...rentalDetails, dropoff: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Date</label>
-                    <input type="date" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.pickupDate} onChange={(e) => setRentalDetails({...rentalDetails, pickupDate: e.target.value})} />
+                    <input required type="date" min={getLocalDateInputValue()} className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.pickupDate} onChange={(e) => { setRentalDetails({...rentalDetails, pickupDate: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Return Date</label>
-                    <input type="date" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.returnDate} onChange={(e) => setRentalDetails({...rentalDetails, returnDate: e.target.value})} />
+                    <input required type="date" min={rentalDetails.pickupDate || getLocalDateInputValue()} className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.returnDate} onChange={(e) => { setRentalDetails({...rentalDetails, returnDate: e.target.value}); setRentalFormError(""); }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Requested pick-up time</label>
+                    <input required type="time" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.time} onChange={(e) => { setRentalDetails({...rentalDetails, time: e.target.value}); setRentalFormError(""); }} />
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#716860] mb-1">Mileage Structure</label>
-                    <select className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0] text-[#3D3530]" value={rentalDetails.mileagePlan} onChange={(e) => setRentalDetails({...rentalDetails, mileagePlan: e.target.value})}>
-                      <option value="limited">Capped Mileage (150 km included)</option>
-                      <option value="unlimited">Unlimited Mileage (Premium Flat Fee)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#716860] mb-1">Estimated Distance (Kilometers)</label>
-                    <input type="number" min="1" className="w-full p-3 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] bg-[#F8F6F0]" value={rentalDetails.estimatedDistance} onChange={(e) => setRentalDetails({...rentalDetails, estimatedDistance: e.target.value})} />
-                  </div>
-                </div>
+                <p className="rounded border border-[#E8DFD1] bg-[#F8F6F0] p-4 text-sm leading-relaxed text-[#716860]">The listed amount is the base vehicle rate. Route-based delivery and any applicable charges depend on distance and will be itemized in a written quote after availability is checked.</p>
+                {rentalFormError && <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{rentalFormError}</p>}
               </div>
             )}
 
             <div className="flex gap-4 mt-auto">
-              <button 
+              <button
                 onClick={() => handleAction(false)}
-                disabled={!isFormValid || recentlyAdded}
-                className={`flex-1 py-4 text-xs font-bold rounded uppercase tracking-widest transition-colors shadow-md ${(!isFormValid || recentlyAdded) ? "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#3D3530]"}`}
+                className={`flex-1 py-4 text-xs font-bold rounded uppercase tracking-widest transition-colors shadow-md ${recentlyAdded ? "bg-emerald-700 text-white" : "bg-[#1F2E27] text-white hover:bg-[#3D3530]"}`}
               >
                 {recentlyAdded ? (
                   <span className="flex items-center justify-center gap-2"><Check size={18}/> Added</span>
                 ) : (
-                  <span className="flex items-center justify-center gap-2"><ShoppingCart size={18}/> {isHearse ? "Add to Booking Requests" : "Add to Cart"}</span>
+                  <span className="flex items-center justify-center gap-2"><ShoppingCart size={18}/> {isHearse ? "Add to transport request" : "Add to selection"}</span>
                 )}
               </button>
-              
-              <button 
+
+              <button
                  onClick={() => handleAction(true)}
-                 disabled={!isFormValid}
-                className={`flex-1 py-4 text-xs font-bold text-white rounded uppercase tracking-widest transition-colors shadow-md ${!isFormValid ? "bg-[#FF8888] cursor-not-allowed" : "bg-[#FF4747] hover:bg-[#E63939]"}`}
+                className="flex-1 py-4 text-xs font-bold text-white rounded uppercase tracking-widest transition-colors shadow-md bg-[#FF4747] hover:bg-[#E63939]"
               >
-                {isHearse ? "Book Now" : "Buy Now"}
+                {isHearse ? "Check availability" : "Continue to quote"}
               </button>
             </div>
-            
+
             <div className="mt-6 flex items-center gap-3 text-sm text-[#716860] bg-white p-4 border border-[#E8DFD1] rounded shadow-sm">
                <ShieldCheck size={18} className="text-[#A8895C] shrink-0" />
-               <p>Verified Last Planner Julz Inventory. Secure Checkout.</p>
+               <p>Availability is confirmed by our team. Request a written quote before paying.</p>
             </div>
           </div>
         </div>

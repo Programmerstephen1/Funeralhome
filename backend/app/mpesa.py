@@ -2,7 +2,8 @@ import os
 import base64
 import datetime
 import requests
-import urllib.parse 
+import urllib.parse
+from urllib.parse import urlencode
 from requests.auth import HTTPBasicAuth
 import logging
 
@@ -85,16 +86,13 @@ def generate_stk_push_payload(amount, phone, email=None):
         logger.error(error)
         return {"error": error, "detail": error}
 
-    # Strip stray whitespace/newlines from callback URL
-    base_callback_url = os.getenv(
-        "MPESA_CALLBACK_URL",
-        "https://startup-simulator-v2.onrender.com/api/payments/callback"
-    ).strip()
-
-    if email:
-        callback_url = f"{base_callback_url}?email={urllib.parse.quote(email)}"
-    else:
-        callback_url = base_callback_url
+    base_callback_url = os.getenv("MPESA_CALLBACK_URL", "").strip()
+    callback_token = os.getenv("MPESA_CALLBACK_TOKEN", "").strip()
+    if not base_callback_url or not callback_token or not base_callback_url.startswith("https://"):
+        logger.error("MPESA_CALLBACK_URL (HTTPS) and MPESA_CALLBACK_TOKEN must be configured before accepting payments.")
+        return {"error": "M-Pesa payments are not configured. Please contact our team to arrange payment."}
+    separator = "&" if "?" in base_callback_url else "?"
+    callback_url = f"{base_callback_url}{separator}{urlencode({'token': callback_token})}"
 
     stk_push_url = os.getenv(
         "MPESA_STK_PUSH_URL", 
@@ -125,7 +123,7 @@ def generate_stk_push_payload(amount, phone, email=None):
     }
 
     try:
-        response = requests.post(stk_push_url, json=payload, headers=headers)
+        response = requests.post(stk_push_url, json=payload, headers=headers, timeout=20)
         response.raise_for_status()
         data = response.json()
         

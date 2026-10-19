@@ -4,6 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { ChevronLeft, Mail, Lock, AlertCircle } from "lucide-react";
 import { getApiBaseUrl } from "../services/config";
 import api from "../services/api";
+import { createOAuthState, createPkcePair } from "../utils/oauth";
 
 export default function LoginPage() {
   const locationContext = useContext(UNSAFE_LocationContext);
@@ -12,13 +13,30 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [accountNotice, setAccountNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
   const API_URL = getApiBaseUrl();
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID;
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const hasRouterContext = Boolean(locationContext && navigationContext);
+
+  useEffect(() => {
+    const verifiedEmail = localStorage.getItem("verificationSuccessEmail");
+    if (verifiedEmail) {
+      setAccountNotice(`${verifiedEmail} is verified. You can sign in now.`);
+      setEmail(verifiedEmail);
+      localStorage.removeItem("verificationSuccessEmail");
+    } else if (localStorage.getItem("passwordResetSuccess") === "true") {
+      setAccountNotice("Your password was updated. Sign in with your new password.");
+      localStorage.removeItem("passwordResetSuccess");
+    }
+  }, []);
+  const postLoginPath = location.state?.from
+    ? `${location.state.from.pathname || "/"}${location.state.from.search || ""}${location.state.from.hash || ""}`
+    : "/";
 
   const navigate = useCallback((target) => {
     const navigator = navigationContext?.navigator;
@@ -49,28 +67,36 @@ export default function LoginPage() {
     if (hash && hash.includes("access_token=")) {
       const params = new URLSearchParams(hash.substring(1));
       const accessToken = params.get("access_token");
-      if (accessToken) {
+      const expectedState = sessionStorage.getItem("facebook_oauth_state");
+      if (accessToken && expectedState && params.get("state") === expectedState) {
+        sessionStorage.removeItem("facebook_oauth_state");
         processSocialLogin("facebook", { token: accessToken });
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (accessToken) {
+        setError("Facebook sign-in could not be verified. Please try again.");
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
     
     const search = window.location.search;
-    if (search && search.includes("code=") && search.includes("state=twitter")) {
+    if (search && search.includes("code=")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
-      
-      const processedCode = sessionStorage.getItem("twitter_auth_code");
-      
-      if (code && processedCode !== code) {
-        sessionStorage.setItem("twitter_auth_code", code); 
-        
+      const expectedState = sessionStorage.getItem("twitter_oauth_state");
+      const verifier = sessionStorage.getItem("twitter_oauth_verifier");
+      if (code && expectedState && params.get("state") === expectedState && verifier) {
+        sessionStorage.removeItem("twitter_oauth_state");
+        sessionStorage.removeItem("twitter_oauth_verifier");
         processSocialLogin("twitter", { 
             code: code, 
             client_id: TWITTER_CLIENT_ID, 
-            redirect_uri: `${window.location.origin}${window.location.pathname}` 
+            redirect_uri: `${window.location.origin}${window.location.pathname}`,
+            code_verifier: verifier,
         });
         
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (code) {
+        setError("X sign-in could not be verified. Please try again.");
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -100,7 +126,7 @@ export default function LoginPage() {
         localStorage.setItem("userEmail", data.email);
         localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
         window.dispatchEvent(new Event("storage"));
-        navigate(data.is_admin ? "/admin" : "/");
+        navigate(data.is_admin ? "/admin" : postLoginPath);
       } else {
         setError(data.message || `${provider} authentication failed.`);
       }
@@ -120,18 +146,23 @@ export default function LoginPage() {
 
     try {
       const data = await api.login(email, password);
-      localStorage.setItem("userEmail", email);
+      const normalizedEmail = (data.email || email).trim().toLowerCase();
+      localStorage.setItem("userEmail", normalizedEmail);
       localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
+      localStorage.removeItem("pendingVerificationEmail");
 
       window.dispatchEvent(new Event("storage"));
 
       if (data.is_admin) {
         navigate("/admin");
       } else {
-        navigate("/");
+        navigate(postLoginPath);
       }
     } catch (err) {
       console.error(err);
+      if ((err.message || "").toLowerCase().includes("verify your email")) {
+        localStorage.setItem("pendingVerificationEmail", email);
+      }
       setError(err.message || "Network error. Please ensure the server is running.");
     } finally {
       setLoading(false);
@@ -144,23 +175,40 @@ export default function LoginPage() {
     onError: () => setError("Google authentication was cancelled or failed.")
   });
 
+  const handleGoogleLogin = () => {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "missing-client-id") {
+      setError("Google sign-in is not configured. Please use email and password for now.");
+      return;
+    }
+    googleLogin();
+  };
+
   const handleFacebookLogin = () => {
     if (!FB_APP_ID || FB_APP_ID === "your_facebook_app_id_here") {
       setError("Facebook API Key has not been configured by the administrator yet.");
       return;
     }
+    const state = createOAuthState();
+    sessionStorage.setItem("facebook_oauth_state", state);
     const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
-    window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile`;
+    window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile&state=${encodeURIComponent(state)}`;
   };
 
-  const handleTwitterLogin = () => {
+  const handleTwitterLogin = async () => {
     if (!TWITTER_CLIENT_ID || TWITTER_CLIENT_ID === "your_twitter_client_id_here") {
       setError("X (Twitter) API Key has not been configured by the administrator yet.");
       return;
     }
-    const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
-    const codeChallenge = "challenge12345678901234567890123456789012345";
-    window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=twitter&code_challenge=${codeChallenge}&code_challenge_method=plain`;
+    try {
+      const state = createOAuthState();
+      const { verifier, challenge } = await createPkcePair();
+      sessionStorage.setItem("twitter_oauth_state", state);
+      sessionStorage.setItem("twitter_oauth_verifier", verifier);
+      const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+      window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256`;
+    } catch (err) {
+      setError("X sign-in could not be started in this browser. Please use email and password.");
+    }
   };
 
   return (
@@ -173,16 +221,18 @@ export default function LoginPage() {
           </button>
           <h2 className="text-center text-3xl font-serif text-[#1F2E27]">Sign in to your account</h2>
           <p className="mt-2 text-center text-sm text-[#716860]">
-            Manage your memorial arrangements securely.
+            Manage your account, bookings, and settings.
           </p>
         </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded text-sm flex items-center gap-3 animate-fadeIn">
             <AlertCircle size={18} className="shrink-0" />
-            <p>{error}</p>
+            <div><p>{error}</p>{error.toLowerCase().includes("verify your email") && <Link to="/verify" className="mt-2 inline-block font-semibold underline">Continue to email verification</Link>}</div>
           </div>
         )}
+
+        {accountNotice && <div role="status" className="rounded border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{accountNotice}</div>}
 
         <form className="mt-8 space-y-6" onSubmit={handleStandardLogin}>
           <div className="space-y-4">
@@ -195,6 +245,7 @@ export default function LoginPage() {
                 <input 
                   type="email" 
                   required 
+                  autoComplete="email"
                   className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" 
                   placeholder="Enter your email"
                   value={email}
@@ -219,6 +270,7 @@ export default function LoginPage() {
                 <input 
                   type="password" 
                   required 
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" 
                   placeholder="••••••••"
                   value={password}
@@ -245,7 +297,8 @@ export default function LoginPage() {
 
           <div className="mt-6 grid grid-cols-1 gap-3">
             <button 
-              onClick={() => googleLogin()}
+              type="button"
+              onClick={handleGoogleLogin}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -259,6 +312,7 @@ export default function LoginPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <button 
+                type="button"
                 onClick={handleFacebookLogin}
                 className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"
               >
@@ -269,6 +323,7 @@ export default function LoginPage() {
               </button>
 
               <button 
+                type="button"
                 onClick={handleTwitterLogin}
                 className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors"
               >

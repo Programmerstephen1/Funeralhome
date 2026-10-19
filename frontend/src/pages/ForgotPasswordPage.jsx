@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getApiBaseUrl } from "../services/config";
 import { KeyRound, Mail, ArrowRight, Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -12,18 +13,18 @@ export default function ForgotPasswordPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+      const API_URL = getApiBaseUrl();
       const response = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), purpose: "reset" }),
       });
 
       const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        localStorage.setItem("resetEmail", email);
-        setStatus({ type: "success", message: data.message || "Reset code sent. Please check your inbox." });
+        localStorage.setItem("resetEmail", email.trim().toLowerCase());
+        setStatus({ type: "success", message: data.message || "If an account exists for this email, a reset code will be sent." });
         window.location.hash = "#reset-password";
       } else {
         setStatus({ type: "error", message: data.message || "Failed to send reset code." });

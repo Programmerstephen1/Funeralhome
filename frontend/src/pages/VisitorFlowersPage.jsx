@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../services/config";
 import React, { useState, useEffect } from "react";
 import { Flower, ArrowLeft, Plus, CreditCard, Smartphone, AlertCircle, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom"; 
@@ -18,8 +19,55 @@ export default function VisitorFlowersPage({ dynamicId }) {
   const [phone, setPhone] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
+  const [pendingFlower, setPendingFlower] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
+
+  useEffect(() => {
+    if (!checkoutRequestId || !pendingFlower) return undefined;
+    let attempts = 0;
+    const interval = window.setInterval(async () => {
+      attempts += 1;
+      try {
+        const response = await fetch(`${API_URL}/api/payments/status/${encodeURIComponent(checkoutRequestId)}`);
+        const status = await response.json().catch(() => ({}));
+        if (status.status === "completed") {
+          window.clearInterval(interval);
+          setFlowers((current) => [{ ...pendingFlower, id: Date.now(), date: new Date().toLocaleDateString() }, ...current]);
+          setPendingFlower(null);
+          setCheckoutRequestId(null);
+          setNewFlower({ from: "", arrangement: "", price: 0 });
+          setPhone("");
+          setShowForm(false);
+          setPaymentMessage("Payment confirmed. Your tribute has been added in this browser.");
+          setIsProcessing(false);
+        } else if (status.status === "failed") {
+          window.clearInterval(interval);
+          setPendingFlower(null);
+          setCheckoutRequestId(null);
+          setPaymentError("The payment was cancelled or could not be completed. You can try again.");
+          setIsProcessing(false);
+        } else if (attempts >= 40) {
+          window.clearInterval(interval);
+          setPendingFlower(null);
+          setCheckoutRequestId(null);
+          setPaymentError("We haven’t received payment confirmation yet. Check your M-Pesa message or call us before trying again.");
+          setIsProcessing(false);
+        }
+      } catch {
+        if (attempts >= 40) {
+          window.clearInterval(interval);
+          setPendingFlower(null);
+          setCheckoutRequestId(null);
+          setPaymentError("We couldn’t confirm the payment status. Check your M-Pesa message or call us before trying again.");
+          setIsProcessing(false);
+        }
+      }
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [checkoutRequestId, pendingFlower, API_URL]);
 
   const arrangements = [
     { name: "White Roses & Lilies", desc: "Classic elegance", price: 1500 },
@@ -51,34 +99,29 @@ export default function VisitorFlowersPage({ dynamicId }) {
 
     setIsProcessing(true);
     setPaymentError("");
+    setPaymentMessage("");
 
     try {
       const token = localStorage.getItem("token") || "";
-      const userEmail = localStorage.getItem("userEmail") || "guest@example.com";
+      if (!token) throw new Error("Please sign in before paying for a floral tribute.");
 
       const paymentResponse = await fetch(`${API_URL}/api/payments/stkpush`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ amount: newFlower.price, phone: phone, email: userEmail }),
+        body: JSON.stringify({ amount: newFlower.price, phone }),
       });
 
-      // STRICT API ENFORCEMENT: No more simulations
+      const result = await paymentResponse.json().catch(() => ({}));
       if (!paymentResponse.ok) {
-        const errorData = await paymentResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || "M-Pesa transaction failed to initiate.");
+        throw new Error(result.message || result.error || "M-Pesa transaction failed to initiate.");
       }
-
-      setFlowers((prev) => [
-        { id: Date.now(), from: newFlower.from, arrangement: newFlower.arrangement, date: new Date().toLocaleDateString() },
-        ...prev,
-      ]);
-      setNewFlower({ from: "", arrangement: "", price: 0 });
-      setPhone("");
-      setShowForm(false);
+      if (!result.checkout_request_id) throw new Error("The payment provider did not return a confirmation reference. Please call us before trying again.");
+      setPendingFlower({ from: newFlower.from, arrangement: newFlower.arrangement });
+      setCheckoutRequestId(result.checkout_request_id);
+      setPaymentMessage("Payment prompt sent. Enter your M-Pesa PIN and keep this page open while we confirm it.");
       
     } catch (error) {
       setPaymentError(error.message || "Network error. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -124,7 +167,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
           {memorialData.donationNumber && (
             <div className="mt-6 flex items-center gap-2 bg-[#1F2E27] text-white px-4 py-2 rounded-full text-xs font-bold tracking-widest shadow-md">
               <ShieldCheck size={16} className="text-[#A8895C]"/>
-              FUNDS WILL BE REMITTED DIRECTLY TO FAMILY TREASURER: {memorialData.donationNumber.substring(0,4)} XXX {memorialData.donationNumber.substring(7)}
+              FAMILY TREASURER CONTACT (CONFIRM DETAILS BEFORE SENDING): {memorialData.donationNumber.substring(0,4)} XXX {memorialData.donationNumber.substring(7)}. Site payments are handled separately.
             </div>
           )}
         </section>
@@ -182,6 +225,8 @@ export default function VisitorFlowersPage({ dynamicId }) {
                 <AlertCircle size={14} className="shrink-0 mt-0.5" /> {paymentError}
               </div>
             )}
+            {paymentMessage && <p className="rounded border border-[#E8DFD1] bg-[#F8F6F0] p-3 text-sm text-[#3D3530]" role="status">{paymentMessage}</p>}
+            {!localStorage.getItem("token") && <p className="text-sm text-[#3D3530]">You’ll need to <Link to="/login" className="font-semibold underline">sign in</Link> before paying.</p>}
 
             <div>
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Your Name</label>

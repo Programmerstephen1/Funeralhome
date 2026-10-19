@@ -38,7 +38,10 @@ class ApiService {
       if (!response.ok) {
         if (response.status === 401) this.logout();
         const message = payload && typeof payload === "object" ? payload.message || payload.error : payload;
-        throw new Error(message || `API error: ${response.status}`);
+        const error = new Error(message || `API error: ${response.status}`);
+        error.status = response.status;
+        error.payload = payload;
+        throw error;
       }
 
       if (!isJson) {
@@ -74,20 +77,24 @@ class ApiService {
   async register(email, password) {
     return this.request("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
     });
   }
 
-  async sendOtp(email) {
+  async sendOtp(email, purpose = "verify") {
     return this.request("/api/auth/send-otp", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: email.trim().toLowerCase(), purpose }),
     });
   }
 
   logout() {
     localStorage.removeItem("token");
-    window.location.hash = "#login"; 
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("isAdmin");
+    localStorage.removeItem("userProfilePic");
+    window.dispatchEvent(new Event("storage"));
+    window.location.hash = "#login";
   }
 
   async healthCheck() { return this.request("/api/health"); }

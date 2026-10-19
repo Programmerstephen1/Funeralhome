@@ -51,7 +51,7 @@ with app.app_context():
             # Send email with QR
             admin = app.config.get('MAIL_USERNAME')
             if job.user_email:
-                msg = Message(subject='Your Digital Eulogy is Ready', sender=("Last Planner Julz Hub", admin), recipients=[job.user_email])
+                msg = Message(subject='Your Digital Eulogy is Ready', sender=("Last Planner Julz Funeral Planning Hub", admin), recipients=[job.user_email])
                 msg.html = f"<p>Your eulogy is ready. Use the QR below to view or print the memorial tribute.</p><p><img src='cid:qrimage' alt='QR' /></p>"
                 msg.attach('eulogy_qr.png', 'image/png', qr_bytes, 'inline', headers=[['Content-ID','<qrimage>']])
                 try:

@@ -10,8 +10,9 @@ export const getApiBaseUrl = () => {
 
   if (configured) {
     const normalized = configured.replace(/\/$/, "");
-    if (isLocalHost || normalized.includes("localhost") || normalized.includes("127.0.0.1")) {
-      return "http://localhost:5000";
+    const pointsAtLocalApi = /:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/i.test(normalized);
+    if (pointsAtLocalApi && !isLocalHost) {
+      return window.location.origin;
     }
     return normalized;
   }

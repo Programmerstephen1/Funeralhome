@@ -152,7 +152,7 @@ with app.app_context():
             title=item["title"],
             description=item["desc"],
             price=item["price"],
-            dispatch_location="Nairobi Central"
+            dispatch_location="Kahawa West"
         )
         db.session.add(product)
         db.session.flush()
@@ -168,8 +168,8 @@ with app.app_context():
             spec = ProductSpecification(product_id=product.id, key_name=key, value=value)
             db.session.add(spec)
                 
-        # Universal Delivery Estimate
-        logistics_spec = ProductSpecification(product_id=product.id, key_name="Delivery Estimate", value="Ruiru & Nairobi (1-2 Days), Other Counties (3-8 Days)")
+        # Delivery charges and timing vary by route and must be confirmed with the customer.
+        logistics_spec = ProductSpecification(product_id=product.id, key_name="Delivery", value="Route charge and delivery timing confirmed in a written quote based on destination and availability.")
         db.session.add(logistics_spec)
 
     db.session.commit()

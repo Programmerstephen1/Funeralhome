@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../services/config";
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Cropper from "react-easy-crop";
@@ -48,9 +49,12 @@ export default function SettingsPage() {
   const activeTab = searchParams.get("tab") === "account" ? "account" : "profile";
 
   const [profile, setProfile] = useState({ first_name: "", last_name: "", phone: "", profile_picture: "", email: "" });
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false); 
   const [imgError, setImgError] = useState(false);   
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -64,7 +68,7 @@ export default function SettingsPage() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -119,18 +123,26 @@ export default function SettingsPage() {
 
   const handlePasswordSave = async (e) => {
     e.preventDefault();
-    if (password.length < 6) return showMessage("error", "Password must be at least 6 characters.");
+    if (!currentPassword) return showMessage("error", "Enter your current password to continue.");
+    if (password.length < 8) return showMessage("error", "Choose a password with at least 8 characters.");
+    if (new TextEncoder().encode(password).length > 72) return showMessage("error", "Password must be 72 bytes or fewer.");
+    if (password !== confirmPassword) return showMessage("error", "The new passwords do not match.");
     setSaving(true);
     try {
       const res = await fetch(`${API_URL}/api/user/password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ current_password: currentPassword, password })
       });
       if (res.ok) {
         showMessage("success", "Password updated successfully.");
+        setCurrentPassword("");
         setPassword("");
-      } else showMessage("error", "Failed to update password.");
+        setConfirmPassword("");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showMessage("error", data.error || data.message || "Failed to update password.");
+      }
     } catch (err) {
       showMessage("error", "Network error while updating password.");
     } finally {
@@ -202,20 +214,34 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm("Are you absolutely sure? This action is permanent and deletes all your data.");
+    const confirmed = window.confirm("Delete your account, linked orders, reviews, eulogies, and consultation requests? Payment totals and status records are kept with your email and phone removed. Memorial workspaces saved in this browser are separate and will remain.");
     if (!confirmed) return;
     
     try {
+      setDeleting(true);
       const res = await fetch(`${API_URL}/api/user/account`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
-        localStorage.clear();
+        const email = localStorage.getItem("userEmail")?.trim().toLowerCase();
+        if (email) {
+          for (const key of Object.keys(localStorage)) {
+            if ((key.startsWith("cart_") || key.startsWith("bookings_")) && key.slice(key.indexOf("_") + 1).trim().toLowerCase() === email) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+        ["token", "userEmail", "isAdmin", "userProfilePic", "pendingVerificationEmail", "pendingVerificationNotice", "resetEmail", "verificationSuccessEmail"].forEach((key) => localStorage.removeItem(key));
         window.location.href = "/";
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showMessage("error", data.error || data.message || "We could not delete your account. Please try again.");
       }
     } catch (err) {
       showMessage("error", "Failed to delete account.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -367,8 +393,16 @@ export default function SettingsPage() {
               
               <form onSubmit={handlePasswordSave} className="space-y-5">
                 <div>
+                  <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Current Password</label>
+                  <input type="password" autoComplete="current-password" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter your current password" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">New Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
+                  <input type="password" autoComplete="new-password" minLength={8} maxLength={72} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Confirm New Password</label>
+                  <input type="password" autoComplete="new-password" minLength={8} maxLength={72} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm your new password" className="w-full p-3.5 border border-[#E8DFD1] bg-white rounded-xl focus:border-[#A8895C] transition-colors outline-none font-medium" />
                 </div>
                 
                 <div className="pt-2">
@@ -386,11 +420,11 @@ export default function SettingsPage() {
               </div>
               
               <p className="text-sm text-[#DC2626] mb-6 font-medium leading-relaxed">
-                Permanently delete your account and everything you own. You will lose access to all related content and files.
+                Deletes your account, linked orders, reviews, eulogies, and consultation requests. Payment totals and status are retained with your email and phone removed. Browser-only memorial workspaces are separate and remain on this device.
               </p>
               
-              <button onClick={handleDeleteAccount} className="w-full flex items-center justify-center gap-2 bg-[#DC2626] text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-red-700 transition-colors shadow-md">
-                <Trash2 size={16} /> Delete Account
+              <button disabled={deleting} onClick={handleDeleteAccount} className="w-full flex items-center justify-center gap-2 bg-[#DC2626] text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-red-700 transition-colors shadow-md disabled:opacity-60">
+                <Trash2 size={16} /> {deleting ? "Deleting Account…" : "Delete Account"}
               </button>
             </div>
             

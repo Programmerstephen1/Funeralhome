@@ -11,6 +11,7 @@ frontend/.DS_Store
 frontend/.vite/
 
 # Backend
+/.env
 backend/venv/
 backend/.venv/
 **/__pycache__/

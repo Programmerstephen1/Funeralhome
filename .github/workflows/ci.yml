@@ -22,7 +22,7 @@ jobs:
 
       - name: Run backend tests
         run: |
-          pytest backend/tests -q
+          python -m unittest discover -s backend/tests -v
 
   frontend:
     runs-on: ubuntu-latest

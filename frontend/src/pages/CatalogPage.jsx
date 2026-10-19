@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Fuel, Route as RouteIcon, Phone, Mail, CheckCircle, Camera, Video, PlayCircle, Star, AlertCircle, Zap, Box } from "lucide-react";
+import { ShieldCheck, ShoppingCart, Check, ChevronLeft, ChevronRight, X, Calendar, MapPin, Clock, Phone, Mail, CheckCircle, Camera, Video, PlayCircle, Star, Zap, Box } from "lucide-react";
+import { getApiBaseUrl } from "../services/config";
+import { showLocalImageFallback } from "../utils/media";
+import { getLocalDateInputValue } from "../config/business";
 
 // --- 1. The Categories & Sub-Categories ---
 const categories = [
-  { 
-    id: "caskets_urns", 
-    title: "Caskets & Urns", 
-    desc: "A carefully curated selection of premium quality caskets and resting vessels.", 
+  {
+    id: "caskets_urns",
+    title: "Caskets & Urns",
+    desc: "A carefully curated selection of premium quality caskets and resting vessels.",
     images: ["/images/caskets/casket3.jpeg"],
     subcategories: [
       { id: "casket_list", title: "Caskets", desc: "Premium wood and metal caskets for dignified burials.", images: ["/images/caskets/casket3.jpeg"] },
       { id: "urns", title: "Cremation Urns", desc: "Beautifully crafted vessels to preserve the ashes of your loved ones.", images: ["/images/urns/images(0).jpg"] }
     ]
   },
-  { 
-    id: "wreaths", 
-    title: "Floral Wreaths", 
-    desc: "Beautifully arranged fresh floral tributes to honor your loved one.", 
+  {
+    id: "wreaths",
+    title: "Floral Wreaths",
+    desc: "Beautifully arranged fresh floral tributes to honor your loved one.",
     images: ["/images/wreaths/wreath1.jpeg"],
     subcategories: [
       { id: "wreath_full_set", title: "Full Set", desc: "Complete and expansive floral arrangements.", images: ["/images/wreaths/wreath1.jpeg"] },
@@ -29,10 +32,10 @@ const categories = [
       { id: "wreath_standard", title: "Standard Wreaths", desc: "Classic circular and standing wreaths.", images: ["/images/wreaths/wreath7.jpeg"] }
     ]
   },
-  { 
-    id: "setup", 
-    title: "Service Setup", 
-    desc: "Complete outdoor setup including premium tents, lowering gears, and decor.", 
+  {
+    id: "setup",
+    title: "Service Setup",
+    desc: "Complete outdoor setup including premium tents, lowering gears, and decor.",
     images: ["/images/tents/tent3.jpeg", "/images/lowering-gears/setup10(0).jpeg"],
     subcategories: [
       { id: "lowering_gears", title: "Lowering Gear", desc: "Professional metal lowering gear and graveside decor.", images: ["/images/lowering-gears/setup11.jpeg"] },
@@ -134,12 +137,12 @@ export const fallbackProducts = [
   { id: 301, categoryId: "lowering_gears", title: "Graveside AstroTurf Setup", desc: "Lowering gear accompanied by premium artificial grass.", price: 20000, images: ["/images/lowering-gears/setup.jpeg"] },
   { id: 302, categoryId: "lowering_gears", title: "Standard Lowering Device 1", desc: "Heavy-duty metal lowering gear mechanism.", price: 15000, images: ["/images/lowering-gears/setup1.jpeg"] },
   { id: 303, categoryId: "lowering_gears", title: "Standard Lowering Device 2", desc: "Durable gear with sturdy green straps.", price: 15000, images: ["/images/lowering-gears/setup2.jpeg"] },
-  { id: 304, categoryId: "lowering_gears", title: "Standard Lowering Device 3", desc: "Metal framework gear for stable descents.", price: 15000, images: ["/images/lowering-gears/setup3.jpeg","/images/lowering-gears/setup5.jpeg"] }, 
-  { id: 305, categoryId: "lowering_gears", title: "Executive Placement Setup 4", desc: "Elegant lowering gear wrapped in green.", price: 25000, images: ["/images/lowering-gears/setup11.jpeg"] }, 
-  { id: 306, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 5", desc: "Service setup featuring a red carpet walkway.", price: 35000, images: ["/images/lowering-gears/setup12.jpeg"] }, 
-  { id: 307, categoryId: "lowering_gears", title: "Executive Walkway", desc: "Premium graveside runner placement.", price: 18000, images: ["/images/lowering-gears/setup18.jpeg", "/images/lowering-gears/setup19.jpeg", "/images/lowering-gears/setup20.jpeg", "/images/lowering-gears/setup18.jpeg"] }, 
+  { id: 304, categoryId: "lowering_gears", title: "Standard Lowering Device 3", desc: "Metal framework gear for stable descents.", price: 15000, images: ["/images/lowering-gears/setup3.jpeg","/images/lowering-gears/setup5.jpeg"] },
+  { id: 305, categoryId: "lowering_gears", title: "Executive Placement Setup 4", desc: "Elegant lowering gear wrapped in green.", price: 25000, images: ["/images/lowering-gears/setup11.jpeg"] },
+  { id: 306, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 5", desc: "Service setup featuring a red carpet walkway.", price: 35000, images: ["/images/lowering-gears/setup12.jpeg"] },
+  { id: 307, categoryId: "lowering_gears", title: "Executive Walkway", desc: "Premium graveside runner placement.", price: 18000, images: ["/images/lowering-gears/setup18.jpeg", "/images/lowering-gears/setup19.jpeg", "/images/lowering-gears/setup20.jpeg", "/images/lowering-gears/setup18.jpeg"] },
   { id: 308, categoryId: "lowering_gears", title: "VIP Red Carpet Setup", desc: "Complete outdoor red carpet experience.", price: 35000, images: ["/images/lowering-gears/setup14.jpeg"] },
-  { id: 309, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 2", desc: "Red carpet setup leading to the tent.", price: 35000, images: ["/images/lowering-gears/setup16.jpeg"] }, 
+  { id: 309, categoryId: "lowering_gears", title: "VIP Red Carpet Setup 2", desc: "Red carpet setup leading to the tent.", price: 35000, images: ["/images/lowering-gears/setup16.jpeg"] },
   { id: 310, categoryId: "lowering_gears", title: "Executive Walkway 2", desc: "Long red carpet runner for family access.", price: 18000, images: ["/images/lowering-gears/setup17.jpeg"] },
 
   // --- TENTS ---
@@ -191,7 +194,7 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
     if (!images || images.length <= 1) return;
     const interval = setInterval(() => {
       setImgIndex((prev) => (prev + 1) % images.length);
-    }, 3500); 
+    }, 3500);
     return () => clearInterval(interval);
   }, [images]);
 
@@ -219,18 +222,18 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
 
   return (
     <div className={`w-full ${aspectClass} bg-white overflow-hidden relative group/slider`}>
-      <img 
-        src={images[imgIndex]} 
+      <img
+        src={images[imgIndex]}
         alt={altText}
         loading="lazy"
-        onError={(e) => { e.target.src = "https://via.placeholder.com/400x400?text=Photo+Pending" }} 
+        onError={showLocalImageFallback}
         className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700"
       />
-      
+
       {images.length > 1 && (
         <>
-          <button onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 transition-all z-10 shadow-sm"><ChevronLeft size={16} /></button>
-          <button onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 transition-all z-10 shadow-sm"><ChevronRight size={16} /></button>
+          <button type="button" aria-label={`Previous ${altText} image`} onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronLeft size={16} /></button>
+          <button type="button" aria-label={`Next ${altText} image`} onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronRight size={16} /></button>
         </>
       )}
     </div>
@@ -240,31 +243,28 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
 // --- COMPONENT: Category Card ---
 const CategoryCard = React.memo(function CategoryCard({ item, onClick }) {
   return (
-    <button 
-      onClick={onClick}
-      className="group flex w-full flex-col overflow-hidden border border-[#E8DFD1] bg-white text-left transition-all duration-300 hover:shadow-lg rounded"
-    >
+    <div className="group flex w-full flex-col overflow-hidden border border-[#E8DFD1] bg-white text-left transition-all duration-300 hover:shadow-lg rounded">
       <div className="relative">
         <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-[4/3]" />
       </div>
-      <div className="flex w-full flex-grow flex-col p-4">
+      <button type="button" onClick={onClick} className="flex w-full flex-grow flex-col p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A8895C]">
         <h3 className="mb-2 text-lg font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
           {item.title}
         </h3>
         <p className="text-xs text-[#716860] line-clamp-2">
           {item.desc}
         </p>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 });
 
 // --- COMPONENT: Product Card ---
 const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAddToCart, onOpenRentalModal, onOpenCasketModal }) {
-  
+
   const ratingScore = item.average_rating || 0;
   const reviewCount = item.review_count || 0;
-  
+
   const discountPercent = item.discount_percent || 0;
   const originalPrice = discountPercent > 0 ? (item.price / (1 - discountPercent / 100)) : item.price;
 
@@ -303,12 +303,12 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
       <Link to={`/product/${item.id}`} className="relative block border-b border-[#F8F6F0]">
         <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-square" />
       </Link>
-      
+
       <div className="flex flex-grow flex-col p-4">
         <Link to={`/product/${item.id}`} className="text-sm font-semibold text-[#1F2E27] hover:text-[#A8895C] transition-colors line-clamp-2 mb-2 leading-tight h-10">
           {item.title}
         </Link>
-        
+
         <div className="flex flex-col mb-2 h-10 justify-center">
           <span className={`text-xl font-bold ${discountPercent > 0 ? 'text-[#FF4747]' : 'text-[#1F2E27]'}`}>
             KSh {item.price.toLocaleString()}
@@ -344,23 +344,24 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
         )}
 
         <div className="mt-auto flex gap-2">
-          <button 
+          <button
+            type="button"
             onClick={() => handlePrimaryAction(false)}
-            disabled={recentlyAdded === item.id}
             className={`flex-1 py-2 text-xs font-bold rounded transition-colors ${
-              recentlyAdded === item.id 
-                ? "bg-green-600 text-white" 
+              recentlyAdded === item.id
+                ? "bg-green-600 text-white"
                 : "bg-[#F5A623] text-white hover:bg-[#E09612]"
             }`}
           >
-            {recentlyAdded === item.id ? <span className="flex items-center justify-center gap-1"><Check size={14}/> Added</span> : "Add to Cart"}
+            {recentlyAdded === item.id ? <span className="flex items-center justify-center gap-1"><Check size={14}/> Added</span> : "Add to selection"}
           </button>
-          
-          <button 
+
+          <button
+            type="button"
              onClick={() => handlePrimaryAction(true)}
             className="flex-1 py-2 text-xs font-bold bg-[#FF4747] text-white rounded hover:bg-[#E63939] transition-colors"
           >
-            {item.categoryId === "hearses" ? "Book Now" : "Buy Now"}
+            {item.categoryId === "hearses" ? "Request availability" : "Request quote"}
           </button>
         </div>
       </div>
@@ -383,16 +384,60 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   const [selectedCasket, setSelectedCasket] = useState(null);
   const [casketSizeIndex, setCasketSizeIndex] = useState(6); // Default to index 6 ('Normal')
   const [buyNowRedirect, setBuyNowRedirect] = useState(false);
-  
+
   const [liveCatalogItems, setLiveCatalogItems] = useState([]);
-  const [serverError, setServerError] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-  
-  const [rentalDetails, setRentalDetails] = useState({ 
-    pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" 
+  const [catalogSource, setCatalogSource] = useState("checking");
+  const API_URL = getApiBaseUrl();
+
+  const [rentalDetails, setRentalDetails] = useState({
+    pickup: "", dropoff: "", pickupDate: "", returnDate: "", time: ""
   });
+  const [rentalFormError, setRentalFormError] = useState("");
 
   const [visibleProducts, setVisibleProducts] = useState([]);
+  const [inquiryForms, setInquiryForms] = useState({
+    catering: { name: "", email: "", phone: "", details: "", consent: false },
+    media: { name: "", email: "", phone: "", details: "", consent: false },
+  });
+  const [inquiryState, setInquiryState] = useState({ catering: "", media: "" });
+  const [inquiryErrors, setInquiryErrors] = useState({ catering: "", media: "" });
+  const [inquiryBusy, setInquiryBusy] = useState({ catering: false, media: false });
+
+  const updateInquiry = (kind, field, value) => {
+    setInquiryForms((current) => ({ ...current, [kind]: { ...current[kind], [field]: value } }));
+    setInquiryErrors((current) => ({ ...current, [kind]: "" }));
+  };
+
+  const submitInquiry = async (event, kind) => {
+    event.preventDefault();
+    const inquiry = inquiryForms[kind];
+    if (!inquiry.consent) {
+      setInquiryErrors((current) => ({ ...current, [kind]: "Please agree to be contacted about this request." }));
+      return;
+    }
+    setInquiryBusy((current) => ({ ...current, [kind]: true }));
+    setInquiryErrors((current) => ({ ...current, [kind]: "" }));
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/consultations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: inquiry.name,
+          email: inquiry.email,
+          phone: inquiry.phone,
+          questions: `${kind === "catering" ? "Catering quote" : "Media callback"}: ${inquiry.details || "Please contact me to discuss this service."}`,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "We could not save your request. Please call us.");
+      setInquiryState((current) => ({ ...current, [kind]: result.message || "Your request has been received." }));
+      setInquiryForms((current) => ({ ...current, [kind]: { name: "", email: "", phone: "", details: "", consent: false } }));
+    } catch (error) {
+      setInquiryErrors((current) => ({ ...current, [kind]: error.message || "Please try again or call us." }));
+    } finally {
+      setInquiryBusy((current) => ({ ...current, [kind]: false }));
+    }
+  };
 
   useEffect(() => {
     fetch(`${API_URL}/api/products`)
@@ -413,11 +458,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
           return normalizedItem;
         });
         setLiveCatalogItems(mergedData);
-        setServerError(false);
+        setCatalogSource(mergedData.length > 0 ? "api" : "built-in");
       })
       .catch(err => {
         console.error("Failed to fetch API products:", err);
-        setServerError(true);
+        setCatalogSource("built-in");
       });
   }, [API_URL]);
 
@@ -435,7 +480,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         setActiveSubCategory(null);
         return;
       }
-      
+
       for (let i = 0; i < categories.length; i++) {
         let cat = categories[i];
         if (cat.subcategories) {
@@ -511,7 +556,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   // --- CASKET MODAL HANDLERS ---
   const handleOpenCasketModal = (casket, redirect) => {
     setSelectedCasket(casket);
-    setCasketSizeIndex(6); 
+    setCasketSizeIndex(6);
     setBuyNowRedirect(redirect);
     setShowCasketModal(true);
   };
@@ -526,12 +571,12 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
     };
 
     addToCart(customizedCasket);
-    
+
     setRecentlyAdded(selectedCasket.id);
     setTimeout(() => setRecentlyAdded(null), 2000);
-    
+
     setShowCasketModal(false);
-    
+
     if (buyNowRedirect) {
       window.location.hash = "#cart";
     }
@@ -540,6 +585,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   // --- RENTAL MODAL HANDLERS ---
   const handleOpenRentalModal = (hearse) => {
     setSelectedHearse(hearse);
+    setRentalFormError("");
     setShowRentalModal(true);
   };
 
@@ -555,28 +601,15 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         days = Math.ceil(timeDiff / (1000 * 3600 * 24));
       }
     }
-    const totalBasePrice = baseDailyRate * days;
-
-    let distanceCharge = 0;
-    const distance = Number(rentalDetails.estimatedDistance) || 0;
-    if (rentalDetails.mileagePlan === "limited") {
-      const allowedDistance = 150 * days;
-      if (distance > allowedDistance) {
-        distanceCharge = (distance - allowedDistance) * 120;
-      }
-    } else if (rentalDetails.mileagePlan === "unlimited") {
-      distanceCharge = 8000 * days; 
-    }
-
-    let fuelCharge = 0;
-    if (rentalDetails.fuelPolicy === "pre_purchased") {
-      fuelCharge = 12500; 
-    }
-
-    return totalBasePrice + distanceCharge + fuelCharge;
+    return baseDailyRate * days;
   };
 
   const handleConfirmRental = () => {
+    if (!isFormValid) {
+      setRentalFormError("Please complete the pick-up, destination, dates and time so our team can check availability.");
+      document.querySelector("#rental-logistics input:invalid, #rental-logistics input:not([value])")?.focus();
+      return;
+    }
     const finalCalculatedPrice = calculateTotal();
     const customizedHearse = {
       ...selectedHearse,
@@ -584,18 +617,19 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
       price: finalCalculatedPrice,
       rentalSchedule: rentalDetails
     };
-    
+
     if (bookRental) {
       bookRental(customizedHearse);
     } else {
       addToCart(customizedHearse);
     }
-    
+
     setRecentlyAdded(selectedHearse.id);
     setTimeout(() => setRecentlyAdded(null), 2000);
-    
+
     setShowRentalModal(false);
-    setRentalDetails({ pickup: "", dropoff: "", pickupDate: "", returnDate: "", mileagePlan: "limited", estimatedDistance: "", fuelPolicy: "full_to_full" });
+    setRentalDetails({ pickup: "", dropoff: "", pickupDate: "", returnDate: "", time: "" });
+    setRentalFormError("");
   };
 
   const handleBackClick = () => {
@@ -607,7 +641,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   };
 
   let isFormValid = false;
-  if (rentalDetails.pickup !== "" && rentalDetails.dropoff !== "" && rentalDetails.pickupDate !== "" && rentalDetails.returnDate !== "" && rentalDetails.estimatedDistance > 0) {
+  if (rentalDetails.pickup !== "" && rentalDetails.dropoff !== "" && rentalDetails.pickupDate !== "" && rentalDetails.returnDate !== "" && rentalDetails.time !== "" && rentalDetails.returnDate >= rentalDetails.pickupDate) {
     isFormValid = true;
   }
 
@@ -621,13 +655,13 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
   return (
     <div className="min-h-screen bg-[#F4F4F4] flex flex-col relative">
       <div className="pt-8 pb-24 flex-grow">
-        
+
         {/* ========================================================================= */}
         {/* STANDARD DIRECTORY LAYOUT (Hidden if in full-screen immersive mode) */}
         {/* ========================================================================= */}
         {!isImmersiveMode && (
           <section className="site-container px-4 mx-auto max-w-6xl animate-fadeIn">
-            
+
             {/* Page Header (E-Commerce Style) */}
             <div className="mb-8 bg-white p-6 rounded shadow-sm border border-[#E8DFD1]">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -636,6 +670,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                   <p className="text-xs text-[#716860] mt-1">
                     Quality memorial selections fulfilled directly by Last Planner Julz.
                   </p>
+                  {import.meta.env.DEV && (
+                    <span className="mt-2 inline-flex rounded-full border border-[#E8DFD1] bg-[#F8F6F0] px-2 py-1 text-[10px] font-semibold tracking-wide text-[#716860]">
+                      DEV · {catalogSource === "checking" ? "Checking catalog…" : catalogSource === "api" ? `API catalog · ${liveCatalogItems.length} items` : `Built-in catalog · ${fallbackProducts.length} items`}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex w-full md:w-96 items-center rounded border border-[#E8DFD1] focus-within:border-[#A8895C] overflow-hidden bg-[#F8F6F0]">
@@ -651,22 +690,14 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               </div>
             </div>
 
-            {/* SERVER ERROR WARNING */}
-            {serverError && (
-              <div className="max-w-3xl mx-auto mb-6 bg-[#FFFDF4] border border-[#E8DFD1] text-[#8F744D] p-3 rounded flex items-center gap-3 shadow-sm text-xs">
-                <AlertCircle size={15} className="shrink-0 text-[#A8895C]" />
-                <p>Running in offline catalog inventory mode. All core booking features remain fully operational.</p>
-              </div>
-            )}
-
             {/* VIEW 1: Main Directory Cards */}
             {!activeCategory && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((cat) => (
-                  <CategoryCard 
-                    key={cat.id} 
-                    item={cat} 
-                    onClick={() => window.location.hash = `#catalog/${cat.id}`} 
+                  <CategoryCard
+                    key={cat.id}
+                    item={cat}
+                    onClick={() => window.location.hash = `#catalog/${cat.id}`}
                   />
                 ))}
               </div>
@@ -675,19 +706,19 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             {/* VIEW 2: Sub-Category Cards */}
             {activeCategory && activeCategory.subcategories && !activeSubCategory && (
               <div>
-                <button 
+                <button
                   onClick={handleBackClick}
                   className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold mb-6"
                 >
                   <ChevronLeft size={16} /> Back to Categories
                 </button>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {activeCategory.subcategories.map((sub) => (
-                    <CategoryCard 
-                      key={sub.id} 
-                      item={sub} 
-                      onClick={() => window.location.hash = `#catalog/${sub.id}`} 
+                    <CategoryCard
+                      key={sub.id}
+                      item={sub}
+                      onClick={() => window.location.hash = `#catalog/${sub.id}`}
                     />
                   ))}
                 </div>
@@ -698,11 +729,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             {activeCategory && (!activeCategory.subcategories || activeSubCategory) && (
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <button 
+                  <button
                     onClick={handleBackClick}
                     className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold"
                   >
-                    <ChevronLeft size={16} /> 
+                    <ChevronLeft size={16} />
                     {activeCategory.subcategories ? `Back to ${activeCategory.title}` : "Back to Categories"}
                   </button>
                   <span className="text-xs text-[#8F847C] font-bold">{visibleProducts.length} Products Found</span>
@@ -711,16 +742,16 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {visibleProducts.length === 0 ? (
                     <div className="col-span-full rounded border border-dashed border-[#E8DFD1] bg-white p-8 text-center text-sm text-[#716860]">
-                      No items matched your search.
+                      No items matched your search. Try another search or browse a different category.
                     </div>
                   ) : visibleProducts.map((item) => (
-                      <ProductCard 
-                        key={item.id} 
-                        item={item} 
-                        recentlyAdded={recentlyAdded} 
-                        onAddToCart={handleAddToCart} 
+                      <ProductCard
+                        key={item.id}
+                        item={item}
+                        recentlyAdded={recentlyAdded}
+                        onAddToCart={handleAddToCart}
                         onOpenRentalModal={handleOpenRentalModal}
-                        onOpenCasketModal={handleOpenCasketModal} 
+                        onOpenCasketModal={handleOpenCasketModal}
                       />
                     ))}
                 </div>
@@ -734,10 +765,10 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
         {/* ========================================================================= */}
         {isImmersiveMode && (
           <div className="w-full animate-fadeIn">
-            
+
             {/* Full Bleed Back Button */}
             <div className="w-full px-4 lg:px-8 py-4 mx-auto max-w-7xl">
-               <button 
+               <button
                  onClick={handleBackClick}
                  className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold transition-colors"
                >
@@ -748,18 +779,18 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             {/* --- LAST PLANNER JULZ CATERING ENGINE (FULL BLEED) --- */}
             {activeCategory.id === "catering" && (
               <div className="w-full bg-[#1A1A18] font-sans border-y border-[#2A2A2A] shadow-2xl">
-                
+
                 {/* Top Notification Bar */}
                 <div className="bg-[#0B0B0A] text-[#A8895C] text-[10px] sm:text-xs tracking-[0.15em] uppercase py-3 px-6 flex flex-wrap justify-center sm:justify-between items-center gap-4 border-b border-[#2A2A2A]">
-                  <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Food Safety Compliant</span>
-                  <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Registered & VAT Invoicing</span>
-                  <span className="flex items-center gap-2"><CheckCircle size={14}/> Serving 50 - 1000+ Guests</span>
+                  <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Catering options</span>
+                  <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Availability confirmed on request</span>
+                  <span className="flex items-center gap-2"><CheckCircle size={14}/> Guest numbers discussed with our team</span>
                 </div>
 
                 {/* Main Hero & PRO-GRADE HTML FORM */}
                 <div className="max-w-7xl mx-auto px-4 lg:px-8 py-16 lg:py-24">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                    
+
                     {/* Left: Typography & Copy */}
                     <div className="lg:col-span-7">
                       <span className="inline-block px-4 py-1.5 rounded-full border border-[#A8895C] text-[#A8895C] text-xs font-bold tracking-[0.2em] mb-8 bg-[#A8895C]/10">
@@ -772,69 +803,70 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                       <p className="text-[#D8CFBC] text-sm lg:text-base leading-relaxed mb-8 opacity-90 max-w-lg">
                         To support our families with absolute devotion, we provide deeply respectful and highly professional funeral catering services. We craft custom packages and traditional tribute menus to handle all catering details during these difficult moments with the utmost dignity.
                       </p>
-                      
+
                       {/* Trust Indicators */}
-                      <div className="flex gap-8 border-t border-[#2A2A2A] pt-8 mt-8">
-                        <div>
-                          <p className="text-white font-serif text-2xl mb-1">500+</p>
-                          <p className="text-[#A8895C] text-xs uppercase tracking-widest">Events Catered</p>
-                        </div>
-                        <div>
-                          <p className="text-white font-serif text-2xl mb-1">98%</p>
-                          <p className="text-[#A8895C] text-xs uppercase tracking-widest">Client Satisfaction</p>
-                        </div>
-                        <div>
-                          <p className="text-white font-serif text-2xl mb-1">10+</p>
-                          <p className="text-[#A8895C] text-xs uppercase tracking-widest">Years Experience</p>
-                        </div>
-                      </div>
+                      <p className="mt-8 border-t border-[#2A2A2A] pt-6 text-sm leading-relaxed text-[#D8CFBC]">Tell us the date, location, and approximate guest count. We’ll follow up to discuss options and provide a quote.</p>
                     </div>
 
                     {/* Right: Lead Capture Form Box */}
                     <div className="lg:col-span-5 bg-[#0B0B0A] border border-[#2A2A2A] rounded-2xl p-8 shadow-2xl">
                       <h3 className="text-2xl font-serif text-white mb-3">Request a Catering Quote</h3>
                       <p className="text-sm text-[#D8CFBC] mb-8 opacity-80 leading-relaxed">
-                        Our culinary coordinators are ready to assist with custom arrangements. Send your details for an immediate response.
+                        Our team can discuss menu options, service area, availability, and pricing for your event.
                       </p>
-                      
-                      <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="space-y-6">
-                        <input type="hidden" name="_subject" value="New Catering Quote Request - Last Planner Julz" />
-                        <input type="hidden" name="_captcha" value="false" />
-                        
+
+                      {inquiryState.catering ? (
+                        <p className="rounded-lg border border-emerald-700 bg-emerald-950 p-4 text-sm leading-relaxed text-emerald-100" role="status">{inquiryState.catering}</p>
+                      ) : <form onSubmit={(event) => submitInquiry(event, "catering")} className="space-y-5">
+                        {inquiryErrors.catering && <p className="rounded border border-red-400 bg-red-950 p-3 text-sm text-red-100" role="alert">{inquiryErrors.catering}</p>}
+
                         <div>
-                          <label className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Your Name</label>
-                          <input 
-                            type="text" 
-                            name="Client_Name"
-                            placeholder="Contact Person" 
+                          <label htmlFor="catering-name" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Your Name</label>
+                          <input
+                            id="catering-name"
+                            type="text"
+                            autoComplete="name"
+                            value={inquiryForms.catering.name}
+                            onChange={(event) => updateInquiry("catering", "name", event.target.value)}
+                            placeholder="Contact Person"
                             required
-                            className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#4A4A4A]" 
+                            className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#4A4A4A]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Phone Number</label>
-                          <input 
-                            type="tel" 
-                            name="Phone_Number"
-                            placeholder="07XX XXX XXX" 
+                          <label htmlFor="catering-email" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Email Address</label>
+                          <input id="catering-email" type="email" autoComplete="email" value={inquiryForms.catering.email} onChange={(event) => updateInquiry("catering", "email", event.target.value)} placeholder="you@example.com" required className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#8F847C]" />
+                        </div>
+                        <div>
+                          <label htmlFor="catering-phone" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Phone Number</label>
+                          <input
+                            id="catering-phone"
+                            type="tel"
+                            autoComplete="tel"
+                            value={inquiryForms.catering.phone}
+                            onChange={(event) => updateInquiry("catering", "phone", event.target.value)}
+                            placeholder="07XX XXX XXX"
                             required
-                            className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#4A4A4A]" 
+                            className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#4A4A4A]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Requirement Details</label>
-                          <textarea 
-                            name="Requirements"
-                            placeholder="Estimated guest count, location, date..." 
-                            rows="3" 
+                          <label htmlFor="catering-details" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Requirement Details</label>
+                          <textarea
+                            id="catering-details"
+                            value={inquiryForms.catering.details}
+                            onChange={(event) => updateInquiry("catering", "details", event.target.value)}
+                            placeholder="Estimated guest count, location, date..."
+                            rows="3"
                             required
                             className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors resize-none placeholder:text-[#4A4A4A]"
                           ></textarea>
                         </div>
-                        <button type="submit" className="w-full bg-[#A8895C] text-white font-bold tracking-widest uppercase py-4 rounded-lg hover:bg-[#8F744D] transition-colors mt-4 shadow-lg">
-                          Get a Quote
+                        <label className="flex items-start gap-3 text-xs leading-relaxed text-[#D8CFBC]"><input type="checkbox" checked={inquiryForms.catering.consent} onChange={(event) => updateInquiry("catering", "consent", event.target.checked)} required className="mt-1 accent-[#A8895C]" /><span>I agree to be contacted about this request. <a href="/privacy" className="underline">Privacy policy</a>.</span></label>
+                        <button type="submit" disabled={inquiryBusy.catering} className="w-full bg-[#A8895C] text-white font-bold tracking-widest uppercase py-4 rounded-lg hover:bg-[#8F744D] transition-colors mt-4 shadow-lg disabled:opacity-60">
+                          {inquiryBusy.catering ? "Sending…" : "Request a quote"}
                         </button>
-                      </form>
+                      </form>}
                     </div>
 
                   </div>
@@ -846,7 +878,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     <div className="lg:col-span-1">
                       <h4 className="text-xl font-serif text-white mb-4">Last Planner <span className="text-[#A8895C] italic">Julz</span></h4>
                       <p className="text-sm text-[#D8CFBC] opacity-80 leading-relaxed mb-6">
-                        Kenya's most reliable catering partner for memorial events. Fresh food, strict hygiene, and on-time delivery — always.
+                        We coordinate catering options for memorial gatherings and discuss the service details for each request.
                       </p>
                     </div>
 
@@ -885,9 +917,9 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             {/* --- PHOTOGRAPHY & MEDIA EXCELLENCE ENGINE (FULL BLEED) --- */}
             {activeCategory.id === "media" && (
               <div className="w-full bg-white border-y border-[#E8DFD1] shadow-xl">
-                
+
                 {/* Media Hero Banner */}
-                <div 
+                <div
                   className="w-full py-20 lg:py-32 px-4 text-center border-b border-[#E8DFD1] bg-cover bg-center bg-no-repeat"
                   style={{ backgroundImage: "url('/images/mediabackground.png')" }}
                 >
@@ -907,11 +939,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 {/* Cinematic Showcase Grid */}
                 <div className="max-w-7xl mx-auto px-4 lg:px-8 py-16 lg:py-24">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
-                    
+
                     {/* Photo Package Card */}
                     <div className="group rounded-xl overflow-hidden border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-2xl transition-all bg-[#F8F6F0] flex flex-col">
                       <div className="h-80 bg-[#1F2E27] overflow-hidden relative">
-                        <img src="/images/images().jpg" alt="Photography" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { e.target.src = "https://via.placeholder.com/800x600?text=Photography+Showcase" }} />
+                        <img src="/images/images().jpg" alt="Photography service example" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={showLocalImageFallback} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
                           <Camera size={36} className="mb-3 text-[#A8895C]" />
@@ -932,7 +964,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     {/* Video/Stream Package Card */}
                     <div className="group rounded-xl overflow-hidden border border-[#E8DFD1] hover:border-[#A8895C] hover:shadow-2xl transition-all bg-[#F8F6F0] flex flex-col">
                       <div className="h-80 bg-[#1F2E27] overflow-hidden relative">
-                        <img src="/images/images.jpg" alt="Videography" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { e.target.src = "https://via.placeholder.com/800x600?text=Cinematic+Videography" }} />
+                        <img src="/images/images.jpg" alt="Videography service example" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={showLocalImageFallback} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
                           <Video size={36} className="mb-3 text-[#A8895C]" />
@@ -956,26 +988,18 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                   <div className="bg-[#1F2E27] rounded-xl p-10 lg:p-16 text-center text-white relative overflow-hidden shadow-2xl">
                     <div className="relative z-10 max-w-3xl mx-auto">
                       <h3 className="text-3xl lg:text-4xl font-serif mb-6 text-[#A8895C]">Require Custom Media Coverage?</h3>
-                      <p className="text-lg text-[#E8DFD1] opacity-90 mb-10 leading-relaxed">
-                        We can arrange drone coverage, multi-location streaming, and extended editorial photography. Speak with our media director today to craft your perfect tribute.
-                                        to contact us you can kindly reach out via the phone number +254 799 847727 or request a call back via the form below and we will get back to you promptly.
-                      </p>
-                      
-                      <form action="https://formsubmit.co/stephenitwika178@gmail.com" method="POST" className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <input type="hidden" name="_subject" value="New Media Callback Request" />
-                        <input type="hidden" name="_captcha" value="false" />
-                        
-                        <input 
-                          type="tel" 
-                          name="Phone_Number"
-                          placeholder="Your Phone Number" 
-                          required
-                          className="px-6 py-4 rounded text-[#1F2E27] focus:outline-none w-full sm:w-80 text-lg" 
-                        />
-                        <button type="submit" className="bg-[#A8895C] text-white px-8 py-4 rounded font-bold uppercase tracking-widest hover:bg-[#8F744D] transition-colors whitespace-nowrap shadow-lg">
-                          Request Callback
-                        </button>
-                      </form>
+                      <p className="text-lg text-[#E8DFD1] opacity-90 mb-10 leading-relaxed">Tell us what kind of coverage you need and when you need it. Our team will contact you to discuss availability and options.</p>
+
+                      {inquiryState.media ? (
+                        <p className="rounded border border-emerald-200 bg-emerald-950 p-4 text-left text-sm text-emerald-100" role="status">{inquiryState.media}</p>
+                      ) : <form onSubmit={(event) => submitInquiry(event, "media")} className="mx-auto grid max-w-2xl gap-4 text-left sm:grid-cols-2">
+                        {inquiryErrors.media && <p className="rounded border border-red-300 bg-red-950 p-3 text-sm text-red-100 sm:col-span-2" role="alert">{inquiryErrors.media}</p>}
+                        <label className="text-sm text-white">Your name<input type="text" autoComplete="name" value={inquiryForms.media.name} onChange={(event) => updateInquiry("media", "name", event.target.value)} placeholder="Full name" required className="mt-1 w-full rounded px-4 py-3 text-[#1F2E27]" /></label>
+                        <label className="text-sm text-white">Email address<input type="email" autoComplete="email" value={inquiryForms.media.email} onChange={(event) => updateInquiry("media", "email", event.target.value)} placeholder="you@example.com" required className="mt-1 w-full rounded px-4 py-3 text-[#1F2E27]" /></label>
+                        <label className="text-sm text-white sm:col-span-2">Phone number<input type="tel" autoComplete="tel" value={inquiryForms.media.phone} onChange={(event) => updateInquiry("media", "phone", event.target.value)} placeholder="+254 …" required className="mt-1 w-full rounded px-4 py-3 text-[#1F2E27]" /></label>
+                        <label className="flex items-start gap-3 text-xs leading-relaxed text-[#E8DFD1] sm:col-span-2"><input type="checkbox" checked={inquiryForms.media.consent} onChange={(event) => updateInquiry("media", "consent", event.target.checked)} required className="mt-1 accent-[#A8895C]" /><span>I agree to be contacted about this request. <a href="/privacy" className="underline">Privacy policy</a>.</span></label>
+                        <button type="submit" disabled={inquiryBusy.media} className="rounded bg-[#A8895C] px-8 py-4 font-bold uppercase tracking-widest text-white shadow-lg transition-colors hover:bg-[#8F744D] disabled:opacity-60 sm:col-span-2">{inquiryBusy.media ? "Sending…" : "Request a callback"}</button>
+                      </form>}
                     </div>
                   </div>
 
@@ -1009,23 +1033,23 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 </h4>
                 <div className="space-y-2">
                   {casketSizes.map((size, index) => {
-                    const priceModifierText = size.priceModifier === 0 
-                      ? "Base Price" 
-                      : size.priceModifier > 0 
-                        ? `+ KSh ${size.priceModifier.toLocaleString()}` 
+                    const priceModifierText = size.priceModifier === 0
+                      ? "Base Price"
+                      : size.priceModifier > 0
+                        ? `+ KSh ${size.priceModifier.toLocaleString()}`
                         : `- KSh ${Math.abs(size.priceModifier).toLocaleString()}`;
-                        
+
                     return (
-                      <label 
-                        key={size.id} 
+                      <label
+                        key={size.id}
                         className={`flex items-center justify-between p-3 rounded border cursor-pointer transition-colors ${
                           casketSizeIndex === index ? "bg-white border-[#A8895C] shadow-sm" : "border-transparent hover:bg-white"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <input 
-                            type="radio" 
-                            name="casketSize" 
+                          <input
+                            type="radio"
+                            name="casketSize"
                             className="accent-[#A8895C]"
                             checked={casketSizeIndex === index}
                             onChange={() => setCasketSizeIndex(index)}
@@ -1055,9 +1079,9 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <button onClick={() => setShowCasketModal(false)} className="flex-1 py-3 text-xs font-bold tracking-wider uppercase bg-white text-[#3D3530] border border-[#E8DFD1] hover:bg-[#F8F6F0] transition-all rounded">
                   Cancel
                 </button>
-                <button 
-                  onClick={handleConfirmCasketSize} 
-                  className="flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md" 
+                <button
+                  onClick={handleConfirmCasketSize}
+                  className="flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md"
                 >
                   Confirm & Add
                 </button>
@@ -1071,7 +1095,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
       {showRentalModal && selectedHearse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-8 animate-fadeIn">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E8DFD1]">
-            
+
             {/* Modal Header */}
             <div className="bg-[#1F2E27] p-5 flex justify-between items-center text-white border-b-4 border-[#A8895C] shrink-0">
               <div>
@@ -1082,62 +1106,41 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <X size={24} />
               </button>
             </div>
-            
+
             {/* Scrollable Form Area */}
             <div className="p-6 overflow-y-auto space-y-8 custom-scrollbar flex-grow">
-              
+
               {/* SECTION 1: Rental Parameters */}
-              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
+              <section id="rental-logistics" className="bg-white p-5 rounded border border-[#E8DFD1]">
                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><MapPin size={16} className="text-[#A8895C]"/> 1. Rental Parameters</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Location</label>
-                    <input type="text" placeholder="e.g. Montezuma Funeral Home" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors" value={rentalDetails.pickup} onChange={(e) => setRentalDetails({...rentalDetails, pickup: e.target.value})} />
+                    <input required type="text" placeholder="e.g. Montezuma Funeral Home" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors" value={rentalDetails.pickup} onChange={(e) => { setRentalDetails({...rentalDetails, pickup: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Destination (Burial Site)</label>
-                    <input type="text" placeholder="e.g. Langata Cemetery" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors" value={rentalDetails.dropoff} onChange={(e) => setRentalDetails({...rentalDetails, dropoff: e.target.value})} />
+                    <input required type="text" placeholder="e.g. Langata Cemetery" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors" value={rentalDetails.dropoff} onChange={(e) => { setRentalDetails({...rentalDetails, dropoff: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Date</label>
-                    <input type="date" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.pickupDate} onChange={(e) => setRentalDetails({...rentalDetails, pickupDate: e.target.value})} />
+                    <input required type="date" min={getLocalDateInputValue()} className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.pickupDate} onChange={(e) => { setRentalDetails({...rentalDetails, pickupDate: e.target.value}); setRentalFormError(""); }} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Return Date</label>
-                    <input type="date" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.returnDate} onChange={(e) => setRentalDetails({...rentalDetails, returnDate: e.target.value})} />
+                    <input required type="date" min={rentalDetails.pickupDate || getLocalDateInputValue()} className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.returnDate} onChange={(e) => { setRentalDetails({...rentalDetails, returnDate: e.target.value}); setRentalFormError(""); }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#716860] mb-1">Requested pick-up time</label>
+                    <input required type="time" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.time} onChange={(e) => { setRentalDetails({...rentalDetails, time: e.target.value}); setRentalFormError(""); }} />
                   </div>
                 </div>
               </section>
 
-              {/* SECTION 2: Mileage Plan */}
-              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
-                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><RouteIcon size={16} className="text-[#A8895C]"/> 2. Mileage Plan</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#716860] mb-1">Select Mileage Structure</label>
-                    <select className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.mileagePlan} onChange={(e) => setRentalDetails({...rentalDetails, mileagePlan: e.target.value})}>
-                      <option value="limited">Capped Mileage (150 km/day included)</option>
-                      <option value="unlimited">Unlimited Mileage (Premium Flat Fee)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#716860] mb-1">Estimated Total Journey (Kilometers)</label>
-                    <input type="number" min="1" placeholder="e.g. 200" className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors" value={rentalDetails.estimatedDistance} onChange={(e) => setRentalDetails({...rentalDetails, estimatedDistance: e.target.value})} />
-                  </div>
-                </div>
-              </section>
+              {rentalFormError && <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{rentalFormError}</p>}
 
-              {/* SECTION 3: Fuel Policy */}
-              <section className="bg-white p-5 rounded border border-[#E8DFD1]">
-                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><Fuel size={16} className="text-[#A8895C]"/> 3. Fuel Policy</h4>
-                <div>
-                  <label className="block text-xs font-semibold text-[#716860] mb-1">Select Fuel Handling</label>
-                  <select className="w-full p-2.5 border border-[#E8DFD1] rounded text-sm outline-none focus:border-[#A8895C] focus:bg-white transition-colors text-[#3D3530]" value={rentalDetails.fuelPolicy} onChange={(e) => setRentalDetails({...rentalDetails, fuelPolicy: e.target.value})}>
-                    <option value="full_to_full">Full-to-Full (Return with full tank - No upfront fee)</option>
-                    <option value="same_to_same">Same-to-Same (Fair Fuel Match)</option>
-                    <option value="pre_purchased">Pre-purchased (Pay upfront, return empty)</option>
-                  </select>
-                </div>
+              <section className="rounded border border-[#E8DFD1] bg-white p-5 text-sm leading-relaxed text-[#716860]">
+                The listed rate is the vehicle base charge for the requested period. Availability, route-based delivery and any other charges are confirmed in a written quote before payment.
               </section>
 
             </div>
@@ -1146,7 +1149,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             <div className="p-6 bg-[#F8F6F0] border-t border-[#E8DFD1] shrink-0">
               <div className="flex justify-between items-end mb-6">
                 <div>
-                  <span className="text-xs font-semibold text-[#716860] uppercase tracking-wider block mb-1">Estimated Total:</span>
+                  <span className="text-xs font-semibold text-[#716860] uppercase tracking-wider block mb-1">Listed base estimate:</span>
                   <span className="text-3xl font-bold text-[#1F2E27]">KSh {calculateTotal().toLocaleString()}</span>
                 </div>
                 <div className="text-right">
@@ -1158,16 +1161,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <button onClick={() => setShowRentalModal(false)} className="flex-1 py-3 text-xs font-bold tracking-wider uppercase bg-white text-[#3D3530] border border-[#E8DFD1] hover:bg-[#F8F6F0] transition-all rounded">
                   Cancel
                 </button>
-                <button 
-                  onClick={handleConfirmRental} 
-                  disabled={!isFormValid}
-                  className={`flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded ${
-                    isFormValid 
-                    ? "bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md" 
-                    : "bg-[#E8DFD1] text-[#A8895C] cursor-not-allowed"
-                  }`}
+                <button
+                  onClick={handleConfirmRental}
+                  className="flex-1 py-3 text-xs font-bold tracking-wider uppercase transition-all rounded bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-md"
                 >
-                  Confirm Transport
+                  Add transport request
                 </button>
               </div>
             </div>

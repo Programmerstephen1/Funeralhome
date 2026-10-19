@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ShieldCheck, ShoppingCart } from "lucide-react";
+import { showLocalImageFallback } from "../utils/media";
 
 const provisions = [
   { 
@@ -49,7 +50,7 @@ export default function ProvisionGrid() {
           </h2>
           <div className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-50 w-fit mx-auto px-4 py-2 rounded-full border border-emerald-100">
             <ShieldCheck size={16} />
-            <span>100% Secure Checkout via M-Pesa API</span>
+            <span>Ask our team to confirm current prices and availability</span>
           </div>
         </div>
         
@@ -65,10 +66,7 @@ export default function ProvisionGrid() {
                   src={item.image_url} 
                   alt={item.title} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  onError={(e) => {
-                    // Fallback just in case the image name is wrong
-                    e.target.src = "https://via.placeholder.com/400x400?text=Photo+Pending";
-                  }}
+                  onError={showLocalImageFallback}
                 />
               </div>
               

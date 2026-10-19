@@ -20,6 +20,28 @@ with app.app_context():
     engine = db.get_engine(app)
     insp = inspect(engine)
 
+    # Ensure profile fields used by /api/user/profile exist on existing accounts.
+    user_cols = {c['name'] for c in insp.get_columns('users')}
+    profile_columns = {
+        'first_name': "VARCHAR(80) NOT NULL DEFAULT ''",
+        'last_name': "VARCHAR(80) NOT NULL DEFAULT ''",
+        'phone': "VARCHAR(50)",
+        'profile_picture': "TEXT",
+    }
+    profile_alters = [
+        f"ALTER TABLE users ADD COLUMN {name} {definition};"
+        for name, definition in profile_columns.items()
+        if name not in user_cols
+    ]
+    if profile_alters:
+        with engine.begin() as conn:
+            for statement in profile_alters:
+                print('Executing:', statement)
+                conn.execute(text(statement))
+        print('User profile schema updates applied.')
+    else:
+        print('User profile columns already exist.')
+
     # 1) Ensure donations table exists
     if 'donations' not in insp.get_table_names():
         print('Creating donations table...')

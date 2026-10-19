@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Trash2, Plus, Minus, ShieldCheck, ArrowLeft, ShoppingBag, Sparkles } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, Sparkles, MapPin } from "lucide-react";
+import { showLocalImageFallback } from "../utils/media";
+import { useNavigate } from "react-router-dom";
 
 export default function CartPage({ cart, updateQuantity, removeFromCart }) {
+  const navigate = useNavigate();
   // State to track which items are checked/selected for checkout
   const [selectedItems, setSelectedItems] = useState([]);
 
@@ -127,7 +130,7 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
                     src={item.images?.[0] || item.image_url} 
                     alt={item.title} 
                     loading="lazy"
-                    onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=No+Image" }}
+                    onError={showLocalImageFallback}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -177,13 +180,13 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
         {/* Checkout Summary Footer */}
         <div className="sticky bottom-4 flex flex-col items-center justify-between gap-6 border border-[#E8DFD1] bg-white p-6 shadow-md md:flex-row">
           <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-                <ShieldCheck size={18} />
-                <span>Secure <b>M-Pesa</b> payment support</span>
+                <MapPin size={18} />
+                <span>Delivery is quoted based on your location</span>
             </div>
             
             <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
               <div className="text-right">
-                <p className="text-sm text-[#3D3530] uppercase tracking-wider mb-1">Total Amount</p>
+                <p className="text-sm text-[#3D3530] uppercase tracking-wider mb-1">Selected items subtotal</p>
                 <p className="text-2xl font-serif font-bold text-[#1F2E27]">
                   KSh {subtotal.toLocaleString()}
                 </p>
@@ -191,10 +194,10 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
               
               <button 
                 disabled={selectedItems.length === 0}
-                onClick={() => window.location.hash = "#checkout"}
+                onClick={() => navigate("/checkout", { state: { cart: cart.filter((item) => selectedItems.includes(getUniqueId(item))) } })}
                 className="w-full md:w-auto px-10 py-4 bg-[#1F2E27] text-white text-sm tracking-widest uppercase hover:bg-[#A8895C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Proceed to Checkout
+                Request availability & quote
               </button>
             </div>
         </div>

@@ -1,224 +1,100 @@
 import React, { useState } from "react";
-import { Clock, MapPin, Calendar, CheckCircle2, Phone, Loader2, Car, ShieldCheck } from "lucide-react";
+import { Calendar, CheckCircle2, Loader2, Phone, AlertCircle, Car } from "lucide-react";
 import ProgressSteps from "../components/ProgressSteps";
-import mpesaIcon from "../assets/mpesa.png";
+import { getApiBaseUrl } from "../services/config";
+import { BUSINESS, formatKES } from "../config/business";
+import { Link } from "react-router-dom";
 
 export default function BookingCheckoutPage({ serviceBookings }) {
+  const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("mpesa");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMessage, setPaymentMessage] = useState("");
-  const [paymentError, setPaymentError] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("userEmail") || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submissionNote, setSubmissionNote] = useState("");
+  const [needsCall, setNeedsCall] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
+  const listedSubtotal = serviceBookings?.reduce((total, item) => total + Number(item.price || 0) * (item.quantity || 1), 0) || 0;
 
-  const subtotal = serviceBookings?.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0) || 0;
-  const bookingFee = 1500;
-  const totalAmount = subtotal + bookingFee;
-  const progressSteps = [
-    { id: "selection", label: "Select services", description: "your requests" },
-    { id: "payment", label: "Secure transport", description: "payment review" },
-    { id: "complete", label: "Complete booking", description: "confirmation" },
-  ];
+  const requestQuote = async () => {
+    setError("");
+    if (!contactName.trim() || !phone.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      setFieldError("Enter your name, phone number, and a valid email address so we can respond to your request.");
+      return;
+    }
+    setFieldError("");
+    const contactEmail = email.trim().toLowerCase();
+    const bookingLines = serviceBookings.map((item) => {
+      const schedule = item.rentalSchedule || {};
+      return `- ${item.title}: listed base ${formatKES(item.price)}; pickup ${schedule.pickup || "not supplied"}; destination ${schedule.dropoff || "not supplied"}; date ${schedule.pickupDate || schedule.date || "not supplied"}; return ${schedule.returnDate || "not applicable"}; time ${schedule.time || "not supplied"}`;
+    }).join("\n");
+    const questions = [
+      "TRANSPORT AVAILABILITY AND FINAL QUOTE REQUEST",
+      `Requested by: ${contactName.trim()}`,
+      `Email: ${contactEmail}`,
+      `Phone: ${phone.trim()}`,
+      "Requested transport:", bookingLines,
+      `Listed base subtotal: ${formatKES(listedSubtotal)} (final delivery/route charges depend on distance and are not included)`,
+      "Please confirm vehicle and date availability and provide a written itemized quote for the route. This request is not a reservation and no payment is authorized until the customer accepts the quote.",
+    ].join("\n");
 
-  const handlePayment = async () => {
-    setPaymentError("");
-    setPaymentMessage("");
-
-    // Allow swapping payment provider at build-time with VITE_PAYMENT_PROVIDER
-    const PAYMENT_PROVIDER = import.meta.env.VITE_PAYMENT_PROVIDER || "mpesa";
-
-    if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mpesa") {
-      const sanitizedPhone = phone.replace(/\D/g, "");
-      if (sanitizedPhone.length < 10) {
-        setPaymentError("Please enter a valid Kenyan M-Pesa phone number to secure the booking.");
-        return;
-      }
-
-      setIsProcessing(true);
-      const currentUserEmail = localStorage.getItem("userEmail") || "";
-      
-      // PRO-GRADE FIX: Dynamic API URL for Render deployment
-      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
-
-      try {
-        const response = await fetch(`${API_URL}/api/payments/stkpush`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            amount: totalAmount, 
-            phone: sanitizedPhone,
-            email: currentUserEmail
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setPaymentMessage("Prompt sent! Please check your phone and enter your M-Pesa PIN to secure your transport.");
-          setTimeout(() => { window.location.hash = "#thankyou"; }, 10000);
-        } else {
-          setPaymentError(data.error || "Failed to initiate payment. Please try again.");
-          setIsProcessing(false);
-        }
-      } catch (err) {
-        setPaymentError("Network error. Please check your connection to the server.");
-        setIsProcessing(false);
-      }
-    } else if (paymentMethod === "mpesa" && PAYMENT_PROVIDER === "mock") {
-      setIsProcessing(true);
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
-        const resp = await fetch(`${API_URL}/api/payments/mock`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: totalAmount, phone: phone.replace(/\D/g, ''), email: localStorage.getItem('userEmail') || '' })
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (resp.ok) {
-          setPaymentMessage("Mock payment processed successfully.");
-          setTimeout(() => { window.location.hash = "#thankyou"; }, 1500);
-        } else {
-          setPaymentError(data.error || data.message || "Mock payment failed.");
-          setIsProcessing(false);
-        }
-      } catch (err) {
-        setPaymentError("Network error during mock payment.");
-        setIsProcessing(false);
-      }
-    } else {
-      setPaymentMessage("This payment method is currently in development.");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/consultation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: contactName.trim(), email: contactEmail, phone: phone.trim(), questions }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || data.error || "We could not send your request. Please call us.");
+      setSubmissionNote(data.message || "Your request has been received.");
+      setNeedsCall(response.status === 202);
+      setSubmitted(true);
+    } catch (requestError) {
+      setError(requestError.message || "We could not send your request. Please call us.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!serviceBookings || serviceBookings.length === 0) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center bg-[#F8F6F0]">
-        <div className="w-24 h-24 bg-white border border-[#E8DFD1] rounded-full flex items-center justify-center mb-6 shadow-sm">
-          <Car size={40} className="text-[#A8895C]" />
-        </div>
-        <h2 className="text-2xl font-serif text-[#1F2E27] mb-4">No scheduled transport to secure.</h2>
-        <a href="#catalog" className="text-[#A8895C] underline hover:text-[#1F2E27] uppercase tracking-widest text-sm">Return to Catalog</a>
-      </div>
-    );
+    return <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#F8F6F0] px-4 text-center"><Car size={40} className="mb-5 text-[#A8895C]" /><h1 className="mb-4 font-serif text-2xl text-[#1F2E27]">No transport requests selected</h1><Link to="/catalog" className="text-[#A8895C] underline">Return to catalog</Link></div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] pb-32">
-      <div className="bg-[#1F2E27] py-10 md:py-12 mb-8 text-center border-b-4 border-[#A8895C] px-4">
-        <h1 className="text-3xl md:text-4xl font-serif text-white tracking-wide mb-2">Secure transport booking</h1>
-        <p className="text-[#E8DFD1] text-xs md:text-sm uppercase tracking-widest opacity-80">Fleet orchestration & payment verification</p>
-      </div>
+    <div className="min-h-screen bg-[#F4F1EA] pb-20">
+      <header className="mb-8 border-b-4 border-[#A8895C] bg-[#1F2E27] px-4 py-10 text-center text-white">
+        <h1 className="font-serif text-3xl md:text-4xl">Request transport availability</h1>
+        <p className="mt-2 text-sm text-[#E8DFD1]">We confirm the vehicle, date, route charge, and complete quote before you commit.</p>
+      </header>
+      <div className="site-container mx-auto mb-8 max-w-6xl px-4"><ProgressSteps steps={[{ id: "selection", label: "Choose transport", description: "your vehicle" }, { id: "details", label: "Request a quote", description: "your route" }, { id: "confirm", label: "Confirm together", description: "written estimate" }]} currentStep="details" title="Confirm your route" subtitle="The route-based delivery charge will be confirmed by the team." /></div>
 
-      <div className="site-container mx-auto mb-8 max-w-6xl px-4">
-        <ProgressSteps steps={progressSteps} currentStep="payment" title="Finalize your transport request" subtitle="A calm and organized booking path" />
-      </div>
+      <div className="site-container mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 lg:grid-cols-5">
+        <section className="flex flex-col gap-5 lg:col-span-3">
+          <h2 className="border-b border-[#E8DFD1] pb-4 font-serif text-xl text-[#1F2E27]">Transport selection</h2>
+          {serviceBookings.map((item, index) => {
+            const schedule = item.rentalSchedule || {};
+            return <article key={item.cartItemId || item.id || index} className="flex flex-col gap-5 rounded border border-[#E8DFD1] bg-white p-5 shadow-sm sm:flex-row">
+              <div className="aspect-[4/3] w-full shrink-0 overflow-hidden border border-[#E8DFD1] bg-[#F8F6F0] sm:w-1/3"><img src={item.images?.[0]} alt={item.title} className="h-full w-full object-cover" /></div>
+              <div className="flex-1"><h3 className="font-serif text-xl text-[#1F2E27]">{item.title}</h3><p className="mt-1 font-medium text-[#A8895C]">Listed base {formatKES(item.price)}</p><div className="mt-4 space-y-2 text-sm text-[#3D3530]"><p><span className="font-semibold">Pick-up:</span> {schedule.pickup}</p><p><span className="font-semibold">Destination:</span> {schedule.dropoff}</p><p className="flex items-center gap-2"><Calendar size={15} className="text-[#A8895C]" />{schedule.pickupDate || schedule.date} {schedule.time ? `· ${schedule.time}` : ""}</p>{schedule.returnDate && <p><span className="font-semibold">Return:</span> {schedule.returnDate}</p>}</div></div>
+            </article>;
+          })}
+        </section>
 
-      <div className="site-container max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3 flex flex-col gap-6">
-          <h2 className="text-xl md:text-2xl font-serif text-[#1F2E27] border-b border-[#E8DFD1] pb-4">Fleet Logistics Summary</h2>
-          
-          <div className="flex flex-col gap-5">
-            {serviceBookings.map((item, index) => (
-              <div key={index} className="bg-white border border-[#E8DFD1] p-5 md:p-6 shadow-sm flex flex-col sm:flex-row gap-6 rounded-sm">
-                <div className="w-full sm:w-1/3 aspect-[4/3] bg-[#F8F6F0] border border-[#E8DFD1] overflow-hidden rounded-sm flex-shrink-0">
-                  <img src={item.images?.[0]} alt={item.title} className="w-full h-full object-cover" />
-                </div>
-                
-                <div className="flex-1 flex flex-col">
-                  <h3 className="text-xl font-serif text-[#1F2E27] mb-1">{item.title}</h3>
-                  <p className="text-sm text-[#A8895C] font-medium mb-5 tracking-wide">KSh {item.price.toLocaleString()}</p>
-                  
-                  {item.rentalSchedule && (
-                    <div className="bg-[#F8F6F0] p-4 md:p-5 rounded-sm border border-[#E8DFD1] space-y-4 mt-auto">
-                      <div className="flex items-start gap-3">
-                        <MapPin size={18} className="text-[#A8895C] mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-[#3D3530] space-y-1.5">
-                          <p><span className="font-semibold text-[#1F2E27] tracking-wide uppercase text-[11px]">Pick-up:</span> {item.rentalSchedule.pickup}</p>
-                          <p><span className="font-semibold text-[#1F2E27] tracking-wide uppercase text-[11px]">Destination:</span> {item.rentalSchedule.dropoff}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 border-t border-[#E8DFD1] pt-4">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={16} className="text-[#A8895C]" />
-                          <span className="text-sm text-[#3D3530] font-medium">{item.rentalSchedule.date}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock size={16} className="text-[#A8895C]" />
-                          <span className="text-sm text-[#3D3530] font-medium">{item.rentalSchedule.time}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-[#E8DFD1] shadow-sm p-6 md:p-8 rounded-sm sticky top-24">
-            <h2 className="text-xl font-serif text-[#1F2E27] mb-6">Payment Authorization</h2>
-            
-            <div className="mb-4 flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-              <ShieldCheck size={16} />
-              <span>Protected payment experience with instant guidance</span>
-            </div>
-
-            <div className="border-2 border-[#A8895C] bg-[#F8F6F0] p-4 flex items-center justify-between mb-8 cursor-pointer rounded-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-9 flex items-center justify-center bg-white rounded border border-[#E8DFD1]">
-                  <img src={mpesaIcon} alt="M-Pesa" className="max-h-full max-w-full object-contain p-1.5" />
-                </div>
-                <span className="font-semibold text-[#1F2E27] tracking-wide">M-PESA Express</span>
-              </div>
-              <CheckCircle2 className="text-[#A8895C]" size={22} />
-            </div>
-
-            <div className="mb-8">
-              <label className="text-sm font-medium text-[#3D3530] mb-3 flex items-center gap-2">
-                <Phone size={16} className="text-[#A8895C]"/> Mobile Money Number
-              </label>
-              <input 
-                type="tel" 
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)} 
-                placeholder="e.g. 0712345678" 
-                className="w-full p-4 border border-[#E8DFD1] bg-[#F8F6F0] focus:border-[#A8895C] focus:bg-white outline-none transition-colors rounded-sm text-lg tracking-wide" 
-              />
-            </div>
-
-            <div className="border-t border-[#E8DFD1] pt-6 mb-8">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#3D3530] mb-5">Final Ledger</h3>
-              <div className="flex justify-between text-sm text-[#3D3530] mb-3">
-                <span>Fleet Total</span>
-                <span className="font-medium">KSh {subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-[#3D3530] mb-5">
-                <span>Dispatch & Routing Fee</span>
-                <span className="font-medium">KSh {bookingFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-xl font-bold text-[#1F2E27] pt-5 border-t border-[#E8DFD1]/50">
-                <span>Total Due</span>
-                <span className="text-[#A8895C]">KSh {totalAmount.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {paymentError && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm border border-red-200 rounded-sm leading-relaxed">{paymentError}</div>}
-            {paymentMessage && <div className="mb-6 p-4 bg-green-50 text-green-800 text-sm border border-green-200 rounded-sm leading-relaxed">{paymentMessage}</div>}
-            {!paymentError && !paymentMessage && (
-              <p className="mb-6 text-sm leading-relaxed text-[#3D3530]">A secure prompt will be sent to your phone after you confirm the booking.</p>
-            )}
-
-            <button 
-              onClick={handlePayment}
-              disabled={isProcessing}
-              className={`w-full py-4 md:py-5 uppercase tracking-widest text-sm font-semibold transition-all flex items-center justify-center gap-3 rounded-sm
-                ${isProcessing ? "bg-[#3D3530] text-[#E8DFD1] cursor-not-allowed" : "bg-[#1F2E27] text-white hover:bg-[#A8895C] shadow-lg hover:shadow-xl hover:-translate-y-0.5"}`}
-            >
-              {isProcessing ? <><Loader2 size={20} className="animate-spin" /> Authorizing...</> : `Secure Booking KSh ${totalAmount.toLocaleString()}`}
-            </button>
-          </div>
-        </div>
-
+        <aside className="h-fit rounded border border-[#E8DFD1] bg-white p-6 shadow-sm lg:col-span-2 lg:sticky lg:top-24">
+          {submitted ? <div role="status"><CheckCircle2 size={34} className="mb-4 text-emerald-700" /><h2 className="font-serif text-xl text-[#1F2E27]">Request {needsCall ? "saved" : "sent"}</h2><p className="mt-3 text-sm leading-relaxed text-[#3D3530]">{submissionNote} {!needsCall && "Vehicle and date availability and the route-based quote will be confirmed by the team. This request does not reserve the vehicle and no payment has been taken."}</p><p className="mt-4 text-sm text-[#716860]">Call <a href={`tel:${BUSINESS.phoneLink}`} className="font-semibold underline">{BUSINESS.phoneDisplay}</a> for help.</p></div> : <>
+            <h2 className="mb-5 border-b border-[#E8DFD1] pb-4 font-serif text-xl text-[#1F2E27]">Your contact details</h2>
+            <label htmlFor="transport-contact-name" className="mb-2 block text-sm font-medium text-[#3D3530]">Name</label><input id="transport-contact-name" autoComplete="name" value={contactName} onChange={(event) => setContactName(event.target.value)} className="mb-4 w-full rounded-sm border border-[#E8DFD1] bg-[#F8F6F0] p-3 focus:border-[#A8895C] focus:outline-none" />
+            <label htmlFor="transport-contact-phone" className="mb-2 block text-sm font-medium text-[#3D3530]">Phone number</label><input id="transport-contact-phone" type="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="w-full rounded-sm border border-[#E8DFD1] bg-[#F8F6F0] p-3 focus:border-[#A8895C] focus:outline-none" />
+            <label htmlFor="transport-contact-email" className="mb-2 mt-4 block text-sm font-medium text-[#3D3530]">Email address</label><input id="transport-contact-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-sm border border-[#E8DFD1] bg-[#F8F6F0] p-3 focus:border-[#A8895C] focus:outline-none" />
+            {fieldError && <p className="mt-3 text-sm text-red-700" role="alert">{fieldError}</p>}
+            <div className="mt-6 border-t border-[#E8DFD1] pt-5"><div className="flex justify-between gap-3 text-sm"><span>Listed base subtotal</span><strong>{formatKES(listedSubtotal)}</strong></div><p className="mt-3 text-xs leading-relaxed text-[#716860]">Route-based delivery is not included. The team will send the complete price before requesting a 10% planning deposit or any other payment.</p></div>
+            {error && <p className="mt-4 flex gap-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert"><AlertCircle size={18} className="shrink-0" />{error}</p>}
+            <button type="button" onClick={requestQuote} disabled={isSubmitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-[#1F2E27] py-4 text-sm font-semibold uppercase tracking-widest text-white hover:bg-[#A8895C] disabled:cursor-wait disabled:opacity-60">{isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Sending…</> : "Request availability & quote"}</button>
+            <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-[#716860]"><Phone size={15} className="text-[#A8895C]" />No payment is taken with this request.</p>
+          </>}
+        </aside>
       </div>
     </div>
   );

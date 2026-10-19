@@ -1,8 +1,9 @@
-from flask import Flask, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_mail import Mail
 import os
+import secrets
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
@@ -13,16 +14,12 @@ mail = Mail()
 
 
 def validate_required_env(app):
-    warnings = []
-    if not os.environ.get('SECRET_KEY'):
-        warnings.append('SECRET_KEY')
-    if not os.environ.get('JWT_SECRET_KEY'):
-        warnings.append('JWT_SECRET_KEY')
-    if not os.environ.get('MAIL_USERNAME') or not os.environ.get('MAIL_PASSWORD'):
-        warnings.append('MAIL_USERNAME/MAIL_PASSWORD')
-
-    if warnings:
-        print(f"WARNING: Missing production settings: {', '.join(warnings)}")
+    missing_secrets = [key for key in ('SECRET_KEY', 'JWT_SECRET_KEY') if not os.environ.get(key)]
+    production = bool(os.environ.get('RENDER')) or os.environ.get('APP_ENV', '').lower() == 'production'
+    if production and missing_secrets:
+        raise RuntimeError(f"Missing required production secrets: {', '.join(missing_secrets)}")
+    if missing_secrets:
+        app.logger.warning("Using temporary process secrets for local development; configure SECRET_KEY and JWT_SECRET_KEY for stable sessions.")
 
 
 def create_app():
@@ -53,15 +50,16 @@ def create_app():
         print("CONNECTED: Local SQLite Database")
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
     
     # PRO-GRADE FIX: Prevents "SSL connection closed unexpectedly" errors from the database
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True}
     
     # --- SECURITY & JWT CONFIGURATION ---
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'super-secret-funeral-key')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_urlsafe(48)
     
     # PRO-GRADE FIX: Extended the default JWT string to >32 characters to clear the PyJWT Warning
-    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'secure-jwt-key-for-last-planner-hub-production')
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY') or secrets.token_urlsafe(48)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400 
     
     app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -84,7 +82,7 @@ def create_app():
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
     
-    app.config['MAIL_DEBUG'] = True 
+    app.config['MAIL_DEBUG'] = False
     mss = os.environ.get('MAIL_SUPPRESS_SEND', '')
     app.config['MAIL_SUPPRESS_SEND'] = str(mss).strip().lower() in ('1', 'true', 'yes')
 
@@ -108,10 +106,16 @@ def create_app():
 
     @app.route('/<path:path>')
     def serve_static(path):
+        if path == 'api' or path.startswith('api/'):
+            return jsonify({"error": "API endpoint not found"}), 404
         if os.path.exists(os.path.join(app.static_folder, path)):
             return send_from_directory(app.static_folder, path)
         else:
             return send_from_directory(app.static_folder, 'index.html')
+
+    @app.errorhandler(413)
+    def request_too_large(_error):
+        return jsonify({"error": "The uploaded file is too large. Choose an image smaller than 10 MB."}), 413
 
     with app.app_context():
         from . import models

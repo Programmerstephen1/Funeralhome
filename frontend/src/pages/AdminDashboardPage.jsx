@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "../services/config";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, ShoppingBag, CreditCard, DollarSign, Activity, AlertCircle, RefreshCw, Package, ArrowUpRight, Smartphone, Plus, Edit, Trash2, MessageSquare, Send, X, Star, CheckCircle, Bookmark } from "lucide-react";
@@ -28,7 +29,7 @@ export default function AdminDashboardPage() {
 
   const [replyText, setReplyText] = useState({});
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
 
   const fetchAdminData = async () => {
     setLoading(true);

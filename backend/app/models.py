@@ -9,6 +9,10 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    first_name = db.Column(db.String(80), nullable=False, default="")
+    last_name = db.Column(db.String(80), nullable=False, default="")
+    phone = db.Column(db.String(50), nullable=True)
+    profile_picture = db.Column(db.Text, nullable=True)
     
     is_verified = db.Column(db.Boolean, default=False)
     otp_code = db.Column(db.String(6), nullable=True)
@@ -17,13 +21,48 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
+        if not isinstance(password, str) or len(password.encode("utf-8")) > 72:
+            raise ValueError("Passwords must be valid text no longer than 72 UTF-8 bytes.")
         self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     def check_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        if not isinstance(password, str) or len(password.encode("utf-8")) > 72:
+            return False
+        try:
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        except (ValueError, TypeError):
+            return False
 
     def is_otp_valid(self, code):
-        return self.otp_code == code and self.otp_expires > datetime.datetime.utcnow()
+        return bool(
+            self.otp_code
+            and self.otp_expires
+            and code
+            and self.otp_code == code
+            and self.otp_expires > datetime.datetime.utcnow()
+        )
+
+
+class AuthChallenge(db.Model):
+    """A single-use, purpose-bound email code for verification or password reset."""
+    __tablename__ = "auth_challenges"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    purpose = db.Column(db.String(24), nullable=False, index=True)
+    code_hash = db.Column(db.String(64), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+
+class UploadedFile(db.Model):
+    __tablename__ = "uploaded_files"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    filename = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
 
 
 class FuneralService(db.Model):
@@ -50,7 +89,7 @@ class Product(db.Model):
     discount_percent = db.Column(db.Integer, nullable=True, default=0)
     has_sizes = db.Column(db.Boolean, default=False)
     inclusions = db.Column(db.Text, nullable=True) 
-    dispatch_location = db.Column(db.String(100), default="Nairobi Central")
+    dispatch_location = db.Column(db.String(100), default="Kahawa West")
     
     images = db.relationship('ProductImage', backref='product', lazy=True, cascade="all, delete-orphan")
     specifications = db.relationship('ProductSpecification', backref='product', lazy=True, cascade="all, delete-orphan")

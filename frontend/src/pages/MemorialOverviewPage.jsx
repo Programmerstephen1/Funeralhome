@@ -64,14 +64,14 @@ export default function MemorialOverviewPage({ dynamicId }) {
           pin: "0000", 
           familyTreePin: "1111", 
           donationNumber: "0712 345 678", 
-          portrait: "https://via.placeholder.com/400x400?text=Jane+Doe",
+          portrait: "/images/photo-unavailable.svg",
           securityQuestion: "What was the name of your first pet?",
           securityAnswer: "fluffy" // Demo recovery answer
         };
         localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(memorials));
 
         localStorage.setItem("LastPlannerJulz_Gallery_demo", JSON.stringify([
-          { id: 1, image: "https://via.placeholder.com/600x400?text=Family+Vacation", caption: "A beautiful day together", uploader: "John", date: new Date().toLocaleDateString() }
+          { id: 1, image: "/images/photo-unavailable.svg", caption: "A sample memory", uploader: "Sample family", date: new Date().toLocaleDateString() }
         ]));
 
         localStorage.setItem("LastPlannerJulz_Candles_demo", JSON.stringify([
@@ -139,7 +139,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
     };
     localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(memorials));
     
-    triggerToastAndRedirect("Secure memorial space generated successfully!", `/memorial/${cleanId}`);
+    triggerToastAndRedirect("Memorial workspace saved in this browser.", `/memorial/${cleanId}`);
   };
 
   const handleAccessMemorial = (e) => {
@@ -198,18 +198,18 @@ export default function MemorialOverviewPage({ dynamicId }) {
 
         <div className="w-full max-w-lg">
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-serif font-semibold text-[#1F2E27] mb-3">Private Memorials</h1>
-            <p className="text-[#3D3530]">Secure, personalized spaces for families.</p>
+            <h1 className="text-4xl font-serif font-semibold text-[#1F2E27] mb-3">Memorial workspaces</h1>
+            <p className="text-[#3D3530]">Create or access a workspace saved in this browser.</p>
           </div>
 
           <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-[#E8DFD1]">
             <div className="flex border-b border-[#E8DFD1] mb-8">
               <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "access" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("access"); setError(""); setHelpText("Enter the memorial ID and PIN shared with your family."); }}>Access Space</button>
-              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Create a secure memorial space and set up your access controls."); }}>Create Space</button>
+              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Set up a memorial workspace in this browser and create access PINs."); }}>Create Space</button>
             </div>
 
             {error !== "" && !showForgotPin && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
-            {!showForgotPin && <div className="mb-6 rounded-lg border border-[#E8DFD1] bg-[#F8F6F0] px-4 py-3 text-sm text-[#3D3530]">{helpText}</div>}
+            {!showForgotPin && <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">{helpText} This workspace is stored only in this browser. It is not shared across devices or backed up, and clearing browser data can remove it.</div>}
 
             {view === "access" && (
               <form onSubmit={handleAccessMemorial} className="space-y-6">
@@ -281,7 +281,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
                 </div>
                 
                 <div className="pt-4 border-t border-[#E8DFD1]">
-                  <button type="submit" className="w-full py-4 bg-[#A8895C] text-white font-semibold uppercase tracking-widest text-sm rounded-lg hover:bg-[#1F2E27] transition-colors shadow-md hover:-translate-y-0.5">Generate Secure Space</button>
+                  <button type="submit" className="w-full py-4 bg-[#A8895C] text-white font-semibold uppercase tracking-widest text-sm rounded-lg hover:bg-[#1F2E27] transition-colors shadow-md hover:-translate-y-0.5">Save workspace on this device</button>
                 </div>
               </form>
             )}
@@ -358,14 +358,14 @@ export default function MemorialOverviewPage({ dynamicId }) {
     <div className="bg-[#F8F6F0] py-16">
       <div className="site-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section className="mb-16 text-center">
-          <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#A8895C] mb-4">Private Memorial Hub</p>
+          <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#A8895C] mb-4">Memorial Hub</p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-[#1F2E27] mb-6 leading-tight">A quiet place for <br className="hidden md:block"/> collective remembrance</h1>
           
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto leading-relaxed">
             {dynamicId === "demo" ? (
               <span>You are exploring the interactive sample memorial space for <strong className="text-[#1F2E27]">Jane Doe</strong>. Feel free to navigate the modules below to see how our platform works.</span>
             ) : (
-              <span>You are securely managing the memorial space for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Each space below is designed to support thoughtful tribute, shared memory, and calm family connection.</span>
+              <span>You are viewing the memorial workspace for <strong className="text-[#1F2E27]">{dynamicId}</strong>. Changes are saved in this browser only.</span>
             )}
           </p>
         </section>

@@ -4,6 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { ChevronLeft, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
 import { getApiBaseUrl } from "../services/config";
 import api from "../services/api";
+import { createOAuthState, createPkcePair } from "../utils/oauth";
 
 export default function RegisterPage() {
   const locationContext = useContext(UNSAFE_LocationContext);
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const API_URL = getApiBaseUrl();
   const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID;
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const hasRouterContext = Boolean(locationContext && navigationContext);
 
@@ -53,28 +55,36 @@ export default function RegisterPage() {
     if (hash && hash.includes("access_token=")) {
       const params = new URLSearchParams(hash.substring(1));
       const accessToken = params.get("access_token");
-      if (accessToken) {
+      const expectedState = sessionStorage.getItem("facebook_oauth_state");
+      if (accessToken && expectedState && params.get("state") === expectedState) {
+        sessionStorage.removeItem("facebook_oauth_state");
         processSocialLogin("facebook", { token: accessToken });
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (accessToken) {
+        setError("Facebook sign-up could not be verified. Please try again.");
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
     
     const search = window.location.search;
-    if (search && search.includes("code=") && search.includes("state=twitter")) {
+    if (search && search.includes("code=")) {
       const params = new URLSearchParams(search);
       const code = params.get("code");
-      
-      const processedCode = sessionStorage.getItem("twitter_auth_code_reg");
-      
-      if (code && processedCode !== code) {
-        sessionStorage.setItem("twitter_auth_code_reg", code); 
-        
+      const expectedState = sessionStorage.getItem("twitter_oauth_state");
+      const verifier = sessionStorage.getItem("twitter_oauth_verifier");
+      if (code && expectedState && params.get("state") === expectedState && verifier) {
+        sessionStorage.removeItem("twitter_oauth_state");
+        sessionStorage.removeItem("twitter_oauth_verifier");
         processSocialLogin("twitter", { 
             code: code, 
             client_id: TWITTER_CLIENT_ID, 
-            redirect_uri: `${window.location.origin}${window.location.pathname}` 
+            redirect_uri: `${window.location.origin}${window.location.pathname}`,
+            code_verifier: verifier,
         });
         
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (code) {
+        setError("X sign-up could not be verified. Please try again.");
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
@@ -122,7 +132,8 @@ export default function RegisterPage() {
 
     // VALIDATION CHECKS
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters long."); return; }
+    if (password.length < 8) { setError("Choose a password with at least 8 characters."); return; }
+    if (new TextEncoder().encode(password).length > 72) { setError("Password must be 72 bytes or fewer."); return; }
     
     // PRO-GRADE FIX: Block registration if terms are not accepted
     if (!agreedToTerms) { 
@@ -132,9 +143,14 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await api.register(email, password);
-      await api.sendOtp(email);
-      localStorage.setItem("pendingVerificationEmail", email);
+      const normalizedEmail = email.trim().toLowerCase();
+      const result = await api.register(normalizedEmail, password);
+      localStorage.setItem("pendingVerificationEmail", normalizedEmail);
+      if (result.verification_sent === false) {
+        localStorage.setItem("pendingVerificationNotice", result.message || "We could not send the code yet. You can retry from this page.");
+      } else {
+        localStorage.removeItem("pendingVerificationNotice");
+      }
       navigate("/verify");
     } catch (err) {
       console.error(err);
@@ -150,23 +166,40 @@ export default function RegisterPage() {
     onError: () => setError("Google authentication was cancelled or failed.")
   });
 
+  const handleGoogleLogin = () => {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "missing-client-id") {
+      setError("Google sign-up is not configured. Please use email and password for now.");
+      return;
+    }
+    googleLogin();
+  };
+
   const handleFacebookLogin = () => {
     if (!FB_APP_ID || FB_APP_ID === "your_facebook_app_id_here") {
       setError("Facebook API Key has not been configured by the administrator yet.");
       return;
     }
+    const state = createOAuthState();
+    sessionStorage.setItem("facebook_oauth_state", state);
     const redirectUri = encodeURIComponent(`${window.location.origin}/register`);
-    window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile`;
+    window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email,public_profile&state=${encodeURIComponent(state)}`;
   };
 
-  const handleTwitterLogin = () => {
+  const handleTwitterLogin = async () => {
     if (!TWITTER_CLIENT_ID || TWITTER_CLIENT_ID === "your_twitter_client_id_here") {
       setError("X (Twitter) API Key has not been configured by the administrator yet.");
       return;
     }
-    const redirectUri = encodeURIComponent(`${window.location.origin}/register`);
-    const codeChallenge = "challenge12345678901234567890123456789012345";
-    window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=twitter&code_challenge=${codeChallenge}&code_challenge_method=plain`;
+    try {
+      const state = createOAuthState();
+      const { verifier, challenge } = await createPkcePair();
+      sessionStorage.setItem("twitter_oauth_state", state);
+      sessionStorage.setItem("twitter_oauth_verifier", verifier);
+      const redirectUri = encodeURIComponent(`${window.location.origin}/register`);
+      window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=users.read%20tweet.read&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256`;
+    } catch (err) {
+      setError("X sign-up could not be started in this browser. Please use email and password.");
+    }
   };
 
   return (
@@ -202,7 +235,7 @@ export default function RegisterPage() {
               <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Create Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock size={18} className="text-[#A8895C]" /></div>
-                <input type="password" required className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" placeholder="At least 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <input type="password" required minLength={8} maxLength={72} autoComplete="new-password" className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
             </div>
 
@@ -210,7 +243,7 @@ export default function RegisterPage() {
               <label className="block text-xs font-bold text-[#716860] uppercase tracking-wider mb-2">Confirm Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CheckCircle size={18} className="text-[#A8895C]" /></div>
-                <input type="password" required className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <input type="password" required minLength={8} maxLength={72} autoComplete="new-password" className="w-full pl-10 pr-3 py-3 border border-[#E8DFD1] rounded outline-none focus:border-[#A8895C] text-sm" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
             </div>
           </div>
@@ -269,16 +302,16 @@ export default function RegisterPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-3">
-            <button onClick={() => googleLogin()} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
+            <button type="button" onClick={handleGoogleLogin} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
               Google
             </button>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={handleFacebookLogin} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
+              <button type="button" onClick={handleFacebookLogin} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                 Facebook
               </button>
-              <button onClick={handleTwitterLogin} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
+              <button type="button" onClick={handleTwitterLogin} className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-[#E8DFD1] rounded text-sm font-bold text-[#3D3530] bg-white hover:bg-[#F8F6F0] transition-colors">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"/></svg>
                 X (Twitter)
               </button>

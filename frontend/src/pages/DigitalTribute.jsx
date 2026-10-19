@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getApiBaseUrl } from "../services/config";
 import { useParams, Link } from "react-router-dom";
 import { Download, Share2, Heart, Calendar, BookOpen, Check, ArrowLeft, ShieldCheck, FileText } from "lucide-react";
 
@@ -9,7 +10,7 @@ export default function DigitalTribute() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
 
   useEffect(() => {
     if (!eulogyId) return;
@@ -226,7 +227,7 @@ export default function DigitalTribute() {
 
       {/* Footer Disclaimer */}
       <footer className="text-center py-6 text-xs text-[#8F847C]">
-        <p>Published & Preserved by Last Planner Julz Funeral Home</p>
+        <p>Published by Last Planner Julz Funeral Planning Hub</p>
       </footer>
 
     </div>

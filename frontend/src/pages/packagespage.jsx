@@ -1,5 +1,7 @@
 import React from "react";
 import { Phone, MessageCircle, Mail, CheckCircle2, Diamond, Gem, Crown, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BUSINESS } from "../config/business";
 
 const signaturePackages = [
   {
@@ -128,7 +130,7 @@ export default function PackagesPage() {
                 </div>
                 
                 <a 
-                  href={`mailto:lastplannerjulzlimited@gmail.com?subject=Inquiry:%20${pkg.name}%20Package`}
+                  href={`mailto:${BUSINESS.email}?subject=Inquiry:%20${pkg.name}%20Package`}
                   className={`w-full flex items-center justify-center gap-2 py-4 rounded-lg text-sm font-bold uppercase tracking-widest transition-all shadow-md hover:shadow-lg ${pkg.buttonTheme}`}
                 >
                   <Mail size={16} /> Email Us
@@ -142,7 +144,7 @@ export default function PackagesPage() {
         {/* Footer Disclaimer */}
         <div className="max-w-3xl mx-auto mt-20 text-center bg-black/40 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
           <p className="text-sm text-gray-300 leading-relaxed">
-            <strong className="text-white">Please note:</strong> To initiate our formal event orchestration and planning services, an upfront payment of <strong className="text-[#A8895C]">10% of the total estimated planning fee</strong> is required.
+            <strong className="text-white">Planning deposit:</strong> A compulsory <strong className="text-[#A8895C]">10% deposit of the agreed planning fee</strong> is due before planning work begins and is credited toward that fee. It is not automatically forfeited if you cancel. Read our <Link to="/refunds" className="font-semibold text-white underline underline-offset-2">refund and cancellation policy</Link>.
           </p>
         </div>
 

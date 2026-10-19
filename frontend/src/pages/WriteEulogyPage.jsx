@@ -1,9 +1,10 @@
+import { getApiBaseUrl } from "../services/config";
 import React, { useState, useEffect } from "react";
 import { 
   CheckCircle, AlertCircle, ArrowLeft, ArrowRight, Camera, 
   CreditCard, Smartphone, Image as ImageIcon, LayoutTemplate, 
   Type, Settings2, User, BookOpen, Mail, QrCode, FileText,
-  ChevronDown, ChevronUp, Clock, RefreshCw
+  ChevronDown, ChevronUp, Clock
 } from "lucide-react";
 import { Link } from "react-router-dom"; 
 import { Card, CardBody } from "../components";
@@ -39,14 +40,13 @@ const lifeChapters = [
 
 export default function WriteEulogyPage({ dynamicId }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [stepStatus, setStepStatus] = useState("drafting"); // 'drafting', 'pending_payment', or 'success'
+  const [stepStatus, setStepStatus] = useState("drafting");
   const [activeChapter, setActiveChapter] = useState("early_life");
   
   // Book Preview State
   const [previewPage, setPreviewPage] = useState(0);
 
-  // 2-Hour Timer State (7200 seconds)
-  const [timeLeft, setTimeLeft] = useState(7200);
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
   
   // Date formats strictly handle DD/MM/YYYY
   const [formData, setFormData] = useState({
@@ -70,26 +70,43 @@ export default function WriteEulogyPage({ dynamicId }) {
   
   const [phone, setPhone] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
 
-  // --- TIMER EFFECT FOR PENDING PAYMENTS ---
+  // Wait for Daraja's callback-backed status before telling the family payment succeeded.
   useEffect(() => {
-    let timer;
-    if (stepStatus === "pending_payment" && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    } else if (timeLeft <= 0) {
-      setStepStatus("drafting"); // Reset if time expires
-      setErrors({ payment: "Your 2-hour reservation window has expired. Please resubmit." });
-    }
-    return () => clearInterval(timer);
-  }, [stepStatus, timeLeft]);
-
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+    if (!checkoutRequestId) return undefined;
+    let attempts = 0;
+    const interval = window.setInterval(async () => {
+      attempts += 1;
+      try {
+        const response = await fetch(`${API_URL}/api/payments/status/${encodeURIComponent(checkoutRequestId)}`);
+        const status = await response.json().catch(() => ({}));
+        if (status.status === "completed") {
+          window.clearInterval(interval);
+          setCheckoutRequestId(null);
+          setStepStatus("success");
+        } else if (status.status === "failed") {
+          window.clearInterval(interval);
+          setCheckoutRequestId(null);
+          setStepStatus("pending_payment");
+          setErrors({ payment: "The payment was cancelled or could not be completed. If money was deducted, call us before paying again." });
+        } else if (attempts >= 40) {
+          window.clearInterval(interval);
+          setCheckoutRequestId(null);
+          setStepStatus("pending_payment");
+          setErrors({ payment: "We have not received payment confirmation. Check your M-Pesa message or call us before trying again." });
+        }
+      } catch {
+        if (attempts >= 40) {
+          window.clearInterval(interval);
+          setCheckoutRequestId(null);
+          setStepStatus("pending_payment");
+          setErrors({ payment: "We could not confirm the payment status. Check your M-Pesa message or call us before trying again." });
+        }
+      }
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [checkoutRequestId, API_URL]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -229,8 +246,11 @@ export default function WriteEulogyPage({ dynamicId }) {
       });
 
       if (!paymentResponse.ok) {
-        throw new Error("Insufficient funds, unauthorized, or M-Pesa prompt failed.");
+        const paymentError = await paymentResponse.json().catch(() => ({}));
+        throw new Error(paymentError.message || paymentError.error || "We couldn’t start the M-Pesa payment.");
       }
+      const payment = await paymentResponse.json().catch(() => ({}));
+      if (!payment.checkout_request_id) throw new Error("The payment provider did not return a confirmation reference. Please call us before trying again.");
 
       // 2. If Payment OK, Save as Success
       const eulogyResponse = await fetch(`${API_URL}/api/eulogies`, {
@@ -240,13 +260,14 @@ export default function WriteEulogyPage({ dynamicId }) {
       });
 
       if (eulogyResponse.ok) {
-        setStepStatus("success");
+        setCheckoutRequestId(payment.checkout_request_id);
+        setStepStatus("confirming_payment");
       } else {
         throw new Error("Failed to save eulogy to server.");
       }
 
     } catch (error) {
-      // 3. IF PAYMENT FAILS -> Save as Pending Draft and Start 2-Hour Timer
+      // Preserve the writing if payment or saving fails, without claiming payment succeeded.
       console.warn("Payment failed, entering pending state:", error.message);
       
       try {
@@ -260,7 +281,6 @@ export default function WriteEulogyPage({ dynamicId }) {
         console.error("Draft save also failed, but continuing local session.", saveError);
       }
       
-      setTimeLeft(7200); // Reset timer to exactly 2 hours
       setStepStatus("pending_payment");
     } finally {
       setIsSubmitting(false);
@@ -273,6 +293,7 @@ export default function WriteEulogyPage({ dynamicId }) {
     setPhone("");
     setCurrentStep(1);
     setStepStatus("drafting");
+    setCheckoutRequestId(null);
     setErrors({});
   };
 
@@ -687,7 +708,17 @@ export default function WriteEulogyPage({ dynamicId }) {
           </div>
         )}
 
-        {/* --- PENDING PAYMENT VAULT (2-HOUR TIMER) --- */}
+        {stepStatus === "confirming_payment" && (
+          <div className="bg-white rounded-2xl shadow-xl border-t-4 border-t-[#A8895C] text-center py-16 px-8 animate-fadeIn" role="status" aria-live="polite">
+            <div className="w-20 h-20 bg-[#F8F6F0] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#E8DFD1]">
+              <Clock size={40} className="text-[#A8895C]" />
+            </div>
+            <h2 className="text-3xl font-serif font-bold text-[#1F2E27] mb-3">Waiting for M-Pesa confirmation</h2>
+            <p className="max-w-xl mx-auto text-[#3D3530]">Enter your PIN on your phone. Keep this page open while we check the payment status. We’ll only mark the tribute as paid after Safaricom confirms it.</p>
+          </div>
+        )}
+
+        {/* --- PAYMENT STATUS NEEDS ATTENTION --- */}
         {stepStatus === "pending_payment" && (
           <div className="bg-white rounded-2xl shadow-2xl border-t-4 border-t-amber-500 text-center py-16 px-8 animate-fadeIn">
             <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-100">
@@ -697,36 +728,13 @@ export default function WriteEulogyPage({ dynamicId }) {
             <h2 className="text-4xl font-serif font-bold text-[#1F2E27] mb-2">
               Payment Pending
             </h2>
-            <p className="text-sm font-bold uppercase tracking-widest text-amber-600 mb-8">
-              M-Pesa Prompt Failed or Timed Out
-            </p>
-
-            <p className="text-[#3D3530] text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-              Don't worry, we have securely saved your eulogy draft. You have <strong className="text-[#1F2E27]">2 hours</strong> to complete the payment before this draft is deleted from our servers.
-            </p>
-
-            {/* The Live Clock */}
-            <div className="text-6xl font-serif font-bold text-[#1F2E27] mb-10 bg-[#F8F6F0] py-6 px-12 rounded-xl inline-block border border-[#E8DFD1] shadow-inner tracking-widest">
-              {formatTime(timeLeft)}
-            </div>
-
-            <div className="max-w-md mx-auto mb-8 bg-[#F8F6F0] p-6 rounded-xl border border-[#E8DFD1] text-left">
-              <label className="block text-xs uppercase tracking-widest font-bold text-[#1F2E27] mb-2">Update M-Pesa Number</label>
-              <div className="relative mb-4">
-                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600" size={18} />
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07XX XXX XXX" className="w-full pl-12 pr-4 py-4 border border-[#E8DFD1] bg-white rounded-xl focus:outline-none focus:border-emerald-500 font-bold" />
-              </div>
-              <button 
-                onClick={handlePaymentAndSubmit}
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 px-8 py-4 rounded-lg text-sm font-bold uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md disabled:opacity-50"
-              >
-                {isSubmitting ? "Sending Prompt..." : <><RefreshCw size={18} /> Retry Payment</>}
-              </button>
-            </div>
+            <p className="text-sm font-bold uppercase tracking-widest text-amber-600 mb-5">Payment not confirmed</p>
+            <p className="text-[#3D3530] text-lg mb-6 max-w-2xl mx-auto leading-relaxed">Your tribute draft may be saved, but no payment has been confirmed. If you received an M-Pesa prompt or money was deducted, contact us before trying to pay again.</p>
+            {errors.payment && <p className="mx-auto mb-8 max-w-xl rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="alert">{errors.payment}</p>}
+            <a href="tel:+254799847727" className="inline-flex items-center gap-2 rounded-lg bg-[#1F2E27] px-8 py-4 text-sm font-bold uppercase tracking-widest text-white hover:bg-[#A8895C]">Call +254 799 847 727</a>
             
             <button onClick={handleReset} className="text-[#716860] hover:text-red-600 text-sm font-bold uppercase tracking-widest transition-colors">
-              Cancel Order & Start Over
+              Return to the eulogy editor
             </button>
           </div>
         )}

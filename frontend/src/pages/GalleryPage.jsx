@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image as ImageIcon, ArrowLeft, Upload, Plus, Lock, Smartphone, CreditCard, AlertCircle } from "lucide-react";
+import { Image as ImageIcon, ArrowLeft, Upload, Plus, Lock } from "lucide-react";
 import { Link } from "react-router-dom"; 
 import { Button, Modal } from "../components";
 
@@ -17,14 +17,10 @@ export default function GalleryPage({ dynamicId }) {
     return localStorage.getItem(`LastPlannerJulz_GalleryUnlocked_${dynamicId}`) === "true";
   });
   
-  const [phone, setPhone] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentError, setPaymentError] = useState("");
-
   const [showForm, setShowForm] = useState(false);
   const [newPhoto, setNewPhoto] = useState({ image: null, caption: "", uploader: "" });
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = getApiBaseUrl();
 
   useEffect(() => {
     if (dynamicId) {
@@ -62,40 +58,6 @@ export default function GalleryPage({ dynamicId }) {
       ]);
       setNewPhoto({ image: null, caption: "", uploader: "" });
       setShowForm(false);
-    }
-  };
-
-  const handleUnlockGallery = async () => {
-    if (phone === "") {
-      setPaymentError("Please provide an M-Pesa phone number.");
-      return;
-    }
-
-    setIsProcessing(true);
-    setPaymentError("");
-
-    try {
-      const token = localStorage.getItem("token") || "";
-      const userEmail = localStorage.getItem("userEmail") || "guest@example.com";
-
-      const paymentResponse = await fetch(`${API_URL}/api/payments/stkpush`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ amount: 1000, phone: phone, email: userEmail }),
-      });
-
-      if (!paymentResponse.ok) {
-        console.warn("Daraja API offline. Utilizing local simulation.");
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
-      }
-
-      setIsUnlocked(true);
-      localStorage.setItem(`LastPlannerJulz_GalleryUnlocked_${dynamicId}`, "true");
-      
-    } catch (error) {
-      setPaymentError("Network error. Please check your connection.");
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -181,44 +143,22 @@ export default function GalleryPage({ dynamicId }) {
             <div className="space-y-6">
               <div className="bg-[#F8F6F0] border border-[#E8DFD1] rounded-lg p-6 text-center">
                 <Lock size={48} className="mx-auto mb-4 text-[#A8895C]" />
-                <h3 className="text-xl font-serif text-[#1F2E27] mb-2">Premium Cloud Storage</h3>
+                <h3 className="text-xl font-serif text-[#1F2E27] mb-2">Add photos to this device</h3>
                 <p className="text-sm text-[#716860] mb-4">
-                  To ensure permanent, secure hosting for high-resolution memorial photographs, the gallery requires a one-time activation fee.
+                  This version stores gallery photos only in this browser. They are not uploaded, shared with family, or backed up. Contact us to arrange a shared gallery before adding private photographs.
                 </p>
-                <span className="text-3xl font-bold text-[#1F2E27] block">KSh 1,000</span>
-              </div>
-
-              {paymentError !== "" && (
-                 <div className="p-3 bg-red-50 border border-red-100 text-red-700 rounded text-xs flex items-start gap-2 font-semibold">
-                   <AlertCircle size={14} className="shrink-0 mt-0.5" /> {paymentError}
-                 </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest font-bold text-[#716860] mb-2">M-Pesa Phone Number</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Smartphone size={16} className="text-[#A8895C]" />
-                  </div>
-                  <input 
-                    type="tel" 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)} 
-                    placeholder="07XX XXX XXX" 
-                    className="w-full pl-10 pr-4 py-3 border border-[#E8DFD1] bg-white rounded focus:outline-none focus:border-[#A8895C] transition-colors text-sm font-semibold"
-                  />
-                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button 
-                  onClick={handleUnlockGallery}
-                  disabled={isProcessing}
-                  className="flex-1 bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] shadow-md flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                <button
+                  type="button"
+                  onClick={() => setIsUnlocked(true)}
+                  className="flex-1 bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] shadow-md flex items-center justify-center gap-2 transition-colors"
                 >
-                  {isProcessing ? "Processing..." : <><CreditCard size={18} /> Unlock Gallery</>}
+                  <Lock size={18} /> Continue to local upload
                 </button>
               </div>
+              <a href="tel:+254799847727" className="block text-center text-sm font-semibold text-[#1F2E27] underline underline-offset-2">Call to ask about a shared gallery</a>
             </div>
           )}
         </Modal>
