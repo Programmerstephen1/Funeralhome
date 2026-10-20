@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { buildApiUrl } from "./services/config";
 
 let monitoringEnabled = false;
 
@@ -40,8 +41,23 @@ function scrubEvent(event) {
   return event;
 }
 
-export function initializeErrorMonitoring() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN?.trim();
+export async function initializeErrorMonitoring() {
+  let dsn = import.meta.env.VITE_SENTRY_DSN?.trim();
+  if (!dsn) {
+    try {
+      const response = await fetch(buildApiUrl("/api/config/public"), {
+        credentials: "omit",
+        cache: "no-store",
+        signal: AbortSignal.timeout(2000),
+      });
+      if (response.ok) {
+        const config = await response.json();
+        dsn = typeof config.sentryDsn === "string" ? config.sentryDsn.trim() : "";
+      }
+    } catch {
+      // Monitoring is optional; application startup must survive its outage.
+    }
+  }
   if (!dsn || monitoringEnabled) return;
 
   Sentry.init({

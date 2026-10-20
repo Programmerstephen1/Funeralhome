@@ -23,6 +23,27 @@ Required runtime values:
 | `MPESA_CALLBACK_TOKEN` | High-entropy callback secret; provision the same token in Safaricom callback configuration |
 | `FRONTEND_URL` / `VITE_SITE_URL` | Identical canonical HTTPS origin |
 | `MAIL_*` | Provider credentials verified with delivery and bounce handling |
+| `MPESA_*` | Sandbox verified, HTTPS callback URL registered, and distinct credentials configured |
+| `SENTRY_DSN` / `VITE_SENTRY_DSN` | Backend and browser projects configured; test events arrive with sensitive data scrubbed |
+| `CSP_REPORT_ONLY`, `FORCE_HTTPS`, `ENABLE_HSTS` | Production policy enforced only after the OAuth/payment/media allowlist is validated |
+
+Run the production preflight from a trusted operator environment after loading
+the intended environment's secret values into process variables (do not pass
+them on the command line or paste them into a ticket):
+
+```powershell
+Set-Location backend
+python -m scripts.production_preflight
+python -m scripts.production_preflight --check-connectivity
+```
+
+The first command checks required configuration and security flags without
+making network connections. The second verifies PostgreSQL and Redis and
+performs a disposable object-storage put/read/delete check. The script reports
+setting names and exception classes only; it must never be given a production
+environment until the target branch, credentials, and change window have been
+verified. SMTP and provider credentials still require a real delivery and M-Pesa
+sandbox transaction check in the provider workflow below.
 
 Run a deployment smoke check against the target service:
 
@@ -163,7 +184,9 @@ browser/device matrix, accessibility review, and documented accepted issues.
    `0002_hardened_data`. Confirm readiness, payment callbacks, signed media, email,
    and error rates before applying the contract revision in Gate 2.
 4. Add `SENTRY_DSN` and the public `VITE_SENTRY_DSN` in the Render service
-   configuration. Both SDKs are conditional on a configured DSN and scrub user,
+   configuration. The browser reads its public DSN from `/api/config/public` at
+   container runtime, so changing the setting does not require rebuilding the
+   image. Both SDKs are conditional on a configured DSN and scrub user,
    request, URL, breadcrumb, and exception-message data before sending. Confirm
    errors are captured without email, phone, memorial secrets, auth tokens, or
    payment credentials. Configure uptime checks for `/api/health/live` and

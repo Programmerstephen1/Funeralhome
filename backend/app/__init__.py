@@ -258,6 +258,13 @@ def create_app():
     def liveness_check():
         return jsonify({"status": "ok"}), 200
 
+    @app.route('/api/config/public', methods=['GET'])
+    def public_runtime_config():
+        """Expose only browser-safe settings that are supplied at container runtime."""
+        response = jsonify({"sentryDsn": os.environ.get('VITE_SENTRY_DSN', '').strip()})
+        response.headers['Cache-Control'] = 'no-store'
+        return response, 200
+
     @app.route('/api/health/ready', methods=['GET'])
     def readiness_check():
         try:

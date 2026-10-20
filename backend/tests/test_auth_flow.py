@@ -60,6 +60,13 @@ class AccountLifecycleTests(unittest.TestCase):
         self.assertEqual(products.status_code, 200, products.get_json())
         self.assertIsInstance(products.get_json(), list)
 
+    def test_public_runtime_config_exposes_only_browser_safe_sentry_value(self):
+        with patch.dict(os.environ, {"VITE_SENTRY_DSN": "https://public@example.ingest.sentry.io/1"}):
+            response = self.client.get("/api/config/public")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"sentryDsn": "https://public@example.ingest.sentry.io/1"})
+        self.assertEqual(response.headers["Cache-Control"], "no-store")
+
     def test_unknown_frontend_path_returns_http_404(self):
         response = self.client.get("/this-page-does-not-exist")
         self.assertEqual(response.status_code, 404)
