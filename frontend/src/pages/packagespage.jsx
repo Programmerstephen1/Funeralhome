@@ -6,7 +6,7 @@ import { BUSINESS } from "../config/business";
 const signaturePackages = [
   {
     name: "Diamond",
-    icon: <Diamond size={32} className="text-[#A8895C] mb-4" />,
+    icon: <Diamond size={32} className="text-[#805400] mb-4" />,
     subtitle: "Essential Care",
     description: "A dignified and essential arrangement covering the fundamental requirements with profound respect.",
     price: "Consultation Required",
@@ -17,7 +17,7 @@ const signaturePackages = [
   },
   {
     name: "Opals",
-    icon: <Sparkles size={32} className="text-[#A8895C] mb-4" />,
+    icon: <Sparkles size={32} className="text-[#805400] mb-4" />,
     subtitle: "Standard Tribute",
     description: "A comprehensive tribute that ensures the family is transported together alongside beautiful memorial additions.",
     price: "Consultation Required",
@@ -28,7 +28,7 @@ const signaturePackages = [
   },
   {
     name: "Rubies",
-    icon: <Gem size={32} className="text-[#A8895C] mb-4" />,
+    icon: <Gem size={32} className="text-[#805400] mb-4" />,
     subtitle: "Premium Memorial",
     description: "An elevated package that handles all transport, attire, and professional media coverage for lasting memories.",
     price: "Consultation Required",
@@ -39,7 +39,7 @@ const signaturePackages = [
   },
   {
     name: "Emerald",
-    icon: <Crown size={32} className="text-[#A8895C] mb-4" />,
+    icon: <Crown size={32} className="text-[#805400] mb-4" />,
     subtitle: "Complete Orchestration",
     description: "Our highest tier of service. We handle every single logistical detail, allowing you to focus entirely on family.",
     price: "Custom Quote",
@@ -83,12 +83,12 @@ export default function PackagesPage() {
               
               <div className="mb-6 pb-6 border-b border-gray-300/20">
                 {pkg.icon}
-                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A8895C]">
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#805400]">
                   {pkg.subtitle}
                 </span>
-                <h3 className={`text-3xl font-serif font-bold mt-2 ${pkg.name === 'Emerald' ? 'text-white' : 'text-[#1F2E27]'}`}>
+                <h2 className={`text-3xl font-serif font-bold mt-2 ${pkg.name === 'Emerald' ? 'text-white' : 'text-[#1F2E27]'}`}>
                   {pkg.name}
-                </h3>
+                </h2>
                 <p className={`mt-3 text-sm leading-relaxed ${pkg.textColor || 'text-[#716860]'}`}>
                   {pkg.description}
                 </p>
@@ -98,7 +98,7 @@ export default function PackagesPage() {
                 <p className={`text-xl font-bold ${pkg.name === 'Emerald' ? 'text-emerald-400' : 'text-[#1F2E27]'}`}>
                   {pkg.price}
                 </p>
-                <p className="text-xs font-semibold text-[#A8895C] mt-1">
+                <p className="text-xs font-semibold text-[#805400] mt-1">
                   {pkg.note}
                 </p>
               </div>
@@ -106,7 +106,7 @@ export default function PackagesPage() {
               <ul className="flex-grow space-y-4 mb-10">
                 {pkg.features.map((feature, fIdx) => (
                   <li key={fIdx} className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className={`shrink-0 mt-0.5 ${pkg.name === 'Emerald' ? 'text-[#A8895C]' : 'text-emerald-700'}`} />
+                    <CheckCircle2 size={18} className={`shrink-0 mt-0.5 ${pkg.name === 'Emerald' ? 'text-[#805400]' : 'text-emerald-700'}`} />
                     <span className={`text-sm font-medium ${pkg.textColor || 'text-[#3D3530]'}`}>
                       {feature}
                     </span>
@@ -121,10 +121,10 @@ export default function PackagesPage() {
                 </p>
                 
                 <div className="grid grid-cols-2 gap-3">
-                  <a href="tel:+254799847727" className="flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-colors bg-black/5 text-[#A8895C] border border-[#A8895C]/30 hover:bg-[#A8895C] hover:text-white">
+                  <a href="tel:+254799847727" className="flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-colors bg-black/5 text-[#805400] border border-[#A8895C]/30 hover:bg-[#A8895C] hover:text-white">
                     <Phone size={14} /> Call
                   </a>
-                  <a href="https://wa.me/254799847727" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-colors bg-black/5 text-[#A8895C] border border-[#A8895C]/30 hover:bg-green-600 hover:border-green-600 hover:text-white">
+                  <a href="https://wa.me/254799847727" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 rounded-lg text-xs font-bold transition-colors bg-black/5 text-[#805400] border border-[#A8895C]/30 hover:bg-green-600 hover:border-green-600 hover:text-white">
                     <MessageCircle size={14} /> WhatsApp
                   </a>
                 </div>
@@ -144,7 +144,7 @@ export default function PackagesPage() {
         {/* Footer Disclaimer */}
         <div className="max-w-3xl mx-auto mt-20 text-center bg-black/40 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
           <p className="text-sm text-gray-300 leading-relaxed">
-            <strong className="text-white">Planning deposit:</strong> A compulsory <strong className="text-[#A8895C]">10% deposit of the agreed planning fee</strong> is due before planning work begins and is credited toward that fee. It is not automatically forfeited if you cancel. Read our <Link to="/refunds" className="font-semibold text-white underline underline-offset-2">refund and cancellation policy</Link>.
+            <strong className="text-white">Planning deposit:</strong> A compulsory <strong className="text-[#805400]">10% deposit of the agreed planning fee</strong> is due before planning work begins and is credited toward that fee. It is not automatically forfeited if you cancel. Read our <Link to="/refunds" className="font-semibold text-white underline underline-offset-2">refund and cancellation policy</Link>.
           </p>
         </div>
 

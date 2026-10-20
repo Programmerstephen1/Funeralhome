@@ -43,9 +43,9 @@ export default function ForgotPasswordPage() {
         
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-[#F8F6F0] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#E8DFD1]">
-            <KeyRound className="text-[#A8895C]" size={28} />
+            <KeyRound className="text-[#805400]" size={28} />
           </div>
-          <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Forgot Password</h2>
+          <h1 className="text-3xl font-serif text-[#1F2E27] mb-2">Forgot Password</h1>
           <p className="text-[#3D3530] text-sm">Enter your email to receive a secure reset code.</p>
         </div>
 
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label className="block text-sm font-semibold text-[#1F2E27] mb-2 uppercase tracking-wider">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8895C]" size={18} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#805400]" size={18} />
               <input 
                 type="email" 
                 required
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
         </form>
         
         <div className="mt-6 text-center">
-          <a href="#login" className="text-sm text-[#A8895C] font-semibold hover:text-[#1F2E27] transition-colors">Return to Sign In</a>
+          <a href="#login" className="text-sm text-[#805400] font-semibold hover:text-[#1F2E27] transition-colors">Return to Sign In</a>
         </div>
       </div>
     </div>

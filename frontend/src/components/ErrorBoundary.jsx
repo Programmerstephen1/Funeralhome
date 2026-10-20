@@ -1,4 +1,5 @@
 import React from "react";
+import { captureApplicationError } from "../monitoring";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -12,6 +13,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("App error boundary caught an error", error, errorInfo);
+    captureApplicationError(error);
   }
 
   handleReload = () => {
@@ -23,7 +25,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="flex min-h-screen items-center justify-center bg-[#F8F6F0] px-6 py-16">
           <div className="max-w-md rounded-[1.5rem] border border-[#E8DFD1] bg-white p-8 text-center shadow-lg">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#A8895C]">Unexpected issue</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#805400]">Unexpected issue</p>
             <h2 className="mt-3 text-2xl font-serif font-semibold text-[#1F2E27]">Something went wrong</h2>
             <p className="mt-3 text-sm leading-relaxed text-[#3D3530]">
               The page hit an unexpected problem. Refreshing the app usually restores everything quickly.

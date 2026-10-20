@@ -90,7 +90,23 @@ export default function HomePage() {
   return (
     <div className="bg-[#F8F6F0]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden" style={{ backgroundImage: "url('/images/background().jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <section className="relative overflow-hidden">
+        <picture className="absolute inset-0" aria-hidden="true">
+          <source
+            type="image/webp"
+            srcSet="/images/background-640.webp 640w, /images/background-1280.webp 1280w, /images/background-1920.webp 1920w"
+            sizes="100vw"
+          />
+          <img
+            src="/images/background().jpg"
+            alt=""
+            width="1920"
+            height="1280"
+            fetchpriority="high"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </picture>
         <div className="absolute inset-0 bg-[#F8F6F0]/85 backdrop-blur-[2px]"></div>
         <div className="relative site-container py-20 md:py-24">
           <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E8DFD1] bg-white/85 p-8 shadow-[0_20px_70px_rgba(31,46,39,0.08)] backdrop-blur md:p-12">
@@ -139,19 +155,19 @@ export default function HomePage() {
               <div className="fade-in-up rounded-[1.5rem] border border-[#E8DFD1] bg-[#F8F6F0] p-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="soft-card rounded-2xl p-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#A8895C]">Guided care</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#805400]">Guided care</p>
                     <p className="mt-2 text-sm text-[#3D3530]">Thoughtful support for every part of the planning journey.</p>
                   </div>
                   <div className="soft-card rounded-2xl p-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#A8895C]">Personal tribute</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#805400]">Personal tribute</p>
                     <p className="mt-2 text-sm text-[#3D3530]">Beautiful memorial pages and remembrance experiences.</p>
                   </div>
                   <div className="soft-card rounded-2xl p-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#A8895C]">Transparent planning</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#805400]">Transparent planning</p>
                     <p className="mt-2 text-sm text-[#3D3530]">Clear options, calm choices, and simple next steps.</p>
                   </div>
                   <div className="soft-card rounded-2xl p-4">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#A8895C]">Flexible support</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#805400]">Flexible support</p>
                     <p className="mt-2 text-sm text-[#3D3530]">Available when you need us most, with respect and discretion.</p>
                   </div>
                 </div>
@@ -290,7 +306,7 @@ export default function HomePage() {
                 aria-expanded={openFaq === index}
               >
                 <span className="font-semibold text-[#1F2E27]">{faq.question}</span>
-                <ChevronDown className={`shrink-0 text-[#A8895C] transition-transform ${openFaq === index ? "rotate-180" : ""}`} size={18} />
+                <ChevronDown className={`shrink-0 text-[#805400] transition-transform ${openFaq === index ? "rotate-180" : ""}`} size={18} />
               </button>
               {openFaq === index && (
                 <div className="border-t border-[#F2EBDD] px-5 py-4 text-sm leading-relaxed text-[#3D3530]">
@@ -313,12 +329,12 @@ export default function HomePage() {
             {/* Left Column: Premium Headline & Action */}
             <div className="lg:col-span-6 space-y-8">
               <div className="space-y-3">
-                <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#A8895C]">
+                <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#805400]">
                   Dedicated Support
                 </span>
                 <h2 className="text-4xl md:text-5xl font-serif font-semibold text-[#1F2E27] leading-tight">
                   We're here for you <br />
-                  <span className="italic text-[#A8895C] font-normal text-3xl md:text-4xl">every step of the way</span>
+                  <span className="italic text-[#805400] font-normal text-3xl md:text-4xl">every step of the way</span>
                 </h2>
               </div>
               
@@ -337,7 +353,7 @@ export default function HomePage() {
                 </button>
                 <a
                   href="tel:+254799847727"
-                  className="inline-flex items-center gap-2 rounded-full border border-[#D8CFBC] bg-white px-5 py-3 text-sm font-semibold text-[#1F2E27] transition-colors hover:border-[#A8895C] hover:text-[#A8895C]"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#D8CFBC] bg-white px-5 py-3 text-sm font-semibold text-[#1F2E27] transition-colors hover:border-[#A8895C] hover:text-[#805400]"
                 >
                   <Phone size={16} />
                   Call now
@@ -354,32 +370,32 @@ export default function HomePage() {
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
-                    <Phone size={18} className="text-[#A8895C]" />
+                    <Phone size={18} className="text-[#805400]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#A8895C] mb-1">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#805400] mb-1">
                       Call our team
                     </h4>
-                    <a href="tel:+254799847727" className="text-lg font-serif font-semibold text-[#1F2E27] transition-colors hover:text-[#A8895C]">+254 799 847 727</a>
+                    <a href="tel:+254799847727" className="text-lg font-serif font-semibold text-[#1F2E27] transition-colors hover:text-[#805400]">+254 799 847 727</a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
-                    <Mail size={18} className="text-[#A8895C]" />
+                    <Mail size={18} className="text-[#805400]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#A8895C] mb-1">Email our team</h4>
-                    <a href={`mailto:${BUSINESS.email}`} className="break-all text-sm font-semibold text-[#1F2E27] transition-colors hover:text-[#A8895C]">{BUSINESS.email}</a>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#805400] mb-1">Email our team</h4>
+                    <a href={`mailto:${BUSINESS.email}`} className="break-all text-sm font-semibold text-[#1F2E27] transition-colors hover:text-[#805400]">{BUSINESS.email}</a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
-                    <MapPin size={18} className="text-[#A8895C]" />
+                    <MapPin size={18} className="text-[#805400]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#A8895C] mb-1">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#805400] mb-1">
                       Service Area
                     </h4>
                     <p className="text-[#3D3530] text-sm leading-relaxed font-medium">
@@ -391,10 +407,10 @@ export default function HomePage() {
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-[#FDFBF7] border border-[#E8DFD1] rounded-full flex items-center justify-center shrink-0">
-                    <Clock size={18} className="text-[#A8895C]" />
+                    <Clock size={18} className="text-[#805400]" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#A8895C] mb-1">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#805400] mb-1">
                       Operating Hours
                     </h4>
                     <p className="text-sm text-[#3D3530] font-medium">
@@ -415,7 +431,7 @@ export default function HomePage() {
       <footer className="border-t border-[#D8CFBC] bg-[#F8F6F0] py-12">
         <div className="site-container text-center text-[#3D3530] text-sm">
           <p className="font-medium">&copy; 2026 {BUSINESS.name}. All rights reserved.</p>
-          <p className="mt-2 text-[#A8895C] italic">Serving families with dignity, clarity, and compassion.</p>
+          <p className="mt-2 text-[#805400] italic">Serving families with dignity, clarity, and compassion.</p>
           <nav aria-label="Legal" className="mt-5 flex justify-center gap-5">
             <Link to="/terms" className="underline underline-offset-4 hover:text-[#1F2E27]">Terms</Link>
             <Link to="/privacy" className="underline underline-offset-4 hover:text-[#1F2E27]">Privacy</Link>
@@ -512,7 +528,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => { setIsModalOpen(false); setFormStatus(""); setFormError(""); }}
                   disabled={isSubmitting}
-                  className="w-full rounded border-2 border-[#A8895C] px-4 py-3 font-bold uppercase tracking-wide text-[#A8895C] transition-colors hover:bg-[#EFEAE0]"
+                  className="w-full rounded border-2 border-[#A8895C] px-4 py-3 font-bold uppercase tracking-wide text-[#805400] transition-colors hover:bg-[#EFEAE0]"
                 >
                   Cancel
                 </button>

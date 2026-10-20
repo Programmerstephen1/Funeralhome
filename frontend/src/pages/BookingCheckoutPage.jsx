@@ -59,7 +59,7 @@ export default function BookingCheckoutPage({ serviceBookings }) {
   };
 
   if (!serviceBookings || serviceBookings.length === 0) {
-    return <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#F8F6F0] px-4 text-center"><Car size={40} className="mb-5 text-[#A8895C]" /><h1 className="mb-4 font-serif text-2xl text-[#1F2E27]">No transport requests selected</h1><Link to="/catalog" className="text-[#A8895C] underline">Return to catalog</Link></div>;
+    return <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#F8F6F0] px-4 text-center"><Car size={40} className="mb-5 text-[#805400]" /><h1 className="mb-4 font-serif text-2xl text-[#1F2E27]">No transport requests selected</h1><Link to="/catalog" className="text-[#805400] underline">Return to catalog</Link></div>;
   }
 
   return (
@@ -77,7 +77,7 @@ export default function BookingCheckoutPage({ serviceBookings }) {
             const schedule = item.rentalSchedule || {};
             return <article key={item.cartItemId || item.id || index} className="flex flex-col gap-5 rounded border border-[#E8DFD1] bg-white p-5 shadow-sm sm:flex-row">
               <div className="aspect-[4/3] w-full shrink-0 overflow-hidden border border-[#E8DFD1] bg-[#F8F6F0] sm:w-1/3"><img src={item.images?.[0]} alt={item.title} className="h-full w-full object-cover" /></div>
-              <div className="flex-1"><h3 className="font-serif text-xl text-[#1F2E27]">{item.title}</h3><p className="mt-1 font-medium text-[#A8895C]">Listed base {formatKES(item.price)}</p><div className="mt-4 space-y-2 text-sm text-[#3D3530]"><p><span className="font-semibold">Pick-up:</span> {schedule.pickup}</p><p><span className="font-semibold">Destination:</span> {schedule.dropoff}</p><p className="flex items-center gap-2"><Calendar size={15} className="text-[#A8895C]" />{schedule.pickupDate || schedule.date} {schedule.time ? `· ${schedule.time}` : ""}</p>{schedule.returnDate && <p><span className="font-semibold">Return:</span> {schedule.returnDate}</p>}</div></div>
+              <div className="flex-1"><h3 className="font-serif text-xl text-[#1F2E27]">{item.title}</h3><p className="mt-1 font-medium text-[#805400]">Listed base {formatKES(item.price)}</p><div className="mt-4 space-y-2 text-sm text-[#3D3530]"><p><span className="font-semibold">Pick-up:</span> {schedule.pickup}</p><p><span className="font-semibold">Destination:</span> {schedule.dropoff}</p><p className="flex items-center gap-2"><Calendar size={15} className="text-[#805400]" />{schedule.pickupDate || schedule.date} {schedule.time ? `· ${schedule.time}` : ""}</p>{schedule.returnDate && <p><span className="font-semibold">Return:</span> {schedule.returnDate}</p>}</div></div>
             </article>;
           })}
         </section>
@@ -92,7 +92,7 @@ export default function BookingCheckoutPage({ serviceBookings }) {
             <div className="mt-6 border-t border-[#E8DFD1] pt-5"><div className="flex justify-between gap-3 text-sm"><span>Listed base subtotal</span><strong>{formatKES(listedSubtotal)}</strong></div><p className="mt-3 text-xs leading-relaxed text-[#716860]">Route-based delivery is not included. The team will send the complete price before requesting a 10% planning deposit or any other payment.</p></div>
             {error && <p className="mt-4 flex gap-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert"><AlertCircle size={18} className="shrink-0" />{error}</p>}
             <button type="button" onClick={requestQuote} disabled={isSubmitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-[#1F2E27] py-4 text-sm font-semibold uppercase tracking-widest text-white hover:bg-[#A8895C] disabled:cursor-wait disabled:opacity-60">{isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Sending…</> : "Request availability & quote"}</button>
-            <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-[#716860]"><Phone size={15} className="text-[#A8895C]" />No payment is taken with this request.</p>
+            <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-[#716860]"><Phone size={15} className="text-[#805400]" />No payment is taken with this request.</p>
           </>}
         </aside>
       </div>

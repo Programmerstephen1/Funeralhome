@@ -6,7 +6,7 @@ export default function SectionPage({ pageTitle, pageDescription, pageContent, s
     <div className="bg-[#F8F6F0] py-12 min-h-screen">
       <div className="site-container">
         <section className="mb-10 text-center">
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">
             Memorial Hub
           </p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">

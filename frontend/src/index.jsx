@@ -3,6 +3,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { initializeErrorMonitoring } from "./monitoring";
 
 // This file serves as the entry point for your React application.
 // It finds the 'root' div in your public/index.html file and 
@@ -10,6 +11,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 const container = document.getElementById("root");
 const root = createRoot(container);
+initializeErrorMonitoring();
 
 root.render(
   <React.StrictMode>

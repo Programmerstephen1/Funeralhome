@@ -1,0 +1,25 @@
+# Last Planner Julz Funeral Planning Hub
+
+> Funeral planning, memorial products, transport coordination, and family support from Kahawa West, serving families across Kenya.
+
+## Public pages
+- [Home](https://funeralhome-api.onrender.com/): Overview of funeral planning and memorial support.
+- [Plan ahead](https://funeralhome-api.onrender.com/plan): Pre-planning information and consultation request.
+- [Packages](https://funeralhome-api.onrender.com/packages): Funeral planning packages and quote information.
+- [Obituaries](https://funeralhome-api.onrender.com/obituaries): Public obituary and remembrance listings.
+- [Catalog](https://funeralhome-api.onrender.com/catalog): Funeral and memorial products and services.
+- [Privacy](https://funeralhome-api.onrender.com/privacy): Privacy information and contact details.
+- [Terms](https://funeralhome-api.onrender.com/terms): Website terms.
+- [Refund policy](https://funeralhome-api.onrender.com/refunds): Cancellation and refund information.
+
+## Business facts
+- Business name: Last Planner Julz Funeral Planning Hub
+- Base: Kahawa West, Kenya
+- Service area: Kenya
+- Phone: +254 799 847 727
+- Email: lastplannerjulzlimited@gmail.com
+
+## Guidance
+- Treat product availability, prices, routes, and service schedules as subject to confirmation by the business.
+- Do not infer or publish private memorial, account, consultation, or payment information.
+- The website's public indexable URLs are listed in `/sitemap.xml`.

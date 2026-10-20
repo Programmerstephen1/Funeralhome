@@ -88,16 +88,16 @@ export default function LiveJournalPage({ dynamicId }) {
         
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
 
         <section className="mb-16 text-center">
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md border border-[#E8DFD1]">
-            <FileText size={32} className="text-[#A8895C]" />
+            <FileText size={32} className="text-[#805400]" />
           </div>
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Timeline & Announcements</p>
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">Timeline & Announcements</p>
           <h1 className="text-4xl md:text-5xl font-serif font-semibold text-[#1F2E27] mb-4">The Memorial Journal</h1>
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto mb-8">
             Official updates, arrangements, and ongoing reflections regarding {memorialData.name}.
@@ -116,7 +116,7 @@ export default function LiveJournalPage({ dynamicId }) {
         {entries.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-[#E8DFD1] border-dashed shadow-sm">
             <FileText size={48} className="mx-auto mb-4 text-[#E8DFD1]" />
-            <h3 className="text-xl font-serif text-[#1F2E27] mb-2">The Journal is empty</h3>
+            <h2 className="text-xl font-serif text-[#1F2E27] mb-2">The Journal is empty</h2>
             <p className="text-[#3D3530]">The family has not posted any announcements yet.</p>
           </div>
         ) : (
@@ -128,9 +128,9 @@ export default function LiveJournalPage({ dynamicId }) {
                   <CardBody className="p-8">
                     <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                       <div className="flex-1">
-                        <h3 className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2">{entry.title}</h3>
+                        <h2 className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2">{entry.title}</h2>
                         
-                        <div className="flex items-center gap-4 text-[10px] font-bold text-[#A8895C] uppercase tracking-widest mb-4">
+                        <div className="flex items-center gap-4 text-[10px] font-bold text-[#805400] uppercase tracking-widest mb-4">
                           <span>By {entry.author}</span>
                           <span className="w-1 h-1 rounded-full bg-[#D8CFBC]"></span>
                           <span className="flex items-center gap-1"><Calendar size={12}/> {entry.date}</span>
@@ -139,12 +139,12 @@ export default function LiveJournalPage({ dynamicId }) {
                         <p className="text-[#3D3530] leading-loose mb-6 font-serif text-lg italic text-black/80">
                           "{entry.excerpt}"
                         </p>
-                        <button onClick={() => setSelectedEntry(entry)} className="text-[#A8895C] border-b border-[#A8895C] pb-0.5 hover:text-[#1F2E27] hover:border-[#1F2E27] text-sm font-semibold transition-colors uppercase tracking-widest">
+                        <button onClick={() => setSelectedEntry(entry)} className="text-[#805400] border-b border-[#A8895C] pb-0.5 hover:text-[#1F2E27] hover:border-[#1F2E27] text-sm font-semibold transition-colors uppercase tracking-widest">
                           Read Full Entry
                         </button>
                       </div>
                       <div className="flex-shrink-0 opacity-20 group-hover:opacity-100 transition-opacity hidden sm:block">
-                        <FileText size={48} className="text-[#A8895C]" />
+                        <FileText size={48} className="text-[#805400]" />
                       </div>
                     </div>
                   </CardBody>
@@ -161,7 +161,7 @@ export default function LiveJournalPage({ dynamicId }) {
               <button onClick={() => {setShowAuthModal(false); setAuthError("");}} className="absolute top-4 right-4 text-[#8F847C] hover:text-[#1F2E27] transition-colors"><X size={20} /></button>
               <div className="p-8 text-center pt-10">
                 <div className="w-16 h-16 bg-[#1F2E27] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <Lock size={28} className="text-[#A8895C]" />
+                  <Lock size={28} className="text-[#805400]" />
                 </div>
                 <h2 className="text-2xl font-serif text-[#1F2E27] mb-2">Family Access</h2>
                 <p className="text-[#716860] mb-6 text-xs leading-relaxed">
@@ -217,7 +217,7 @@ export default function LiveJournalPage({ dynamicId }) {
         {selectedEntry && (
           <Modal isOpen={!!selectedEntry} onClose={() => setSelectedEntry(null)} title={selectedEntry.title}>
             <div className="p-2">
-              <p className="text-xs uppercase tracking-widest text-[#A8895C] font-bold mb-6 border-b border-[#E8DFD1] pb-4">
+              <p className="text-xs uppercase tracking-widest text-[#805400] font-bold mb-6 border-b border-[#E8DFD1] pb-4">
                 By {selectedEntry.author} <span className="mx-2 text-[#D8CFBC]">|</span> {selectedEntry.date}
               </p>
               <p className="text-[#3D3530] leading-loose whitespace-pre-wrap font-serif text-lg">

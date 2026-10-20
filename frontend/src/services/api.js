@@ -37,7 +37,17 @@ class ApiService {
 
       if (!response.ok) {
         if (response.status === 401) this.logout();
-        const message = payload && typeof payload === "object" ? payload.message || payload.error : payload;
+        const safePayloadMessage =
+          payload && typeof payload === "object"
+            ? payload.message || payload.error
+            : typeof payload === "string" && !/^\s*<(?:!doctype|html|head|body)\b/i.test(payload)
+              ? payload
+              : null;
+        const message =
+          safePayloadMessage ||
+          (response.status >= 500
+            ? "The server encountered an error. Please try again in a moment."
+            : `The request could not be completed (${response.status}).`);
         const error = new Error(message || `API error: ${response.status}`);
         error.status = response.status;
         error.payload = payload;

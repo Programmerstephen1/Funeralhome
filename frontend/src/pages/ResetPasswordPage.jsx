@@ -110,9 +110,9 @@ export default function ResetPasswordPage() {
         
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-[#F8F6F0] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#E8DFD1]">
-            <ShieldCheck className="text-[#A8895C]" size={28} />
+            <ShieldCheck className="text-[#805400]" size={28} />
           </div>
-          <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">Secure Reset</h2>
+          <h1 className="text-3xl font-serif text-[#1F2E27] mb-2">Secure Reset</h1>
           <p className="text-[#3D3530] text-sm">Enter the code sent to {userEmail || "your email"}</p>
           <p className="mt-2 text-xs text-[#716860]">If an account exists, a code will arrive shortly. Check your spam folder if it does not appear.</p>
         </div>
@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
         )}
 
         <form onSubmit={handleReset} className="space-y-6">
-          {!userEmail && <a href="#forgot-password" className="block text-center text-sm font-semibold text-[#A8895C] underline">Request a new reset code</a>}
+          {!userEmail && <a href="#forgot-password" className="block text-center text-sm font-semibold text-[#805400] underline">Request a new reset code</a>}
           {/* Pro OTP Input */}
           <div>
             <label className="block text-sm font-semibold text-[#1F2E27] mb-3 uppercase tracking-wider text-center">6-Digit Code</label>
@@ -145,7 +145,7 @@ export default function ResetPasswordPage() {
                 />
               ))}
             </div>
-            <button type="button" onClick={handleResendCode} disabled={!userEmail || isResending || resendCooldown > 0} className="mt-3 w-full text-center text-sm font-semibold text-[#A8895C] hover:text-[#1F2E27] disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" onClick={handleResendCode} disabled={!userEmail || isResending || resendCooldown > 0} className="mt-3 w-full text-center text-sm font-semibold text-[#805400] hover:text-[#1F2E27] disabled:cursor-not-allowed disabled:opacity-50">
               {isResending ? "Sending…" : resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend reset code"}
             </button>
           </div>
@@ -153,7 +153,7 @@ export default function ResetPasswordPage() {
           <div>
             <label className="block text-sm font-semibold text-[#1F2E27] mb-2 uppercase tracking-wider">New Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8895C]" size={18} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#805400]" size={18} />
               <input type="password" required minLength={8} maxLength={72} autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-[#F8F6F0] border border-[#E8DFD1] focus:border-[#A8895C] focus:bg-white outline-none rounded" placeholder="At least 8 characters" />
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
           <div>
             <label className="block text-sm font-semibold text-[#1F2E27] mb-2 uppercase tracking-wider">Confirm New Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8895C]" size={18} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#805400]" size={18} />
               <input type="password" required minLength={8} maxLength={72} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-[#F8F6F0] border border-[#E8DFD1] focus:border-[#A8895C] focus:bg-white outline-none rounded" placeholder="Confirm your new password" />
             </div>
           </div>

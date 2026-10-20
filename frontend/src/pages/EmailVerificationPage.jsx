@@ -127,7 +127,7 @@ export default function EmailVerificationPage({ userEmail }) {
     <div className="min-h-[80vh] bg-[#F8F6F0] flex flex-col items-center justify-center p-4">
       
       <div className="w-20 h-20 bg-white border border-[#E8DFD1] rounded-full flex items-center justify-center mb-8 shadow-sm">
-        <Mail className="text-[#A8895C]" size={32} />
+        <Mail className="text-[#805400]" size={32} />
       </div>
 
       <div className="text-center mb-10">
@@ -137,7 +137,7 @@ export default function EmailVerificationPage({ userEmail }) {
         <p className="text-[#3D3530] text-lg">
           Enter the 6-digit code we sent to
         </p>
-        <p className="text-[#A8895C] font-semibold mt-1">
+        <p className="text-[#805400] font-semibold mt-1">
           {activeEmail || "your email address"}
         </p>
         {status.message && <p role="status" className={`mx-auto mt-4 max-w-md rounded p-3 text-sm ${status.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>{status.message}</p>}
@@ -146,7 +146,7 @@ export default function EmailVerificationPage({ userEmail }) {
       <div className="bg-white border border-[#E8DFD1] rounded-2xl shadow-lg p-8 md:p-10 w-full max-w-md">
         
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[#A8895C] font-bold">#</span>
+          <span className="text-[#805400] font-bold">#</span>
           <label className="text-sm tracking-widest uppercase font-semibold text-[#1F2E27]">
             6-Digit Code
           </label>
@@ -171,7 +171,7 @@ export default function EmailVerificationPage({ userEmail }) {
         </div>
 
         <div className="flex items-center justify-center gap-2 text-sm text-[#3D3530] mb-8">
-          <Clock size={16} className="text-[#A8895C]" />
+          <Clock size={16} className="text-[#805400]" />
           <span>Code expires in 10 minutes</span>
         </div>
 
@@ -190,7 +190,7 @@ export default function EmailVerificationPage({ userEmail }) {
           <button 
             onClick={handleResend}
             disabled={isResending || resendCooldown > 0}
-            className="flex items-center justify-center gap-2 text-[#A8895C] hover:text-[#1F2E27] disabled:cursor-not-allowed disabled:opacity-50 font-semibold text-sm tracking-wider uppercase transition-colors w-full"
+            className="flex items-center justify-center gap-2 text-[#805400] hover:text-[#1F2E27] disabled:cursor-not-allowed disabled:opacity-50 font-semibold text-sm tracking-wider uppercase transition-colors w-full"
           >
             <RefreshCw size={16} className={isResending ? "animate-spin" : ""} /> {isResending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
           </button>

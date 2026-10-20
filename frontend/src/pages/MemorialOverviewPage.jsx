@@ -191,7 +191,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
       <div className="min-h-[80vh] bg-[#F8F6F0] py-16 flex items-center justify-center relative overflow-hidden px-4">
         {toast.show && (
           <div className="fixed top-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#1F2E27] text-white px-6 py-4 shadow-2xl rounded-lg border border-[#A8895C] animate-fade-in-down">
-            <CheckCircle size={20} className="text-[#A8895C]" />
+            <CheckCircle size={20} className="text-[#805400]" />
             <span className="font-semibold text-sm tracking-wide">{toast.message}</span>
           </div>
         )}
@@ -204,8 +204,8 @@ export default function MemorialOverviewPage({ dynamicId }) {
 
           <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-[#E8DFD1]">
             <div className="flex border-b border-[#E8DFD1] mb-8">
-              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "access" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("access"); setError(""); setHelpText("Enter the memorial ID and PIN shared with your family."); }}>Access Space</button>
-              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#A8895C] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Set up a memorial workspace in this browser and create access PINs."); }}>Create Space</button>
+              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "access" ? "text-[#805400] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("access"); setError(""); setHelpText("Enter the memorial ID and PIN shared with your family."); }}>Access Space</button>
+              <button className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${view === "create" ? "text-[#805400] border-b-2 border-[#A8895C] bg-[#F8F6F0]/50" : "text-[#8F847C] hover:text-[#1F2E27] hover:bg-gray-50"}`} onClick={() => { setView("create"); setError(""); setHelpText("Set up a memorial workspace in this browser and create access PINs."); }}>Create Space</button>
             </div>
 
             {error !== "" && !showForgotPin && <div className="mb-6 p-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">{error}</div>}
@@ -214,13 +214,13 @@ export default function MemorialOverviewPage({ dynamicId }) {
             {view === "access" && (
               <form onSubmit={handleAccessMemorial} className="space-y-6">
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Lock size={14} className="text-[#A8895C]"/> Memorial ID</label>
+                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Lock size={14} className="text-[#805400]"/> Memorial ID</label>
                   <input type="text" value={accessId} onChange={e => setAccessId(e.target.value)} placeholder="e.g., doe-family" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#1F2E27]">General Access PIN</label>
-                    <button type="button" onClick={() => {setShowForgotPin(true); setError("");}} className="text-[10px] uppercase font-bold tracking-widest text-[#A8895C] hover:text-[#1F2E27] transition-colors">Forgot PIN?</button>
+                    <button type="button" onClick={() => {setShowForgotPin(true); setError("");}} className="text-[10px] uppercase font-bold tracking-widest text-[#805400] hover:text-[#1F2E27] transition-colors">Forgot PIN?</button>
                   </div>
                   <input type="password" value={accessPin} onChange={e => setAccessPin(e.target.value)} placeholder="••••" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all tracking-[0.5em] text-center text-xl" />
                 </div>
@@ -231,7 +231,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
             {view === "create" && (
               <form onSubmit={handleCreateMemorial} className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><UserPlus size={14} className="text-[#A8895C]"/> Name of Loved One *</label>
+                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><UserPlus size={14} className="text-[#805400]"/> Name of Loved One *</label>
                   <input type="text" value={createName} onChange={e => setCreateName(e.target.value)} placeholder="e.g., John Doe" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
                 <div>
@@ -253,7 +253,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
                 {/* SECURITY QUESTIONS SETUP */}
                 <div className="bg-[#F8F6F0] p-4 rounded-lg border border-[#E8DFD1] space-y-4">
                   <div className="flex items-center gap-2 mb-2 border-b border-[#E8DFD1] pb-2">
-                    <ShieldAlert size={14} className="text-[#A8895C]"/>
+                    <ShieldAlert size={14} className="text-[#805400]"/>
                     <span className="text-xs font-bold uppercase tracking-wider text-[#1F2E27]">Security Recovery Setup</span>
                   </div>
                   <div>
@@ -271,12 +271,12 @@ export default function MemorialOverviewPage({ dynamicId }) {
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Smartphone size={14} className="text-[#A8895C]"/> Family Treasurer Mobile No. *</label>
+                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Smartphone size={14} className="text-[#805400]"/> Family Treasurer Mobile No. *</label>
                   <input type="tel" value={createDonationNumber} onChange={e => setCreateDonationNumber(e.target.value)} placeholder="07XX XXX XXX (For Remittances)" className="w-full p-4 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] focus:border-[#A8895C] focus:ring-2 focus:ring-[#A8895C]/20 outline-none transition-all" />
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Upload size={14} className="text-[#A8895C]"/> Primary Portrait (Optional)</label>
+                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1F2E27] mb-2"><Upload size={14} className="text-[#805400]"/> Primary Portrait (Optional)</label>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full p-2 border border-[#E8DFD1] rounded-lg bg-[#F8F6F0] text-sm file:mr-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-xs file:uppercase file:tracking-wider file:font-bold file:bg-[#1F2E27] file:text-white hover:file:bg-[#A8895C] transition-colors cursor-pointer" />
                 </div>
                 
@@ -292,7 +292,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
         {showForgotPin && (
           <Modal isOpen={showForgotPin} onClose={closeRecoveryModal} title="Security Recovery">
             <div className="p-4 space-y-6 text-center">
-              <ShieldAlert size={48} className="mx-auto text-[#A8895C] mb-4" />
+              <ShieldAlert size={48} className="mx-auto text-[#805400] mb-4" />
               
               {error !== "" && <div className="p-3 bg-red-50 text-red-700 text-xs rounded border border-red-100 font-semibold">{error}</div>}
 
@@ -313,7 +313,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
               {recoveryStep === 2 && recoveredData && (
                 <div className="space-y-4 animate-fadeIn">
                   <div className="bg-[#F8F6F0] p-4 rounded border border-[#E8DFD1]">
-                    <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-1">Security Question</span>
+                    <span className="text-[10px] uppercase font-bold text-[#805400] block mb-1">Security Question</span>
                     <p className="font-serif text-[#1F2E27] text-lg">{recoveredData.securityQuestion}</p>
                   </div>
                   <input 
@@ -340,7 +340,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
                       <p className="font-mono text-2xl tracking-[0.3em] text-[#1F2E27] font-bold">{recoveredData.pin}</p>
                     </div>
                     <div className="bg-[#1F2E27] p-4 rounded border border-[#1F2E27]">
-                      <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-2">Nuclear PIN</span>
+                      <span className="text-[10px] uppercase font-bold text-[#805400] block mb-2">Nuclear PIN</span>
                       <p className="font-mono text-2xl tracking-[0.3em] text-white font-bold">{recoveredData.familyTreePin}</p>
                     </div>
                   </div>
@@ -358,7 +358,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
     <div className="bg-[#F8F6F0] py-16">
       <div className="site-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <section className="mb-16 text-center">
-          <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#A8895C] mb-4">Memorial Hub</p>
+          <p className="text-xs font-bold tracking-[0.28em] uppercase text-[#805400] mb-4">Memorial Hub</p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-[#1F2E27] mb-6 leading-tight">A quiet place for <br className="hidden md:block"/> collective remembrance</h1>
           
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto leading-relaxed">
@@ -380,7 +380,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
               >
                 <CardBody className="flex flex-col h-full p-8">
                   <div className="flex flex-col mb-6">
-                    <span className={`flex h-14 w-14 items-center justify-center rounded-full mb-6 transition-colors ${isActive ? "bg-[#A8895C] text-white" : "bg-[#F8F6F0] text-[#A8895C] border border-[#E8DFD1]"}`}>
+                    <span className={`flex h-14 w-14 items-center justify-center rounded-full mb-6 transition-colors ${isActive ? "bg-[#A8895C] text-white" : "bg-[#F8F6F0] text-[#805400] border border-[#E8DFD1]"}`}>
                       <Icon size={24} />
                     </span>
                     <div>
@@ -391,7 +391,7 @@ export default function MemorialOverviewPage({ dynamicId }) {
                   <div className="mt-auto pt-6 border-t border-[#F8F6F0]">
                     <Link
                       to={`/${target}/${dynamicId}`}
-                      className={`inline-block w-full text-center rounded-sm px-4 py-3 uppercase tracking-wider text-xs font-semibold transition-colors ${isActive ? "bg-[#1F2E27] text-white hover:bg-[#3D3530]" : "border border-[#E8DFD1] text-[#3D3530] hover:bg-[#F8F6F0] hover:text-[#A8895C] hover:border-[#A8895C]"}`}
+                      className={`inline-block w-full text-center rounded-sm px-4 py-3 uppercase tracking-wider text-xs font-semibold transition-colors ${isActive ? "bg-[#1F2E27] text-white hover:bg-[#3D3530]" : "border border-[#E8DFD1] text-[#3D3530] hover:bg-[#F8F6F0] hover:text-[#805400] hover:border-[#A8895C]"}`}
                       onClick={() => setActiveSection(title)}
                     >
                       Visit {title}

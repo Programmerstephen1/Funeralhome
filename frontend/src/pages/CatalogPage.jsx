@@ -232,8 +232,8 @@ const ImageSlider = ({ images, altText, aspectClass }) => {
 
       {images.length > 1 && (
         <>
-          <button type="button" aria-label={`Previous ${altText} image`} onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronLeft size={16} /></button>
-          <button type="button" aria-label={`Next ${altText} image`} onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#A8895C] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronRight size={16} /></button>
+          <button type="button" aria-label={`Previous ${altText} image`} onClick={prevImg} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#805400] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronLeft size={16} /></button>
+          <button type="button" aria-label={`Next ${altText} image`} onClick={nextImg} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white border border-[#E8DFD1] p-1.5 rounded-full text-[#3D3530] hover:text-[#805400] opacity-0 group-hover/slider:opacity-100 focus-visible:opacity-100 transition-all z-10 shadow-sm"><ChevronRight size={16} /></button>
         </>
       )}
     </div>
@@ -248,7 +248,7 @@ const CategoryCard = React.memo(function CategoryCard({ item, onClick }) {
         <ImageSlider images={item.images} altText={item.title} aspectClass="aspect-[4/3]" />
       </div>
       <button type="button" onClick={onClick} className="flex w-full flex-grow flex-col p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A8895C]">
-        <h3 className="mb-2 text-lg font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
+        <h3 className="mb-2 text-lg font-bold text-[#1F2E27] transition-colors group-hover:text-[#805400]">
           {item.title}
         </h3>
         <p className="text-xs text-[#716860] line-clamp-2">
@@ -305,7 +305,7 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
       </Link>
 
       <div className="flex flex-grow flex-col p-4">
-        <Link to={`/product/${item.id}`} className="text-sm font-semibold text-[#1F2E27] hover:text-[#A8895C] transition-colors line-clamp-2 mb-2 leading-tight h-10">
+        <Link to={`/product/${item.id}`} className="text-sm font-semibold text-[#1F2E27] hover:text-[#805400] transition-colors line-clamp-2 mb-2 leading-tight h-10">
           {item.title}
         </Link>
 
@@ -331,7 +331,7 @@ const ProductCard = React.memo(function ProductCard({ item, recentlyAdded, onAdd
 
         {item.inclusions && item.inclusions.length > 0 && (
           <div className="mb-4 pt-3 border-t border-[#F8F6F0]">
-            <span className="text-[9px] font-bold text-[#A8895C] uppercase tracking-wider block mb-1.5">Package Includes:</span>
+            <span className="text-[9px] font-bold text-[#805400] uppercase tracking-wider block mb-1.5">Package Includes:</span>
             <ul className="space-y-1">
               {item.inclusions.map((inc, i) => (
                 <li key={i} className="text-[10px] text-[#716860] flex items-start gap-1.5 leading-tight">
@@ -654,6 +654,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
   return (
     <div className="min-h-screen bg-[#F4F4F4] flex flex-col relative">
+      {isImmersiveMode && <h1 className="sr-only">{activeCategory?.name || "Funeral and memorial services"}</h1>}
       <div className="pt-8 pb-24 flex-grow">
 
         {/* ========================================================================= */}
@@ -666,7 +667,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             <div className="mb-8 bg-white p-6 rounded shadow-sm border border-[#E8DFD1]">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#1F2E27]">Official Store</h2>
+                  <h1 className="text-2xl font-bold text-[#1F2E27]">Official Store</h1>
                   <p className="text-xs text-[#716860] mt-1">
                     Quality memorial selections fulfilled directly by Last Planner Julz.
                   </p>
@@ -708,7 +709,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               <div>
                 <button
                   onClick={handleBackClick}
-                  className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold mb-6"
+                  className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#805400] font-bold mb-6"
                 >
                   <ChevronLeft size={16} /> Back to Categories
                 </button>
@@ -731,7 +732,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <div className="flex justify-between items-center mb-6">
                   <button
                     onClick={handleBackClick}
-                    className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold"
+                    className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#805400] font-bold"
                   >
                     <ChevronLeft size={16} />
                     {activeCategory.subcategories ? `Back to ${activeCategory.title}` : "Back to Categories"}
@@ -770,7 +771,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             <div className="w-full px-4 lg:px-8 py-4 mx-auto max-w-7xl">
                <button
                  onClick={handleBackClick}
-                 className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold transition-colors"
+                 className="flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold transition-colors"
                >
                  <ChevronLeft size={16} /> Return to Main Catalog
                </button>
@@ -781,7 +782,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
               <div className="w-full bg-[#1A1A18] font-sans border-y border-[#2A2A2A] shadow-2xl">
 
                 {/* Top Notification Bar */}
-                <div className="bg-[#0B0B0A] text-[#A8895C] text-[10px] sm:text-xs tracking-[0.15em] uppercase py-3 px-6 flex flex-wrap justify-center sm:justify-between items-center gap-4 border-b border-[#2A2A2A]">
+                <div className="bg-[#0B0B0A] text-[#805400] text-[10px] sm:text-xs tracking-[0.15em] uppercase py-3 px-6 flex flex-wrap justify-center sm:justify-between items-center gap-4 border-b border-[#2A2A2A]">
                   <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Catering options</span>
                   <span className="hidden md:flex items-center gap-2"><CheckCircle size={14}/> Availability confirmed on request</span>
                   <span className="flex items-center gap-2"><CheckCircle size={14}/> Guest numbers discussed with our team</span>
@@ -793,12 +794,12 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
                     {/* Left: Typography & Copy */}
                     <div className="lg:col-span-7">
-                      <span className="inline-block px-4 py-1.5 rounded-full border border-[#A8895C] text-[#A8895C] text-xs font-bold tracking-[0.2em] mb-8 bg-[#A8895C]/10">
+                      <span className="inline-block px-4 py-1.5 rounded-full border border-[#A8895C] text-[#805400] text-xs font-bold tracking-[0.2em] mb-8 bg-[#A8895C]/10">
                         MEMORIAL SERVICES
                       </span>
                       <h2 className="text-4xl lg:text-6xl xl:text-7xl font-serif text-white mb-6 leading-[1.1]">
                         Last Planner Julz <br/>
-                        <span className="text-[#A8895C] italic text-3xl lg:text-5xl xl:text-6xl">Dignified Memorial Catering</span>
+                        <span className="text-[#805400] italic text-3xl lg:text-5xl xl:text-6xl">Dignified Memorial Catering</span>
                       </h2>
                       <p className="text-[#D8CFBC] text-sm lg:text-base leading-relaxed mb-8 opacity-90 max-w-lg">
                         To support our families with absolute devotion, we provide deeply respectful and highly professional funeral catering services. We craft custom packages and traditional tribute menus to handle all catering details during these difficult moments with the utmost dignity.
@@ -821,7 +822,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                         {inquiryErrors.catering && <p className="rounded border border-red-400 bg-red-950 p-3 text-sm text-red-100" role="alert">{inquiryErrors.catering}</p>}
 
                         <div>
-                          <label htmlFor="catering-name" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Your Name</label>
+                          <label htmlFor="catering-name" className="block text-[11px] font-bold text-[#805400] tracking-[0.15em] mb-2 uppercase">Your Name</label>
                           <input
                             id="catering-name"
                             type="text"
@@ -834,11 +835,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                           />
                         </div>
                         <div>
-                          <label htmlFor="catering-email" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Email Address</label>
+                          <label htmlFor="catering-email" className="block text-[11px] font-bold text-[#805400] tracking-[0.15em] mb-2 uppercase">Email Address</label>
                           <input id="catering-email" type="email" autoComplete="email" value={inquiryForms.catering.email} onChange={(event) => updateInquiry("catering", "email", event.target.value)} placeholder="you@example.com" required className="w-full bg-[#1A1A18] border border-[#2A2A2A] rounded-lg p-4 text-white focus:border-[#A8895C] outline-none transition-colors placeholder:text-[#8F847C]" />
                         </div>
                         <div>
-                          <label htmlFor="catering-phone" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Phone Number</label>
+                          <label htmlFor="catering-phone" className="block text-[11px] font-bold text-[#805400] tracking-[0.15em] mb-2 uppercase">Phone Number</label>
                           <input
                             id="catering-phone"
                             type="tel"
@@ -851,7 +852,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                           />
                         </div>
                         <div>
-                          <label htmlFor="catering-details" className="block text-[11px] font-bold text-[#A8895C] tracking-[0.15em] mb-2 uppercase">Requirement Details</label>
+                          <label htmlFor="catering-details" className="block text-[11px] font-bold text-[#805400] tracking-[0.15em] mb-2 uppercase">Requirement Details</label>
                           <textarea
                             id="catering-details"
                             value={inquiryForms.catering.details}
@@ -876,14 +877,14 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <div className="bg-[#0B0B0A] border-t border-[#2A2A2A]">
                   <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-12">
                     <div className="lg:col-span-1">
-                      <h4 className="text-xl font-serif text-white mb-4">Last Planner <span className="text-[#A8895C] italic">Julz</span></h4>
+                      <h4 className="text-xl font-serif text-white mb-4">Last Planner <span className="text-[#805400] italic">Julz</span></h4>
                       <p className="text-sm text-[#D8CFBC] opacity-80 leading-relaxed mb-6">
                         We coordinate catering options for memorial gatherings and discuss the service details for each request.
                       </p>
                     </div>
 
                     <div>
-                      <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Our Services</h4>
+                      <h4 className="text-[#805400] text-xs font-bold tracking-[0.2em] uppercase mb-6">Our Services</h4>
                       <ul className="space-y-3 text-sm text-[#D8CFBC] opacity-90">
                         <li className="hover:text-white cursor-pointer transition-colors">Funeral Catering Services</li>
                         <li className="hover:text-white cursor-pointer transition-colors">Memorial Receptions</li>
@@ -894,18 +895,18 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                     </div>
 
                     <div>
-                      <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Contact Us</h4>
+                      <h4 className="text-[#805400] text-xs font-bold tracking-[0.2em] uppercase mb-6">Contact Us</h4>
                       <ul className="space-y-4 text-sm text-[#D8CFBC] opacity-90">
-                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Phone size={16} className="text-[#A8895C]"/> +254 799 847727</li>
-                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Mail size={16} className="text-[#A8895C]"/> catering@lastplannerjulz.co.ke</li>
+                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Phone size={16} className="text-[#805400]"/> +254 799 847727</li>
+                        <li className="flex items-center gap-3 hover:text-white cursor-pointer transition-colors"><Mail size={16} className="text-[#805400]"/> catering@lastplannerjulz.co.ke</li>
                       </ul>
                     </div>
 
                     <div>
-                      <h4 className="text-[#A8895C] text-xs font-bold tracking-[0.2em] uppercase mb-6">Serving Regions</h4>
+                      <h4 className="text-[#805400] text-xs font-bold tracking-[0.2em] uppercase mb-6">Serving Regions</h4>
                       <ul className="space-y-3 text-sm text-[#D8CFBC] opacity-90">
                         <li className="hover:text-white cursor-pointer transition-colors flex items-center gap-2">
-                          <CheckCircle size={14} className="text-[#A8895C]" /> All Major cities and towns in Kenya
+                          <CheckCircle size={14} className="text-[#805400]" /> All Major cities and towns in Kenya
                         </li>
                       </ul>
                     </div>
@@ -924,11 +925,11 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                   style={{ backgroundImage: "url('/images/mediabackground.png')" }}
                 >
                   <div className="relative z-10 max-w-4xl mx-auto">
-                    <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-4 font-extrabold drop-shadow-md">
+                    <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-4 font-extrabold drop-shadow-md">
                       Timeless Tribute Media
                     </p>
                     <h2 className="text-5xl lg:text-6xl font-serif font-bold text-[#1F2E27] mb-8 leading-tight drop-shadow-xl">
-                      Preserving Legacies <br/> <span className="italic text-[#A8895C]">Through the Lens</span>
+                      Preserving Legacies <br/> <span className="italic text-[#805400]">Through the Lens</span>
                     </h2>
                     <p className="text-xl text-[#1F2E27] font-semibold leading-relaxed mb-8 max-w-2xl mx-auto drop-shadow-xl">
                       Our media team captures the profound dignity of your loved one's final journey. From high-resolution photography to multi-camera global live streaming, we ensure every memory is handled with the utmost excellence.
@@ -946,7 +947,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                         <img src="/images/images().jpg" alt="Photography service example" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={showLocalImageFallback} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
-                          <Camera size={36} className="mb-3 text-[#A8895C]" />
+                          <Camera size={36} className="mb-3 text-[#805400]" />
                           <h3 className="text-3xl font-serif">Standard Photography</h3>
                         </div>
                       </div>
@@ -967,7 +968,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                         <img src="/images/images.jpg" alt="Videography service example" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={showLocalImageFallback} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1F2E27] to-transparent opacity-80"></div>
                         <div className="absolute bottom-8 left-8 text-white">
-                          <Video size={36} className="mb-3 text-[#A8895C]" />
+                          <Video size={36} className="mb-3 text-[#805400]" />
                           <h3 className="text-3xl font-serif">Cinematic Video & Stream</h3>
                         </div>
                       </div>
@@ -987,7 +988,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                   {/* Media Inquiry Box */}
                   <div className="bg-[#1F2E27] rounded-xl p-10 lg:p-16 text-center text-white relative overflow-hidden shadow-2xl">
                     <div className="relative z-10 max-w-3xl mx-auto">
-                      <h3 className="text-3xl lg:text-4xl font-serif mb-6 text-[#A8895C]">Require Custom Media Coverage?</h3>
+                      <h3 className="text-3xl lg:text-4xl font-serif mb-6 text-[#805400]">Require Custom Media Coverage?</h3>
                       <p className="text-lg text-[#E8DFD1] opacity-90 mb-10 leading-relaxed">Tell us what kind of coverage you need and when you need it. Our team will contact you to discuss availability and options.</p>
 
                       {inquiryState.media ? (
@@ -1021,7 +1022,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <h3 className="font-serif text-xl tracking-wide">Select Casket Size</h3>
                 <p className="text-xs text-[#E8DFD1] opacity-80 mt-1 uppercase tracking-widest">{selectedCasket.title}</p>
               </div>
-              <button onClick={() => setShowCasketModal(false)} className="hover:text-[#A8895C] transition-colors p-1">
+              <button onClick={() => setShowCasketModal(false)} className="hover:text-[#805400] transition-colors p-1">
                 <X size={24} />
               </button>
             </div>
@@ -1029,7 +1030,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
             <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-grow">
               <div className="bg-[#F8F6F0] p-4 rounded border border-[#E8DFD1]">
                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Box size={16} className="text-[#A8895C]"/> Dimensions & Pricing
+                  <Box size={16} className="text-[#805400]"/> Dimensions & Pricing
                 </h4>
                 <div className="space-y-2">
                   {casketSizes.map((size, index) => {
@@ -1056,7 +1057,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                           />
                           <span className="text-sm font-semibold text-[#3D3530]">{size.label}</span>
                         </div>
-                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#A8895C]" : "text-[#716860]"}`}>
+                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#805400]" : "text-[#716860]"}`}>
                           {priceModifierText}
                         </span>
                       </label>
@@ -1102,7 +1103,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
                 <h3 className="font-serif text-xl tracking-wide">Configure Transport Logistics</h3>
                 <p className="text-xs text-[#E8DFD1] opacity-80 mt-1 uppercase tracking-widest">{selectedHearse.title}</p>
               </div>
-              <button onClick={() => setShowRentalModal(false)} className="hover:text-[#A8895C] transition-colors p-1">
+              <button onClick={() => setShowRentalModal(false)} className="hover:text-[#805400] transition-colors p-1">
                 <X size={24} />
               </button>
             </div>
@@ -1112,7 +1113,7 @@ export default function CatalogPage({ dynamicId, cart, addToCart, bookRental }) 
 
               {/* SECTION 1: Rental Parameters */}
               <section id="rental-logistics" className="bg-white p-5 rounded border border-[#E8DFD1]">
-                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><MapPin size={16} className="text-[#A8895C]"/> 1. Rental Parameters</h4>
+                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2"><MapPin size={16} className="text-[#805400]"/> 1. Rental Parameters</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Location</label>

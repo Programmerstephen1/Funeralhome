@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, ShieldCheck, HeartHandshake, Sparkles, FileText, Clock3, ArrowRightCircle } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ShieldCheck,
+  HeartHandshake,
+  Sparkles,
+  FileText,
+  Clock3,
+  ArrowRightCircle,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { Button, Card } from "../components";
 import { getApiBaseUrl } from "../services/config";
@@ -16,7 +25,7 @@ export default function PlanAheadPage() {
     name: "",
     email: "",
     phone: "",
-    questions: ""
+    questions: "",
   });
 
   const faqs = [
@@ -43,16 +52,32 @@ export default function PlanAheadPage() {
   ];
 
   const processSteps = [
-    { title: "Schedule Consultation", desc: "Discuss your wishes and preferences. The team will explain the planning fee, deposit amount, and payment terms before you proceed.", icon: HeartHandshake },
+    {
+      title: "Schedule Consultation",
+      desc: "Discuss your wishes and preferences. The team will explain the planning fee, deposit amount, and payment terms before you proceed.",
+      icon: HeartHandshake,
+    },
     {
       title: "Review Options",
       desc: "Explore our thoughtfully designed signature packages.",
       icon: Sparkles,
-      isLink: true
+      isLink: true,
     },
-    { title: "Document Preferences", desc: "Provide personal details, family information, and specific requests.", icon: FileText },
-    { title: "Finalize Plan", desc: "Review your arrangements, written estimate, and applicable deposit terms with the team.", icon: ShieldCheck },
-    { title: "Peace of Mind", desc: "Rest assured knowing your wishes are documented and our team is handling the logistics.", icon: Clock3 },
+    {
+      title: "Document Preferences",
+      desc: "Provide personal details, family information, and specific requests.",
+      icon: FileText,
+    },
+    {
+      title: "Finalize Plan",
+      desc: "Review your arrangements, written estimate, and applicable deposit terms with the team.",
+      icon: ShieldCheck,
+    },
+    {
+      title: "Peace of Mind",
+      desc: "Rest assured knowing your wishes are documented and our team is handling the logistics.",
+      icon: Clock3,
+    },
   ];
 
   const handleInputChange = (e) => {
@@ -65,9 +90,11 @@ export default function PlanAheadPage() {
     const errors = {};
     if (!formData.name.trim()) errors.name = "Please share your full name.";
     if (!formData.email.trim()) errors.email = "Please add an email address.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = "Please use a valid email address.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      errors.email = "Please use a valid email address.";
     if (!formData.phone.trim()) errors.phone = "Please add a phone number.";
-    if (!consentGiven) errors.consent = "Please agree to be contacted about this request.";
+    if (!consentGiven)
+      errors.consent = "Please agree to be contacted about this request.";
     return errors;
   };
 
@@ -93,19 +120,35 @@ export default function PlanAheadPage() {
       });
 
       let data = {};
-      try { data = await response.json(); } catch (e) { }
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (response.ok) {
-        toast.success(data.message || "Your request has been received. Our team will follow up using the contact details you provided.", { id: toastId });
+        toast.success(
+          data.message ||
+            "Your request has been received. Our team will follow up using the contact details you provided.",
+          { id: toastId },
+        );
         setIsModalOpen(false);
         setFormData({ name: "", email: "", phone: "", questions: "" });
         setConsentGiven(false);
       } else {
-        const serverMessage = data.message || data.error || (await response.text().catch(() => ""));
-        toast.error(`Server error (${response.status}): ${serverMessage || 'Unable to send your request right now.'}`, { id: toastId });
+        const serverMessage =
+          data.message || data.error || (await response.text().catch(() => ""));
+        toast.error(
+          `Server error (${response.status}): ${serverMessage || "Unable to send your request right now."}`,
+          { id: toastId },
+        );
       }
     } catch (error) {
-      toast.error(error.message || "We could not send your request. Please try again or call us.", { id: toastId });
+      toast.error(
+        error.message ||
+          "We could not send your request. Please try again or call us.",
+        { id: toastId },
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -131,12 +174,14 @@ export default function PlanAheadPage() {
               </h1>
 
               {/* EYE-CATCHING MANTRA */}
-              <p className="text-[#A8895C] italic font-serif text-2xl md:text-3xl mb-8 tracking-wide drop-shadow-sm">
+              <p className="text-[#805400] italic font-serif text-2xl md:text-3xl mb-8 tracking-wide drop-shadow-sm">
                 "With you when you need us the most."
               </p>
 
               <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#3D3530]">
-                Take control of your legacy and ease the burden on your loved ones. Pre-planning gives you profound peace of mind and a calm path forward.
+                Take control of your legacy and ease the burden on your loved
+                ones. Pre-planning gives you profound peace of mind and a calm
+                path forward.
               </p>
             </div>
 
@@ -154,10 +199,10 @@ export default function PlanAheadPage() {
                       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#A8895C] text-xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform">
                         {i + 1}
                       </div>
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#A8895C] shadow-sm">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#805400] shadow-sm">
                         <Icon size={18} />
                       </div>
-                      <h3 className="mb-3 text-sm font-bold text-[#1F2E27] transition-colors group-hover:text-[#A8895C]">
+                      <h3 className="mb-3 text-sm font-bold text-[#1F2E27] transition-colors group-hover:text-[#805400]">
                         {step.title}
                       </h3>
                       <p className="px-2 text-xs leading-relaxed text-[#3D3530] mb-4">
@@ -166,7 +211,7 @@ export default function PlanAheadPage() {
 
                       {/* RIGHT-POINTING ARROW FIXED */}
                       {step.isLink && (
-                        <div className="mt-auto flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#A8895C] group-hover:text-[#1F2E27] transition-colors">
+                        <div className="mt-auto flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#805400] group-hover:text-[#1F2E27] transition-colors">
                           View Packages <ArrowRightCircle size={16} />
                         </div>
                       )}
@@ -205,14 +250,33 @@ export default function PlanAheadPage() {
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
             {[
-              { title: "Your wishes are honored", text: "Every preference is documented clearly so your family never has to guess." },
-              { title: "Less emotional pressure", text: "Your loved ones can focus on comfort and remembrance instead of difficult decisions." },
-              { title: "Understand costs", text: "Ask about pre-funding options and the terms that apply to your selected services." },
-              { title: "Secure personal guidance", text: "Private, thoughtful planning support that respects your pace and preferences." },
+              {
+                title: "Your wishes are honored",
+                text: "Every preference is documented clearly so your family never has to guess.",
+              },
+              {
+                title: "Less emotional pressure",
+                text: "Your loved ones can focus on comfort and remembrance instead of difficult decisions.",
+              },
+              {
+                title: "Understand costs",
+                text: "Ask about pre-funding options and the terms that apply to your selected services.",
+              },
+              {
+                title: "Secure personal guidance",
+                text: "Private, thoughtful planning support that respects your pace and preferences.",
+              },
             ].map((benefit, i) => (
-              <div key={i} className="rounded-[1.1rem] border border-[#E8DFD1] bg-white/80 p-5">
-                <h3 className="mb-2 text-lg font-semibold text-[#1F2E27]">{benefit.title}</h3>
-                <p className="text-sm leading-relaxed text-[#3D3530]">{benefit.text}</p>
+              <div
+                key={i}
+                className="rounded-[1.1rem] border border-[#E8DFD1] bg-white/80 p-5"
+              >
+                <h3 className="mb-2 text-lg font-semibold text-[#1F2E27]">
+                  {benefit.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-[#3D3530]">
+                  {benefit.text}
+                </p>
               </div>
             ))}
           </div>
@@ -234,9 +298,15 @@ export default function PlanAheadPage() {
                     {faq.q}
                   </h3>
                   {expandedFaq === i ? (
-                    <ChevronUp className="text-[#A8895C] flex-shrink-0" size={24} />
+                    <ChevronUp
+                      className="text-[#805400] flex-shrink-0"
+                      size={24}
+                    />
                   ) : (
-                    <ChevronDown className="text-[#A8895C] flex-shrink-0" size={24} />
+                    <ChevronDown
+                      className="text-[#805400] flex-shrink-0"
+                      size={24}
+                    />
                   )}
                 </button>
                 {expandedFaq === i && (
@@ -256,11 +326,23 @@ export default function PlanAheadPage() {
             Ready to Plan Ahead?
           </h2>
           <p className="mb-8 text-lg text-[#3D3530] max-w-3xl mx-auto">
-            Our specialized team is ready to assist and guide you at your own pace. <br className="hidden md:block" />
-            <strong className="text-[#1F2E27]">Planning deposit:</strong> A compulsory 10% deposit of the agreed planning fee is due before work begins and is credited toward that fee. We will provide the full written fee and terms for your approval first. <Link to="/refunds" className="font-semibold underline">Read the refund policy</Link>.
+            Our specialized team is ready to assist and guide you at your own
+            pace. <br className="hidden md:block" />
+            <strong className="text-[#1F2E27]">Planning deposit:</strong> A
+            compulsory 10% deposit of the agreed planning fee is due before work
+            begins and is credited toward that fee. We will provide the full
+            written fee and terms for your approval first.{" "}
+            <Link to="/refunds" className="font-semibold underline">
+              Read the refund policy
+            </Link>
+            .
           </p>
           <div onClick={() => setIsModalOpen(true)} className="inline-block">
-            <Button variant="primary" size="lg" className="px-8 py-4 text-lg shadow-md transition-all hover:shadow-lg">
+            <Button
+              variant="primary"
+              size="lg"
+              className="px-8 py-4 text-lg shadow-md transition-all hover:shadow-lg"
+            >
               Schedule Your Consultation
             </Button>
           </div>
@@ -269,18 +351,36 @@ export default function PlanAheadPage() {
 
       {/* --- CONSULTATION MODAL --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="plan-consultation-title">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="plan-consultation-title"
+        >
           <div className="bg-[#F8F6F0] rounded-lg p-6 sm:p-8 max-h-[90vh] overflow-y-auto max-w-md w-full shadow-2xl border border-[#D8CFBC]">
-            <h3 id="plan-consultation-title" className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2 border-b-2 border-[#A8895C] pb-2 inline-block">
+            <h3
+              id="plan-consultation-title"
+              className="text-2xl font-serif font-semibold text-[#1F2E27] mb-2 border-b-2 border-[#A8895C] pb-2 inline-block"
+            >
               Schedule a Consultation
             </h3>
             <p className="text-[#3D3530] mb-6 text-sm mt-4">
-              Please provide your details and we will contact you to arrange a time.
+              Please provide your details and we will contact you to arrange a
+              time.
             </p>
 
-            <form onSubmit={handleConsultationSubmit} className="space-y-5" noValidate>
+            <form
+              onSubmit={handleConsultationSubmit}
+              className="space-y-5"
+              noValidate
+            >
               <div>
-                <label htmlFor="plan-consult-name" className="mb-1 block text-sm font-semibold text-[#1F2E27]">Your name</label>
+                <label
+                  htmlFor="plan-consult-name"
+                  className="mb-1 block text-sm font-semibold text-[#1F2E27]"
+                >
+                  Your name
+                </label>
                 <input
                   id="plan-consult-name"
                   type="text"
@@ -293,10 +393,19 @@ export default function PlanAheadPage() {
                   aria-invalid={!!formErrors.name}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
-                {formErrors.name && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.name}</p>}
+                {formErrors.name && (
+                  <p className="mt-2 text-sm text-red-700" role="alert">
+                    {formErrors.name}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="plan-consult-email" className="mb-1 block text-sm font-semibold text-[#1F2E27]">Email address</label>
+                <label
+                  htmlFor="plan-consult-email"
+                  className="mb-1 block text-sm font-semibold text-[#1F2E27]"
+                >
+                  Email address
+                </label>
                 <input
                   id="plan-consult-email"
                   type="email"
@@ -309,10 +418,19 @@ export default function PlanAheadPage() {
                   aria-invalid={!!formErrors.email}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
-                {formErrors.email && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.email}</p>}
+                {formErrors.email && (
+                  <p className="mt-2 text-sm text-red-700" role="alert">
+                    {formErrors.email}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="plan-consult-phone" className="mb-1 block text-sm font-semibold text-[#1F2E27]">Phone number</label>
+                <label
+                  htmlFor="plan-consult-phone"
+                  className="mb-1 block text-sm font-semibold text-[#1F2E27]"
+                >
+                  Phone number
+                </label>
                 <input
                   id="plan-consult-phone"
                   type="tel"
@@ -325,10 +443,20 @@ export default function PlanAheadPage() {
                   aria-invalid={!!formErrors.phone}
                   className="w-full p-3.5 rounded border border-[#E8DFD1] bg-white text-[#3D3530] focus:outline-none focus:border-[#A8895C] transition-colors"
                 />
-                {formErrors.phone && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.phone}</p>}
+                {formErrors.phone && (
+                  <p className="mt-2 text-sm text-red-700" role="alert">
+                    {formErrors.phone}
+                  </p>
+                )}
               </div>
               <div>
-                <label htmlFor="plan-consult-questions" className="mb-1 block text-sm font-semibold text-[#1F2E27]">How can we help? <span className="font-normal text-[#716860]">(optional)</span></label>
+                <label
+                  htmlFor="plan-consult-questions"
+                  className="mb-1 block text-sm font-semibold text-[#1F2E27]"
+                >
+                  How can we help?{" "}
+                  <span className="font-normal text-[#716860]">(optional)</span>
+                </label>
                 <textarea
                   id="plan-consult-questions"
                   name="questions"
@@ -342,10 +470,32 @@ export default function PlanAheadPage() {
 
               <div>
                 <label className="flex items-start gap-3 text-sm leading-relaxed text-[#3D3530]">
-                  <input type="checkbox" required checked={consentGiven} onChange={(event) => { setConsentGiven(event.target.checked); setFormErrors((current) => ({ ...current, consent: "" })); }} className="mt-1 accent-[#1F2E27]" />
-                  <span>I agree to be contacted about this request. <Link to="/privacy" className="font-semibold text-[#1F2E27] underline">Read the privacy policy</Link>.</span>
+                  <input
+                    type="checkbox"
+                    required
+                    checked={consentGiven}
+                    onChange={(event) => {
+                      setConsentGiven(event.target.checked);
+                      setFormErrors((current) => ({ ...current, consent: "" }));
+                    }}
+                    className="mt-1 accent-[#1F2E27]"
+                  />
+                  <span>
+                    I agree to be contacted about this request.{" "}
+                    <Link
+                      to="/privacy"
+                      className="font-semibold text-[#1F2E27] underline"
+                    >
+                      Read the privacy policy
+                    </Link>
+                    .
+                  </span>
                 </label>
-                {formErrors.consent && <p className="mt-2 text-sm text-red-700" role="alert">{formErrors.consent}</p>}
+                {formErrors.consent && (
+                  <p className="mt-2 text-sm text-red-700" role="alert">
+                    {formErrors.consent}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-[#E8DFD1]">
@@ -353,7 +503,7 @@ export default function PlanAheadPage() {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={isSubmitting}
-                  className="w-full py-3 px-4 rounded border-2 border-[#A8895C] text-[#A8895C] font-bold tracking-wide uppercase hover:bg-[#EFEAE0] transition-colors disabled:opacity-50"
+                  className="w-full py-3 px-4 rounded border-2 border-[#A8895C] text-[#805400] font-bold tracking-wide uppercase hover:bg-[#EFEAE0] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

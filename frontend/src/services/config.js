@@ -1,3 +1,15 @@
+export const getSiteUrl = () => {
+  const configured = import.meta.env.VITE_SITE_URL?.trim();
+  if (configured) {
+    const siteUrl = new URL(configured);
+    if (!['https:', 'http:'].includes(siteUrl.protocol) || siteUrl.pathname !== '/' || siteUrl.search || siteUrl.hash) {
+      throw new Error('VITE_SITE_URL must be an absolute origin without a path, query, or fragment.');
+    }
+    return siteUrl.origin;
+  }
+  return typeof window === 'undefined' ? '' : window.location.origin;
+};
+
 export const getApiBaseUrl = () => {
   const configured = import.meta.env.VITE_API_URL?.trim();
 
@@ -12,7 +24,9 @@ export const getApiBaseUrl = () => {
     const normalized = configured.replace(/\/$/, "");
     const pointsAtLocalApi = /:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/i.test(normalized);
     if (pointsAtLocalApi && !isLocalHost) {
-      return window.location.origin;
+      const apiUrl = new URL(normalized);
+      apiUrl.hostname = window.location.hostname;
+      return apiUrl.toString().replace(/\/$/, "");
     }
     return normalized;
   }

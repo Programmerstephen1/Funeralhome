@@ -42,7 +42,7 @@ export default function ProvisionGrid() {
       <div className="site-container px-4 mx-auto max-w-6xl">
         
         <div className="text-center mb-12">
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">
             Classic Provisions
           </p>
           <h2 className="text-4xl font-serif font-semibold text-[#1F2E27] mb-4">
@@ -71,7 +71,7 @@ export default function ProvisionGrid() {
               </div>
               
               <div className="flex-grow text-center">
-                <p className="text-xs uppercase tracking-widest text-[#A8895C] mb-2">{item.category}</p>
+                <p className="text-xs uppercase tracking-widest text-[#805400] mb-2">{item.category}</p>
                 <h3 className="text-xl font-serif text-[#1F2E27] mb-3 border-b border-[#E8DFD1] pb-3 mx-4">
                   {item.title}
                 </h3>

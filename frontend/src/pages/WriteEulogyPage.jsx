@@ -312,6 +312,7 @@ export default function WriteEulogyPage({ dynamicId }) {
 
   return (
     <div className="bg-[#F8F6F0] min-h-screen relative pb-20">
+      <h1 className="sr-only">Create a digital eulogy and memorial tribute</h1>
       
       {/* Global CSS for Animations */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -361,7 +362,7 @@ export default function WriteEulogyPage({ dynamicId }) {
                     <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isActive ? 'bg-[#A8895C] border-[#A8895C] text-white shadow-md scale-110' : 'bg-white border-[#E8DFD1] text-[#D8CFBC]'}`}>
                       <Icon size={18} className={isCurrent ? "animate-pulse" : ""} />
                     </div>
-                    <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${isCurrent ? 'text-[#1F2E27]' : isActive ? 'text-[#A8895C]' : 'text-[#D8CFBC] hidden sm:block'}`}>{s.label}</span>
+                    <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${isCurrent ? 'text-[#1F2E27]' : isActive ? 'text-[#805400]' : 'text-[#D8CFBC] hidden sm:block'}`}>{s.label}</span>
                   </div>
                 );
               })}
@@ -383,11 +384,11 @@ export default function WriteEulogyPage({ dynamicId }) {
                   <div className="col-span-1">
                     <label className="cursor-pointer group w-full aspect-square rounded-2xl border-2 border-dashed border-[#A8895C] bg-[#F8F6F0] flex flex-col items-center justify-center overflow-hidden relative transition-all hover:bg-[#EFEAE0]">
                       {displayImageUrl ? (
-                        <img src={displayImageUrl} alt="Profile" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                        <img src={displayImageUrl} alt={`Portrait of ${formData.deceased_name || "the person being remembered"}`} className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
                       ) : (
                         <>
                           <Camera size={48} className="text-[#D8CFBC] mb-4 group-hover:scale-110 transition-transform" />
-                          <p className="text-xs font-bold text-[#A8895C] uppercase tracking-widest text-center px-4">Upload Photo</p>
+                          <p className="text-xs font-bold text-[#805400] uppercase tracking-widest text-center px-4">Upload Photo</p>
                         </>
                       )}
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
@@ -457,13 +458,13 @@ export default function WriteEulogyPage({ dynamicId }) {
                           <div className="flex flex-col text-left">
                             <div className="flex items-center gap-3">
                               <span className="font-bold text-[#1F2E27] text-lg">{chapter.title}</span>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#A8895C] bg-[#A8895C]/10 px-2 py-0.5 rounded">{chapter.subtitle}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#805400] bg-[#A8895C]/10 px-2 py-0.5 rounded">{chapter.subtitle}</span>
                             </div>
                             <span className="text-sm text-[#716860] mt-1">{chapter.desc}</span>
                           </div>
                           <div className="flex items-center gap-4 shrink-0">
                             {hasContent && <span className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle size={14} /> Written</span>}
-                            {isActive ? <ChevronUp size={24} className="text-[#A8895C]" /> : <ChevronDown size={24} className="text-[#A8895C]" />}
+                            {isActive ? <ChevronUp size={24} className="text-[#805400]" /> : <ChevronDown size={24} className="text-[#805400]" />}
                           </div>
                         </button>
                         
@@ -480,7 +481,7 @@ export default function WriteEulogyPage({ dynamicId }) {
                             <div className="flex justify-end mt-4">
                               <button 
                                 onClick={() => setActiveChapter(null)} 
-                                className="text-xs font-bold uppercase tracking-widest text-[#716860] hover:text-[#A8895C] transition-colors"
+                                className="text-xs font-bold uppercase tracking-widest text-[#716860] hover:text-[#805400] transition-colors"
                               >
                                 Save Chapter
                               </button>
@@ -627,13 +628,13 @@ export default function WriteEulogyPage({ dynamicId }) {
                   
                   <div className="flex gap-4 mb-8">
                     <div className="flex-1 bg-[#F8F6F0] border border-[#E8DFD1] rounded-2xl p-6 text-center shadow-sm">
-                      <FileText size={32} className="text-[#A8895C] mx-auto mb-3" />
-                      <h4 className="font-bold text-[#1F2E27] text-sm">PDF Eulogy</h4>
+                      <FileText size={32} className="text-[#805400] mx-auto mb-3" />
+                      <h3 className="font-bold text-[#1F2E27] text-sm">PDF Eulogy</h3>
                       <p className="text-[10px] text-[#716860] mt-1 uppercase tracking-widest">Print Ready</p>
                     </div>
                     <div className="flex-1 bg-[#F8F6F0] border border-[#E8DFD1] rounded-2xl p-6 text-center shadow-sm">
-                      <QrCode size={32} className="text-[#A8895C] mx-auto mb-3" />
-                      <h4 className="font-bold text-[#1F2E27] text-sm">QR Code</h4>
+                      <QrCode size={32} className="text-[#805400] mx-auto mb-3" />
+                      <h3 className="font-bold text-[#1F2E27] text-sm">QR Code</h3>
                       <p className="text-[10px] text-[#716860] mt-1 uppercase tracking-widest">For Programs</p>
                     </div>
                   </div>
@@ -641,7 +642,7 @@ export default function WriteEulogyPage({ dynamicId }) {
                   <div>
                     <label className="flex w-full justify-between items-center text-xs uppercase tracking-widest font-bold text-[#1F2E27] mb-2">Email Address for Delivery * {errors.recipient_email && <span className="text-red-600">Required</span>}</label>
                     <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A8895C]" size={18} />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#805400]" size={18} />
                       <input type="email" name="recipient_email" value={formData.recipient_email} onChange={handleChange} placeholder="Where should we send the files?" className="w-full pl-12 pr-4 py-4 border border-[#E8DFD1] bg-[#F8F6F0] rounded-xl focus:outline-none focus:border-[#A8895C] focus:bg-white transition-colors" />
                     </div>
                   </div>
@@ -711,7 +712,7 @@ export default function WriteEulogyPage({ dynamicId }) {
         {stepStatus === "confirming_payment" && (
           <div className="bg-white rounded-2xl shadow-xl border-t-4 border-t-[#A8895C] text-center py-16 px-8 animate-fadeIn" role="status" aria-live="polite">
             <div className="w-20 h-20 bg-[#F8F6F0] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#E8DFD1]">
-              <Clock size={40} className="text-[#A8895C]" />
+              <Clock size={40} className="text-[#805400]" />
             </div>
             <h2 className="text-3xl font-serif font-bold text-[#1F2E27] mb-3">Waiting for M-Pesa confirmation</h2>
             <p className="max-w-xl mx-auto text-[#3D3530]">Enter your PIN on your phone. Keep this page open while we check the payment status. We’ll only mark the tribute as paid after Safaricom confirms it.</p>
@@ -750,7 +751,7 @@ export default function WriteEulogyPage({ dynamicId }) {
               Tribute Published
             </h2>
             <p className="text-[#3D3530] text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
-              We have received your order for {formData.deceased_name}. The system is currently generating your high-resolution PDF and custom QR code. These will be sent to <strong className="text-[#A8895C]">{formData.recipient_email}</strong> momentarily.
+              We have received your order for {formData.deceased_name}. The system is currently generating your high-resolution PDF and custom QR code. These will be sent to <strong className="text-[#805400]">{formData.recipient_email}</strong> momentarily.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

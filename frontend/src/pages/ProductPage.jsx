@@ -214,7 +214,7 @@ export default function ProductPage({ addToCart, bookRental }) {
   if (!product) {
     return (
       <div className="min-h-screen bg-[#F8F6F0] flex flex-col items-center justify-center text-center p-4">
-        <Box size={48} className="text-[#A8895C] mb-4" />
+        <Box size={48} className="text-[#805400] mb-4" />
         <h2 className="text-2xl font-serif text-[#1F2E27] mb-4">Item Not Found</h2>
         <Link to="/catalog" className="bg-[#1F2E27] text-white px-6 py-3 rounded text-sm uppercase tracking-widest hover:bg-[#A8895C] transition-colors">
           Return to Catalog
@@ -287,7 +287,7 @@ export default function ProductPage({ addToCart, bookRental }) {
       <div className="site-container max-w-6xl mx-auto px-4">
 
         <div className="mb-8">
-          <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#A8895C] font-bold transition-colors">
+          <button onClick={() => window.history.back()} className="flex items-center gap-2 text-sm text-[#716860] hover:text-[#805400] font-bold transition-colors">
             <ChevronLeft size={16} /> Back to Results
           </button>
         </div>
@@ -311,7 +311,7 @@ export default function ProductPage({ addToCart, bookRental }) {
                       mainImage === imgUrl ? 'border-[#A8895C] shadow-md scale-105' : 'border-[#E8DFD1] opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={imgUrl} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={imgUrl} alt={`${product.title} alternate view ${idx + 1}`} loading="lazy" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -320,7 +320,7 @@ export default function ProductPage({ addToCart, bookRental }) {
 
           {/* Configuration & Purchase Block */}
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-[#A8895C] uppercase tracking-widest mb-2 block">
+            <span className="text-xs font-bold text-[#805400] uppercase tracking-widest mb-2 block">
               {product.categoryId?.replace(/_/g, " ")}
             </span>
             <h1 className="text-3xl lg:text-4xl font-serif text-[#1F2E27] mb-4">{product.title}</h1>
@@ -343,7 +343,7 @@ export default function ProductPage({ addToCart, bookRental }) {
             {/* --- INJECTIONS RENDERED HERE --- */}
             {product.inclusions && product.inclusions.length > 0 && (
               <div className="mb-8 pt-6 border-t border-[#E8DFD1]">
-                <span className="text-[10px] font-bold text-[#A8895C] uppercase tracking-wider block mb-3">Package Includes:</span>
+                <span className="text-[10px] font-bold text-[#805400] uppercase tracking-wider block mb-3">Package Includes:</span>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {product.inclusions.map((inc, i) => (
                     <li key={i} className="text-sm text-[#716860] flex items-start gap-2">
@@ -358,9 +358,9 @@ export default function ProductPage({ addToCart, bookRental }) {
             {/* EMBEDDED CASKET SIZING ENGINE */}
             {isCasket && (
               <div className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 shadow-sm">
-                <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Box size={16} className="text-[#A8895C]"/> Select Dimensions
-                </h4>
+                <h2 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Box size={16} className="text-[#805400]"/> Select Dimensions
+                </h2>
                 <div className="space-y-3">
                   {casketSizes.map((size, index) => {
                     const priceModifierText = size.priceModifier === 0
@@ -375,7 +375,7 @@ export default function ProductPage({ addToCart, bookRental }) {
                           <input type="radio" name="casketSize" className="accent-[#A8895C] w-4 h-4" checked={casketSizeIndex === index} onChange={() => setCasketSizeIndex(index)}/>
                           <span className="text-sm font-semibold text-[#3D3530]">{size.label}</span>
                         </div>
-                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#A8895C]" : "text-[#716860]"}`}>{priceModifierText}</span>
+                        <span className={`text-xs font-bold ${casketSizeIndex === index ? "text-[#805400]" : "text-[#716860]"}`}>{priceModifierText}</span>
                       </label>
                     );
                   })}
@@ -386,9 +386,9 @@ export default function ProductPage({ addToCart, bookRental }) {
             {/* EMBEDDED RENTAL ENGINE */}
             {isHearse && (
               <div id="product-rental-logistics" className="bg-white p-6 rounded border border-[#E8DFD1] mb-8 space-y-8 shadow-sm">
-                 <h4 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider flex items-center gap-2 border-b border-[#F8F6F0] pb-4">
-                  <MapPin size={16} className="text-[#A8895C]"/> Logistics Configuration
-                </h4>
+                 <h2 className="text-sm font-bold text-[#1F2E27] uppercase tracking-wider flex items-center gap-2 border-b border-[#F8F6F0] pb-4">
+                  <MapPin size={16} className="text-[#805400]"/> Logistics Configuration
+                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#716860] mb-1">Pick-up Location</label>
@@ -438,7 +438,7 @@ export default function ProductPage({ addToCart, bookRental }) {
             </div>
 
             <div className="mt-6 flex items-center gap-3 text-sm text-[#716860] bg-white p-4 border border-[#E8DFD1] rounded shadow-sm">
-               <ShieldCheck size={18} className="text-[#A8895C] shrink-0" />
+               <ShieldCheck size={18} className="text-[#805400] shrink-0" />
                <p>Availability is confirmed by our team. Request a written quote before paying.</p>
             </div>
           </div>

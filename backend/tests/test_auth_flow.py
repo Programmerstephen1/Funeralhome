@@ -11,9 +11,8 @@ if BACKEND_DIR not in sys.path:
 
 os.environ["DATABASE_URL"] = "sqlite://"
 
-from app import create_app, db
+from app import create_app, db, limiter
 from app.models import AuthChallenge, PaymentTransaction, User
-from app.routes import RATE_LIMIT_STORE
 
 
 class AccountLifecycleTests(unittest.TestCase):
@@ -32,7 +31,7 @@ class AccountLifecycleTests(unittest.TestCase):
         with self.app.app_context():
             db.drop_all()
             db.create_all()
-        RATE_LIMIT_STORE.clear()
+        limiter.reset()
         self.client = self.app.test_client()
         self.sent_messages = []
         self.mail_patch = patch("app.routes.send_mail_message", side_effect=self._capture_mail)
@@ -53,9 +52,40 @@ class AccountLifecycleTests(unittest.TestCase):
         self.assertEqual(health.status_code, 200, health.get_json())
         self.assertEqual(health.get_json(), {"status": "ok", "database": "ok"})
 
+        readiness = self.client.get("/api/health/ready")
+        self.assertEqual(readiness.status_code, 200, readiness.get_json())
+        self.assertEqual(readiness.get_json(), {"status": "ready"})
+
         products = self.client.get("/api/products")
         self.assertEqual(products.status_code, 200, products.get_json())
         self.assertIsInstance(products.get_json(), list)
+
+    def test_unknown_frontend_path_returns_http_404(self):
+        response = self.client.get("/this-page-does-not-exist")
+        self.assertEqual(response.status_code, 404)
+
+    def test_production_http_request_redirects_to_configured_https_origin(self):
+        self.app.config.update(FORCE_HTTPS=True, PUBLIC_ORIGIN="https://example.test")
+        try:
+            response = self.client.get("/plan?source=qr")
+            self.assertEqual(response.status_code, 308)
+            self.assertEqual(response.headers["Location"], "https://example.test/plan?source=qr")
+        finally:
+            self.app.config.update(FORCE_HTTPS=False, PUBLIC_ORIGIN="")
+
+    def test_production_rejects_sqlite_database_urls(self):
+        with patch.dict(
+            os.environ,
+            {
+                "APP_ENV": "production",
+                "RENDER": "",
+                "SECRET_KEY": "production-test-secret",
+                "JWT_SECRET_KEY": "production-test-jwt-secret",
+                "DATABASE_URL": "sqlite:///not-durable.db",
+            },
+        ):
+            with self.assertRaisesRegex(RuntimeError, "managed PostgreSQL"):
+                create_app()
 
     def _register(self, email="family@example.com", password="safe-pass-123"):
         response = self.client.post("/api/auth/register", json={"email": email, "password": password})

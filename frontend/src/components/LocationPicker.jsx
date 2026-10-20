@@ -42,7 +42,7 @@ export default function LocationPicker({ onLocationSelect, id = "venue-location"
 
   return (
     <div className="relative">
-      <MapPin className="absolute left-3 top-3.5 text-[#A8895C]" size={16} />
+      <MapPin className="absolute left-3 top-3.5 text-[#805400]" size={16} />
       <input
         id={id}
         type="text"

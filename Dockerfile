@@ -1,12 +1,14 @@
-FROM node:20-alpine AS frontend-build
+FROM node:24-alpine AS frontend-build
 
 WORKDIR /workspace
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci
 
 COPY frontend ./frontend
-ARG VITE_API_URL=https://funeralhome-api.onrender.com
+ARG VITE_API_URL=
+ARG VITE_SENTRY_DSN=
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
 RUN npm run build --prefix frontend
 
 FROM python:3.12-slim

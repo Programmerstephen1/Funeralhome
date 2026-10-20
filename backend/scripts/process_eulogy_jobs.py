@@ -13,6 +13,7 @@ from backend.app import create_app, db
 from backend.app.models import EulogyJob, Eulogy
 from flask_mail import Message
 from datetime import datetime
+import os
 import requests
 
 app = create_app()
@@ -30,7 +31,7 @@ with app.app_context():
                 continue
 
             # Construct public URL for the eulogy (assumes front-end route /eulogy/:id)
-            base = app.config.get('FRONTEND_BASE_URL') or 'http://localhost:5173'
+            base = app.config.get('FRONTEND_BASE_URL') or os.environ.get('FRONTEND_URL') or 'http://localhost:4173'
             eulogy_url = f"{base}/eulogy/{eulogy.id}"
 
             # Use Google Chart API to generate a QR image

@@ -10,7 +10,7 @@ export default function AdminDashboardPage() {
   const [payments, setPayments] = useState([]);
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
-  
+
   const [memorials, setMemorials] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,8 +18,8 @@ export default function AdminDashboardPage() {
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [productForm, setProductForm] = useState({ 
-    title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: "" 
+  const [productForm, setProductForm] = useState({
+    title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: ""
   });
   const [showSizesModal, setShowSizesModal] = useState(false);
   const [sizesProduct, setSizesProduct] = useState(null);
@@ -34,16 +34,16 @@ export default function AdminDashboardPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     setError(null);
-    
+
     // Load local memorials
     const localMemorials = JSON.parse(localStorage.getItem("LastPlannerJulz_Memorials") || "{}");
     setMemorials(localMemorials);
 
     const token = localStorage.getItem("token") || "";
-    
+
     try {
       const headers = { "Authorization": `Bearer ${token}` };
-      
+
       const [statsRes, ordersRes, paymentsRes, productsRes, reviewsRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/dashboard-stats`, { headers }),
         fetch(`${API_URL}/api/admin/orders`, { headers }),
@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
         fetch(`${API_URL}/api/products`),
         fetch(`${API_URL}/api/admin/reviews`, { headers })
       ]);
-      
+
       if (!statsRes.ok || !ordersRes.ok || !paymentsRes.ok) {
         throw new Error("Failed to authenticate or connect to API.");
       }
@@ -61,8 +61,8 @@ export default function AdminDashboardPage() {
       setPayments(await paymentsRes.json());
       setProducts(await productsRes.json());
       setReviews(await reviewsRes.json());
-      
-    } catch (err) { 
+
+    } catch (err) {
       console.error("Database Connection Error:", err);
       setError("Failed to sync with the live database. Please check your connection.");
       // Reset to strict zero values if the connection fails
@@ -83,10 +83,10 @@ export default function AdminDashboardPage() {
   // --- MEMORIAL MANAGEMENT LOGIC ---
   const handleDeleteMemorial = (idToRemove) => {
     if (!window.confirm(`Are you sure you want to permanently delete the memorial space: "${idToRemove}"?`)) return;
-    
+
     const updatedMemorials = { ...memorials };
     delete updatedMemorials[idToRemove];
-    
+
     localStorage.setItem("LastPlannerJulz_Memorials", JSON.stringify(updatedMemorials));
     setMemorials(updatedMemorials);
   };
@@ -94,8 +94,8 @@ export default function AdminDashboardPage() {
   // --- PRODUCT CRUD HANDLERS ---
   const openAddModal = () => {
     setEditingProduct(null);
-    setProductForm({ 
-      title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: "" 
+    setProductForm({
+      title: "", desc: "", price: 0, category_id: "casket_list", images: "", discount_percent: 0, has_sizes: false, inclusions: ""
     });
     setShowProductModal(true);
   };
@@ -120,12 +120,12 @@ export default function AdminDashboardPage() {
 
     const token = localStorage.getItem("token");
     const imageArray = productForm.images.split(",").map(i => i.trim()).filter(Boolean);
-    
-    const payload = { 
-      ...productForm, 
-      price: parseFloat(productForm.price), 
+
+    const payload = {
+      ...productForm,
+      price: parseFloat(productForm.price),
       discount_percent: parseInt(productForm.discount_percent) || 0,
-      images: imageArray 
+      images: imageArray
     };
 
     const url = editingProduct ? `${API_URL}/api/admin/products/${editingProduct.id}` : `${API_URL}/api/admin/products`;
@@ -286,7 +286,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] py-12 px-4 sm:px-6 lg:px-8">
-      
+
       {/* ERROR BANNER */}
       {error && (
         <div className="max-w-7xl mx-auto mb-6 bg-[#FFF4F4] border border-[#FF4747] text-[#FF4747] p-4 rounded-lg shadow-sm flex items-center justify-between">
@@ -301,13 +301,13 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="max-w-7xl mx-auto">
-        
+
         {/* Dashboard Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <p className="text-[#A8895C] text-xs font-bold uppercase tracking-[0.2em] mb-2">Enterprise Administration</p>
+            <p className="text-[#805400] text-xs font-bold uppercase tracking-[0.2em] mb-2">Enterprise Administration</p>
             <h1 className="text-3xl lg:text-4xl font-serif text-[#1F2E27] flex items-center gap-3">
-              <Activity className="text-[#A8895C]"/> System Overview Command
+              <Activity className="text-[#805400]"/> System Overview Command
             </h1>
           </div>
           <button onClick={fetchAdminData} className="flex items-center gap-2 bg-white border border-[#E8DFD1] text-[#3D3530] px-4 py-2 rounded shadow-sm hover:border-[#A8895C] transition-colors text-sm font-semibold">
@@ -378,15 +378,15 @@ export default function AdminDashboardPage() {
 
         {/* Data Logs Container */}
         <div className="bg-white border border-[#E8DFD1] rounded-xl shadow-sm overflow-hidden mb-12">
-          
+
           {/* TAB 1: ORDERS */}
           {activeTab === "orders" && (
             <>
               <div className="bg-[#1F2E27] px-8 py-5 text-white flex justify-between items-center">
-                <h3 className="font-serif text-xl tracking-wide text-[#A8895C]">Order History</h3>
+                <h2 className="font-serif text-xl tracking-wide text-[#805400]">Order History</h2>
                 <span className="text-xs font-mono bg-black/30 px-3 py-1 rounded border border-[#A8895C]/30">Showing latest {orders.length}</span>
               </div>
-              
+
               {orders.length === 0 ? (
                 <div className="p-12 text-center text-[#716860]">
                   <Package size={48} className="mx-auto mb-4 opacity-20" />
@@ -409,14 +409,14 @@ export default function AdminDashboardPage() {
                     <tbody className="divide-y divide-[#E8DFD1]">
                       {orders.map((order) => (
                         <tr key={order.id} className="hover:bg-[#F8F6F0]/50 transition-colors">
-                          <td className="p-5 font-mono text-[#A8895C] font-semibold">ORD-{order.id.toString().padStart(4, '0')}</td>
+                          <td className="p-5 font-mono text-[#805400] font-semibold">ORD-{order.id.toString().padStart(4, '0')}</td>
                           <td className="p-5 text-xs text-[#716860]">{new Date(order.created_at).toLocaleString()}</td>
                           <td className="p-5 font-semibold">{order.user_email}</td>
                           <td className="p-5 text-xs">
                             <ul className="space-y-1">
                               {order.items.map(i => (
                                 <li key={i.id} className="flex items-start gap-1">
-                                  <span className="text-[#A8895C] font-bold">x{i.quantity}</span> 
+                                  <span className="text-[#805400] font-bold">x{i.quantity}</span>
                                   <span>{i.product_title}</span>
                                 </li>
                               ))}
@@ -443,10 +443,10 @@ export default function AdminDashboardPage() {
           {activeTab === "payments" && (
             <>
               <div className="bg-[#1F2E27] px-8 py-5 text-white flex justify-between items-center">
-                <h3 className="font-serif text-xl tracking-wide text-[#A8895C]">Live M-Pesa Gateway Logs</h3>
+                <h3 className="font-serif text-xl tracking-wide text-[#805400]">Live M-Pesa Gateway Logs</h3>
                 <span className="text-xs font-mono bg-black/30 px-3 py-1 rounded border border-[#A8895C]/30">Showing latest {payments.length}</span>
               </div>
-              
+
               {payments.length === 0 ? (
                 <div className="p-12 text-center text-[#716860]">
                   <CreditCard size={48} className="mx-auto mb-4 opacity-20" />
@@ -481,7 +481,7 @@ export default function AdminDashboardPage() {
                           <td className="p-5 font-bold text-right text-lg">KSh {payment.amount ? payment.amount.toLocaleString() : "0"}</td>
                           <td className="p-5 text-center">
                             <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
-                              payment.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 
+                              payment.status === 'completed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
                               payment.status === 'failed' ? 'bg-red-100 text-red-800 border border-red-200' :
                               'bg-orange-100 text-orange-800 border border-orange-200'
                             }`}>
@@ -522,7 +522,7 @@ export default function AdminDashboardPage() {
                     <tbody className="divide-y divide-[#E8DFD1]">
                       {products.map(p => (
                         <tr key={p.id} className="hover:bg-[#F8F6F0]/50">
-                          <td className="p-4 font-mono text-xs text-[#A8895C]">#{p.id}</td>
+                          <td className="p-4 font-mono text-xs text-[#805400]">#{p.id}</td>
                           <td className="p-4 font-semibold">{p.title}</td>
                           <td className="p-4 text-xs uppercase">{p.categoryId}</td>
                           <td className="p-4 font-bold text-right">KSh {p.price.toLocaleString()}</td>
@@ -578,7 +578,7 @@ export default function AdminDashboardPage() {
                     <tbody className="divide-y divide-[#E8DFD1]">
                       {Object.keys(memorials).map((id) => (
                         <tr key={id} className="hover:bg-[#F8F6F0]/50 transition-colors">
-                          <td className="p-4 font-mono text-xs text-[#A8895C] font-semibold">{id}</td>
+                          <td className="p-4 font-mono text-xs text-[#805400] font-semibold">{id}</td>
                           <td className="p-4 font-semibold text-[#1F2E27]">{memorials[id].name}</td>
                           <td className="p-4 text-center font-mono tracking-widest">{memorials[id].pin}</td>
                           <td className="p-4 text-center font-mono tracking-widest text-emerald-700">{memorials[id].familyTreePin}</td>
@@ -612,7 +612,7 @@ export default function AdminDashboardPage() {
                     <div key={r.id} className="bg-white p-6 rounded-xl border border-[#E8DFD1] shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <span className="text-xs font-bold text-[#A8895C] block mb-1">{r.product_title}</span>
+                          <span className="text-xs font-bold text-[#805400] block mb-1">{r.product_title}</span>
                           <span className="font-semibold text-sm text-[#1F2E27]">{r.user_email}</span>
                           {r.is_verified_buyer && <span className="ml-2 text-xs text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded"><CheckCircle size={10} className="inline mr-1"/>Verified</span>}
                         </div>
@@ -622,7 +622,7 @@ export default function AdminDashboardPage() {
 
                       {r.admin_reply ? (
                         <div className="bg-[#1F2E27] text-white p-4 rounded border border-[#A8895C]">
-                          <span className="text-xs text-[#A8895C] font-bold uppercase tracking-wider block mb-1">Official Response:</span>
+                          <span className="text-xs text-[#805400] font-bold uppercase tracking-wider block mb-1">Official Response:</span>
                           <p className="text-sm italic">"{r.admin_reply}"</p>
                         </div>
                       ) : (
@@ -646,10 +646,10 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 border border-[#E8DFD1] relative">
             <button onClick={() => setShowProductModal(false)} className="absolute top-4 right-4 text-[#8F847C] hover:text-[#1F2E27]"><X size={20}/></button>
             <h3 className="text-2xl font-serif text-[#1F2E27] mb-6">{editingProduct ? "Edit Catalog Item" : "Add New Catalog Item"}</h3>
-            
+
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Title</label><input type="text" required value={productForm.title} onChange={(e) => setProductForm({...productForm, title: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
-              
+
               <div className="grid grid-cols-3 gap-4">
                 <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Base Price</label><input type="number" required value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
                 <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Discount (%)</label><input type="number" min="0" max="99" value={productForm.discount_percent} onChange={(e) => setProductForm({...productForm, discount_percent: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
@@ -669,37 +669,37 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-[#F8F6F0] rounded border border-[#E8DFD1]">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="has_sizes"
-                  checked={productForm.has_sizes} 
-                  onChange={(e) => setProductForm({...productForm, has_sizes: e.target.checked})} 
+                  checked={productForm.has_sizes}
+                  onChange={(e) => setProductForm({...productForm, has_sizes: e.target.checked})}
                   className="w-4 h-4 accent-[#1F2E27] cursor-pointer"
                 />
                 <label htmlFor="has_sizes" className="text-xs font-bold text-[#1F2E27] uppercase tracking-wider cursor-pointer">
                   Enable Casket Sizing Engine (2ft - 12ft options)
                 </label>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 bg-[#F8F6F0] rounded border border-[#E8DFD1]">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="has_sound_system"
-                  checked={productForm.has_sound_system} 
-                  onChange={(e) => setProductForm({...productForm, has_sound_system: e.target.checked})} 
+                  checked={productForm.has_sound_system}
+                  onChange={(e) => setProductForm({...productForm, has_sound_system: e.target.checked})}
                   className="w-4 h-4 accent-[#1F2E27] cursor-pointer"
                 />
                 <label htmlFor="has_sound_system" className="text-xs font-bold text-[#1F2E27] uppercase tracking-wider cursor-pointer">
                   Include Sound Systems / Videography Options
                 </label>
               </div>
-              
+
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Description</label><textarea rows="2" required value={productForm.desc} onChange={(e) => setProductForm({...productForm, desc: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm resize-none"></textarea></div>
-              
+
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Package Inclusions (Comma-separated)</label><input type="text" placeholder="Auto-lowering gear, Gazebo tent, PA system" value={productForm.inclusions} onChange={(e) => setProductForm({...productForm, inclusions: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
 
               <div><label className="block text-xs font-bold text-[#716860] uppercase mb-1">Image URLs (Comma-separated)</label><input type="text" placeholder="/images/caskets/casket1().jpg" value={productForm.images} onChange={(e) => setProductForm({...productForm, images: e.target.value})} className="w-full p-3 border border-[#E8DFD1] rounded text-sm"/></div>
-              
+
               <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors mt-4">Save Catalog Item</button>
             </form>
           </div>

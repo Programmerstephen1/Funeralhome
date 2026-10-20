@@ -33,7 +33,7 @@ export default function ObituaryListPage() {
         <div className="bg-white rounded-xl border border-[#E8DFD1] p-6 mb-12 shadow-sm">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search size={18} className="absolute left-4 top-3.5 text-[#A8895C]" />
+              <Search size={18} className="absolute left-4 top-3.5 text-[#805400]" />
               <input type="text" placeholder="Search by name or keyword..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C] bg-[#F8F6F0]" />
             </div>
             <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="px-6 py-3 border border-[#E8DFD1] rounded-lg focus:outline-none focus:border-[#A8895C] bg-[#F8F6F0] font-semibold text-[#1F2E27] uppercase tracking-wider text-sm">
@@ -51,13 +51,13 @@ export default function ObituaryListPage() {
               <Card key={obit.id} className="hover:border-[#A8895C] transition-colors group cursor-pointer hover:shadow-lg">
                 <CardBody className="p-8">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-serif font-bold text-[#1F2E27] group-hover:text-[#A8895C] transition-colors">{obit.name}</h3>
-                    <ChevronRight size={20} className="text-[#E8DFD1] group-hover:text-[#A8895C] transition-colors" />
+                    <h2 className="text-2xl font-serif font-bold text-[#1F2E27] group-hover:text-[#805400] transition-colors">{obit.name}</h2>
+                    <ChevronRight size={20} className="text-[#E8DFD1] group-hover:text-[#805400] transition-colors" />
                   </div>
                   <p className="text-[#3D3530] italic font-serif mb-6">"{obit.note}"</p>
                   <div className="flex flex-col sm:flex-row gap-4 text-xs tracking-wider uppercase font-semibold text-[#8F847C] border-t border-[#F0ECE1] pt-4">
-                    <span className="flex items-center gap-2"><Calendar size={14} className="text-[#A8895C]" /> {obit.born} – {obit.died}</span>
-                    <span className="flex items-center gap-2"><Users size={14} className="text-[#A8895C]" /> Service: {obit.service}</span>
+                    <span className="flex items-center gap-2"><Calendar size={14} className="text-[#805400]" /> {obit.born} – {obit.died}</span>
+                    <span className="flex items-center gap-2"><Users size={14} className="text-[#805400]" /> Service: {obit.service}</span>
                   </div>
                 </CardBody>
               </Card>

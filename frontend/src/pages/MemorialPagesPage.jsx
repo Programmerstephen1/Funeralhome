@@ -61,13 +61,13 @@ export default function MemorialPagesPage({ dynamicId }) {
         
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
 
         <section className="mb-12 text-center">
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">The Memory Board</p>
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">The Memory Board</p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Shared Stories & Reflections</h1>
           <p className="text-lg text-[#3D3530] max-w-3xl mx-auto">
             A collaborative space for family and friends to pin stories, photographs, and cherished moments with {memorialData.name}.
@@ -80,19 +80,19 @@ export default function MemorialPagesPage({ dynamicId }) {
         {memories.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-[#E8DFD1] border-dashed">
             <Pin size={48} className="mx-auto mb-4 text-[#E8DFD1]" />
-            <h3 className="text-xl font-serif text-[#1F2E27] mb-2">No memories pinned yet</h3>
+            <h2 className="text-xl font-serif text-[#1F2E27] mb-2">No memories pinned yet</h2>
             <p className="text-[#3D3530]">Be the first to share a story or photo.</p>
           </div>
         ) : (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
             {memories.map((memory) => (
               <div key={memory.id} className="break-inside-avoid bg-white rounded-2xl p-6 shadow-sm border border-[#E8DFD1] relative group hover:shadow-xl transition-shadow cursor-pointer">
-                <div className="absolute top-4 left-4 text-[#A8895C] bg-[#F8F6F0] p-1.5 rounded-full shadow-sm z-10 group-hover:-translate-y-1 transition-transform">
+                <div className="absolute top-4 left-4 text-[#805400] bg-[#F8F6F0] p-1.5 rounded-full shadow-sm z-10 group-hover:-translate-y-1 transition-transform">
                   <Pin size={16} className="fill-current -rotate-45" />
                 </div>
                 {memory.image && (
                   <div className="mb-4 -mx-6 -mt-6 rounded-t-2xl overflow-hidden relative">
-                    <img src={memory.image} alt="Memory" className="w-full h-auto object-cover" />
+                    <img src={memory.image} alt={memory.alt_text || memory.caption || "Photo shared with this memorial"} loading="lazy" width="1200" height="900" className="aspect-[4/3] w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                   </div>
                 )}
@@ -100,7 +100,7 @@ export default function MemorialPagesPage({ dynamicId }) {
                   {memory.text && <p className="text-[#3D3530] leading-relaxed mb-4 whitespace-pre-wrap font-serif italic text-lg">"{memory.text}"</p>}
                   <div className="pt-4 border-t border-[#F0ECE1] flex justify-between items-end">
                     <p className="font-semibold text-[#1F2E27] text-sm uppercase tracking-wide">{memory.author}</p>
-                    <span className="text-xs text-[#A8895C] font-medium">{memory.date}</span>
+                    <span className="text-xs text-[#805400] font-medium">{memory.date}</span>
                   </div>
                 </div>
               </div>

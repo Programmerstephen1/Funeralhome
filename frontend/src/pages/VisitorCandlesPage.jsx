@@ -70,7 +70,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
         
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-white uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-white uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
@@ -84,7 +84,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
               />
             ) : (
               <div className="w-48 h-48 rounded-full bg-[#2A2A28] flex items-center justify-center border-4 border-[#3A3A38] flicker-glow">
-                <Flame size={64} className="text-[#A8895C] opacity-30" />
+                <Flame size={64} className="text-[#805400] opacity-30" />
               </div>
             )}
             <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-[#1A1A18] rounded-full p-2 shadow-[0_0_15px_rgba(249,115,22,0.5)] border border-[#2A2A28]">
@@ -92,8 +92,8 @@ export default function VisitorCandlesPage({ dynamicId }) {
             </div>
           </div>
 
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Vigil & Remembrance <span className="ml-2 inline-block w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live</p>
-          <h2 className="text-5xl font-serif text-[#F8F6F0] mb-4">In loving memory of {memorialData.name}</h2>
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">Vigil & Remembrance <span className="ml-2 inline-block w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Live</p>
+          <h1 className="text-5xl font-serif text-[#F8F6F0] mb-4">In loving memory of {memorialData.name}</h1>
           <p className="text-lg text-[#E8DFD1] max-w-2xl mx-auto opacity-80">
             Light a candle as a symbol of remembrance, support, and eternal hope. Your flame joins others in a circle of quiet reflection in the darkness.
           </p>
@@ -112,7 +112,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
             {candles.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-[#3A3A38] rounded-2xl">
                 <Flame size={32} className="mx-auto text-[#3A3A38] mb-4" />
-                <p className="text-[#A8895C] italic">The night is quiet. Be the first to light a candle.</p>
+                <p className="text-[#805400] italic">The night is quiet. Be the first to light a candle.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -124,7 +124,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
                     <div className="flex-1">
                       <p className="font-semibold text-white text-lg">{candle.from}</p>
                       <p className="text-[#E8DFD1] italic mt-2 font-serif">"{candle.message}"</p>
-                      <p className="text-xs text-[#A8895C] uppercase tracking-widest mt-4 font-bold">{candle.date}</p>
+                      <p className="text-xs text-[#805400] uppercase tracking-widest mt-4 font-bold">{candle.date}</p>
                     </div>
                   </div>
                 ))}
@@ -134,7 +134,7 @@ export default function VisitorCandlesPage({ dynamicId }) {
 
           <div className="rounded-3xl bg-[#2A2A28] border border-[#3A3A38] p-8 shadow-2xl h-fit sticky top-24">
             <h3 className="text-2xl font-serif font-semibold text-[#F8F6F0] mb-4 flex items-center gap-3">
-              <Flame size={24} className="text-[#A8895C]" /> The Circle of Light
+              <Flame size={24} className="text-[#805400]" /> The Circle of Light
             </h3>
             <p className="text-sm text-[#E8DFD1] opacity-80 leading-loose">
               As more family and friends light candles, the glow surrounding the portrait grows stronger. Each candle represents a moment of quiet reflection, a message of support, and a connection to those who came before us. 

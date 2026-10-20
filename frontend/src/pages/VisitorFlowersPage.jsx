@@ -137,7 +137,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
         
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
@@ -148,15 +148,15 @@ export default function VisitorFlowersPage({ dynamicId }) {
               <div className="w-48 h-48 rounded-full object-cover border-4 border-white shadow-lg hover:shadow-xl transition-shadow" style={{ backgroundImage: `url(${memorialData.portrait})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
             ) : (
               <div className="w-48 h-48 rounded-full bg-[#EFEAE0] flex items-center justify-center border-4 border-white shadow-lg">
-                <Flower size={64} className="text-[#A8895C] opacity-50" />
+                <Flower size={64} className="text-[#805400] opacity-50" />
               </div>
             )}
             <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-2 shadow-md">
-              <Flower size={24} className="text-[#A8895C]" />
+              <Flower size={24} className="text-[#805400]" />
             </div>
           </div>
 
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Floral Tributes</p>
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">Floral Tributes</p>
           <h1 className="text-5xl font-serif font-semibold text-[#1F2E27] mb-4">
             In loving memory of {memorialData.name}
           </h1>
@@ -166,7 +166,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
           
           {memorialData.donationNumber && (
             <div className="mt-6 flex items-center gap-2 bg-[#1F2E27] text-white px-4 py-2 rounded-full text-xs font-bold tracking-widest shadow-md">
-              <ShieldCheck size={16} className="text-[#A8895C]"/>
+              <ShieldCheck size={16} className="text-[#805400]"/>
               FAMILY TREASURER CONTACT (CONFIRM DETAILS BEFORE SENDING): {memorialData.donationNumber.substring(0,4)} XXX {memorialData.donationNumber.substring(7)}. Site payments are handled separately.
             </div>
           )}
@@ -177,10 +177,10 @@ export default function VisitorFlowersPage({ dynamicId }) {
             <Card key={arr.name} className="hover:border-[#A8895C] transition-colors hover:shadow-lg group">
               <CardBody className="p-8">
                 <div className="flex justify-between items-start mb-4">
-                  <Flower size={36} className="text-[#A8895C] group-hover:scale-110 transition-transform" />
+                  <Flower size={36} className="text-[#805400] group-hover:scale-110 transition-transform" />
                   <span className="text-[#1F2E27] font-bold">KSh {arr.price.toLocaleString()}</span>
                 </div>
-                <h3 className="text-xl font-serif font-semibold text-[#1F2E27] mb-2">{arr.name}</h3>
+                <h2 className="text-xl font-serif font-semibold text-[#1F2E27] mb-2">{arr.name}</h2>
                 <p className="text-sm text-[#3D3530] mb-6">{arr.desc}</p>
                 <Button variant="secondary" size="sm" className="w-full" onClick={() => handleSelectArrangement(arr)}>
                   Send as Donation
@@ -202,11 +202,11 @@ export default function VisitorFlowersPage({ dynamicId }) {
               {flowers.map((flower) => (
                 <div key={flower.id} className="p-6 bg-[#F8F6F0] rounded-2xl border border-[#E8DFD1] flex flex-col justify-between group hover:shadow-md transition-all hover:-translate-y-1">
                   <div>
-                    <Flower size={24} className="text-[#A8895C] mb-4" />
+                    <Flower size={24} className="text-[#805400] mb-4" />
                     <p className="font-serif text-lg font-semibold text-[#1F2E27]">{flower.arrangement}</p>
                     <p className="text-sm text-[#3D3530] mt-2 italic font-serif">From: {flower.from}</p>
                   </div>
-                  <p className="text-xs text-[#A8895C] mt-6 font-bold tracking-widest uppercase border-t border-[#E8DFD1] pt-4">{flower.date}</p>
+                  <p className="text-xs text-[#805400] mt-6 font-bold tracking-widest uppercase border-t border-[#E8DFD1] pt-4">{flower.date}</p>
                 </div>
               ))}
             </div>
@@ -237,7 +237,7 @@ export default function VisitorFlowersPage({ dynamicId }) {
               <label className="block text-[10px] uppercase tracking-widest font-bold text-[#716860] mb-2">M-Pesa Phone Number</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Smartphone size={16} className="text-[#A8895C]" />
+                  <Smartphone size={16} className="text-[#805400]" />
                 </div>
                 <input 
                   type="tel" 

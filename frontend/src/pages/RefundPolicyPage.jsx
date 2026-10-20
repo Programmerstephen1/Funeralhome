@@ -41,7 +41,7 @@ export default function RefundPolicyPage() {
     <div className="min-h-screen bg-[#F8F6F0] px-4 py-16 sm:px-6 lg:px-8">
       <article className="mx-auto max-w-3xl rounded-xl border border-[#E8DFD1] bg-white p-8 shadow-sm sm:p-12">
         <header className="mb-10 text-center">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#A8895C]">{BUSINESS.name}</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#805400]">{BUSINESS.name}</p>
           <h1 className="mb-4 font-serif text-3xl font-semibold text-[#1F2E27] sm:text-4xl">Refund and Cancellation Policy</h1>
           <p className="text-sm font-bold uppercase tracking-widest text-[#716860]">Effective October 2026</p>
         </header>

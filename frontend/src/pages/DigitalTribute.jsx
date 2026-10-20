@@ -103,7 +103,7 @@ export default function DigitalTribute() {
     return (
       <div className="min-h-screen bg-[#F8F6F0] px-4 py-16 flex items-center justify-center">
         <div className="max-w-md w-full bg-white border border-[#E8DFD1] p-8 rounded-2xl text-center shadow-sm">
-          <Heart size={48} className="text-[#A8895C] mx-auto mb-4 opacity-50" />
+          <Heart size={48} className="text-[#805400] mx-auto mb-4 opacity-50" />
           <h2 className="text-2xl font-serif text-[#1F2E27] mb-2">Memorial Not Found</h2>
           <p className="text-sm text-[#716860] mb-6">The requested memorial page could not be located or may still be processing.</p>
           <Link to="/" className="inline-block px-6 py-3 bg-[#1F2E27] text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors">
@@ -122,7 +122,7 @@ export default function DigitalTribute() {
       {/* Sticky Header Bar */}
       <header className="sticky top-0 z-40 bg-[#1F2E27] text-white py-3 px-4 shadow-md">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link to="/" className="text-xs font-serif tracking-widest text-[#A8895C] uppercase">
+          <Link to="/" className="text-xs font-serif tracking-widest text-[#805400] uppercase">
             Last Planner Julz
           </Link>
           
@@ -149,7 +149,7 @@ export default function DigitalTribute() {
       {/* Hero Section */}
       <section className="bg-white border-b border-[#E8DFD1] py-12 px-4 shadow-sm">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#A8895C] font-extrabold mb-3">
+          <p className="text-xs uppercase tracking-[0.25em] text-[#805400] font-extrabold mb-3">
             In Loving Memory
           </p>
           <h1 className="text-4xl sm:text-5xl font-serif text-[#1F2E27] font-bold mb-4 leading-tight">
@@ -157,7 +157,7 @@ export default function DigitalTribute() {
           </h1>
 
           <div className="flex items-center justify-center gap-3 text-sm font-bold text-[#716860] uppercase tracking-wider mb-8">
-            <Calendar size={16} className="text-[#A8895C]" />
+            <Calendar size={16} className="text-[#805400]" />
             <span>{eulogy.birth_year ? eulogy.birth_year.slice(0, 4) : "YYYY"}</span>
             <span>—</span>
             <span>{eulogy.passing_year ? eulogy.passing_year.slice(0, 4) : "YYYY"}</span>
@@ -166,11 +166,11 @@ export default function DigitalTribute() {
           {/* Quick Action Download Banner */}
           <div className="bg-[#F8F6F0] border border-[#E8DFD1] rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-left max-w-xl mx-auto">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-white rounded-xl border border-[#E8DFD1] text-[#A8895C]">
+              <div className="p-3 bg-white rounded-xl border border-[#E8DFD1] text-[#805400]">
                 <FileText size={24} />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#1F2E27]">Official Printed Program</h4>
+                <h2 className="text-sm font-bold text-[#1F2E27]">Official Printed Program</h2>
                 <p className="text-xs text-[#716860]">Keep a formatted PDF copy on your phone.</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function DigitalTribute() {
         {chapters.map((chap, idx) => (
           <article key={idx} className="bg-white border border-[#E8DFD1] rounded-2xl p-6 sm:p-8 shadow-sm">
             <h2 className="text-lg font-bold font-serif text-[#1F2E27] uppercase tracking-wider mb-4 border-b border-[#F8F6F0] pb-3 flex items-center gap-2">
-              <BookOpen size={18} className="text-[#A8895C]" />
+              <BookOpen size={18} className="text-[#805400]" />
               {chap.title}
             </h2>
             <div className="text-base leading-relaxed text-[#3D3530] whitespace-pre-wrap font-serif">
@@ -201,7 +201,7 @@ export default function DigitalTribute() {
 
         {/* Footer Actions */}
         <div className="bg-white border border-[#E8DFD1] rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <Heart size={32} className="text-[#A8895C] mx-auto" />
+          <Heart size={32} className="text-[#805400] mx-auto" />
           <h3 className="text-xl font-serif text-[#1F2E27]">Honoring a Life Well Lived</h3>
           <p className="text-xs text-[#716860] max-w-md mx-auto leading-relaxed">
             Thank you for being part of this tribute. You can download the complete eulogy document to preserve these memories.

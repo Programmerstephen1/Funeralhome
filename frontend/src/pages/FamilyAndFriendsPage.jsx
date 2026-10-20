@@ -58,14 +58,14 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
       <div className="site-container max-w-6xl mx-auto">
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
 
         <section className="mb-16 text-center">
-          <Users size={48} className="mx-auto mb-4 text-[#A8895C]" />
-          <p className="text-sm tracking-[0.28em] uppercase text-[#A8895C] mb-3">Memorial Hub</p>
+          <Users size={48} className="mx-auto mb-4 text-[#805400]" />
+          <p className="text-sm tracking-[0.28em] uppercase text-[#805400] mb-3">Memorial Hub</p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Family & Friends</h1>
           <p className="text-lg text-[#3D3530] max-w-3xl mx-auto">
             The people who shared in a life of meaning, love, and lasting connection with {memorialData.name}.
@@ -88,11 +88,11 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
                   <CardBody className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#F8F6F0] border border-[#E8DFD1] flex items-center justify-center flex-shrink-0 mt-1">
-                        <Heart size={20} className="text-[#A8895C]" />
+                        <Heart size={20} className="text-[#805400]" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-[#1F2E27] text-lg">{member.name}</h3>
-                        <p className="text-sm text-[#A8895C] font-medium">{member.role}</p>
+                        <p className="text-sm text-[#805400] font-medium">{member.role}</p>
                         <p className="text-xs uppercase tracking-wider text-[#3D3530] mt-1">Primary Family</p>
                       </div>
                     </div>
@@ -119,11 +119,11 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
                   <CardBody className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#F8F6F0] border border-[#E8DFD1] flex items-center justify-center flex-shrink-0 mt-1">
-                        <Users size={20} className="text-[#A8895C]" />
+                        <Users size={20} className="text-[#805400]" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-[#1F2E27] text-lg">{friend.name}</h3>
-                        <p className="text-sm text-[#A8895C] font-medium">{friend.role}</p>
+                        <p className="text-sm text-[#805400] font-medium">{friend.role}</p>
                         <p className="text-xs uppercase tracking-wider text-[#3D3530] mt-1">Close Circle</p>
                       </div>
                     </div>
@@ -144,7 +144,7 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
           </p>
           <Link 
             to={`/memorial/${dynamicId || ''}`}
-            className="inline-block border border-[#E8DFD1] text-[#3D3530] px-8 py-3 text-sm tracking-wider font-semibold uppercase rounded hover:border-[#A8895C] hover:text-[#A8895C] transition-colors"
+            className="inline-block border border-[#E8DFD1] text-[#3D3530] px-8 py-3 text-sm tracking-wider font-semibold uppercase rounded hover:border-[#A8895C] hover:text-[#805400] transition-colors"
           >
             Return to Memorial Hub
           </Link>
@@ -156,11 +156,11 @@ export default function FamilyAndFriendsPage({ dynamicId }) {
               <label className="block text-sm font-medium text-[#1F2E27] mb-2">Category</label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" checked={newPerson.category === "family"} onChange={() => setNewPerson({ ...newPerson, category: "family" })} className="text-[#A8895C] focus:ring-[#A8895C]" />
+                  <input type="radio" checked={newPerson.category === "family"} onChange={() => setNewPerson({ ...newPerson, category: "family" })} className="text-[#805400] focus:ring-[#A8895C]" />
                   <span className="text-[#3D3530] text-sm">Immediate Family</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" checked={newPerson.category === "friend"} onChange={() => setNewPerson({ ...newPerson, category: "friend" })} className="text-[#A8895C] focus:ring-[#A8895C]" />
+                  <input type="radio" checked={newPerson.category === "friend"} onChange={() => setNewPerson({ ...newPerson, category: "friend" })} className="text-[#805400] focus:ring-[#A8895C]" />
                   <span className="text-[#3D3530] text-sm">Cherished Friend</span>
                 </label>
               </div>

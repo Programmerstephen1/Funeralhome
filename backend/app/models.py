@@ -2,6 +2,8 @@ from . import db
 import bcrypt
 import datetime
 import uuid
+from decimal import Decimal
+from sqlalchemy import Numeric
 
 class User(db.Model):
     __tablename__ = "users"
@@ -62,6 +64,8 @@ class UploadedFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     filename = db.Column(db.String(100), unique=True, nullable=False)
+    content_type = db.Column(db.String(100), nullable=False, default="image/jpeg")
+    byte_size = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
 
 
@@ -84,7 +88,7 @@ class Product(db.Model):
     category_id = db.Column(db.String(50), nullable=False)
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Float, nullable=False, default=0.0)
+    price = db.Column(Numeric(12, 2), nullable=False, default=Decimal("0.00"))
     
     discount_percent = db.Column(db.Integer, nullable=True, default=0)
     has_sizes = db.Column(db.Boolean, default=False)
@@ -123,7 +127,7 @@ class Product(db.Model):
             "categoryId": self.category_id,
             "title": self.title,
             "desc": self.description,
-            "price": self.price,
+            "price": float(self.price or 0),
             "discount_percent": self.discount_percent,
             "has_sizes": bool(self.has_sizes),
             "inclusions": parsed_inclusions,
@@ -258,7 +262,9 @@ class PaymentTransaction(db.Model):
     merchant_request_id = db.Column(db.String(128), unique=False, nullable=True)
     phone = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(150), nullable=True)
-    amount = db.Column(db.Float, nullable=True)
+    amount = db.Column(Numeric(12, 2), nullable=True)
+    mpesa_receipt = db.Column(db.String(50), unique=True, nullable=True)
+    callback_received_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(50), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -269,7 +275,7 @@ class PaymentTransaction(db.Model):
             "merchant_request_id": self.merchant_request_id,
             "phone": self.phone,
             "email": self.email,
-            "amount": self.amount,
+            "amount": float(self.amount) if self.amount is not None else None,
             "status": self.status,
             "created_at": self.created_at.isoformat()
         }
@@ -278,7 +284,7 @@ class Order(db.Model):
     __tablename__ = "orders"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    total_amount = db.Column(db.Float, nullable=False, default=0.0)
+    total_amount = db.Column(Numeric(12, 2), nullable=False, default=Decimal("0.00"))
     status = db.Column(db.String(50), default="completed") 
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
@@ -289,7 +295,7 @@ class Order(db.Model):
         return {
             "id": self.id,
             "user_email": self.user.email if self.user else "Unknown",
-            "total_amount": self.total_amount,
+            "total_amount": float(self.total_amount or 0),
             "status": self.status,
             "created_at": self.created_at.isoformat(),
             "items": [item.to_dict() for item in self.items]
@@ -320,12 +326,12 @@ class Memorial(db.Model):
     __tablename__ = "memorials"
     id = db.Column(db.String(150), primary_key=True) # The URL slug (e.g., doe-family)
     name = db.Column(db.String(150), nullable=False)
-    general_pin = db.Column(db.String(10), nullable=False)
-    nuclear_pin = db.Column(db.String(10), nullable=False)
+    general_pin_hash = db.Column(db.String(255), nullable=False)
+    nuclear_pin_hash = db.Column(db.String(255), nullable=False)
     donation_number = db.Column(db.String(20), nullable=False)
     portrait_url = db.Column(db.Text, nullable=True)
     security_question = db.Column(db.String(255), nullable=False)
-    security_answer = db.Column(db.String(255), nullable=False)
+    security_answer_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def to_dict(self):
@@ -337,6 +343,18 @@ class Memorial(db.Model):
             "security_question": self.security_question,
             "created_at": self.created_at.isoformat()
         }
+
+
+class MpesaCallbackEvent(db.Model):
+    """Durable callback receipt; unique provider key makes replays harmless."""
+    __tablename__ = "mpesa_callback_events"
+    id = db.Column(db.Integer, primary_key=True)
+    checkout_request_id = db.Column(db.String(128), nullable=False, unique=True, index=True)
+    payload_sha256 = db.Column(db.String(64), nullable=False)
+    result_code = db.Column(db.Integer, nullable=False)
+    received_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    processed_at = db.Column(db.DateTime, nullable=True)
+    error = db.Column(db.String(255), nullable=True)
 
 class JournalEntry(db.Model):
     __tablename__ = "journal_entries"

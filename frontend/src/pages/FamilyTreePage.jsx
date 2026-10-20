@@ -89,7 +89,7 @@ export default function FamilyTreePage({ dynamicId }) {
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-[#E8DFD1] p-8 text-center animate-fadeIn relative">
           
           <div className="w-16 h-16 bg-[#1F2E27] rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-            {recoveryMode ? <HelpCircle size={28} className="text-[#A8895C]" /> : <Lock size={28} className="text-[#A8895C]" />}
+            {recoveryMode ? <HelpCircle size={28} className="text-[#805400]" /> : <Lock size={28} className="text-[#805400]" />}
           </div>
           <h2 className="text-3xl font-serif text-[#1F2E27] mb-2">{recoveryMode ? "Recover Access" : "Restricted Access"}</h2>
           
@@ -116,7 +116,7 @@ export default function FamilyTreePage({ dynamicId }) {
                 <button type="submit" className="w-full bg-[#1F2E27] text-white py-4 rounded font-bold uppercase tracking-widest hover:bg-[#A8895C] transition-colors shadow-md">
                   Verify Access
                 </button>
-                <button type="button" onClick={() => {setRecoveryMode(true); setAuthError("");}} className="text-[10px] uppercase font-bold tracking-widest text-[#A8895C] hover:text-[#1F2E27] transition-colors mt-4 block mx-auto">
+                <button type="button" onClick={() => {setRecoveryMode(true); setAuthError("");}} className="text-[10px] uppercase font-bold tracking-widest text-[#805400] hover:text-[#1F2E27] transition-colors mt-4 block mx-auto">
                   Forgot Family PIN?
                 </button>
               </form>
@@ -127,7 +127,7 @@ export default function FamilyTreePage({ dynamicId }) {
           {recoveryMode && !recoveredPin && (
             <div className="space-y-4 animate-fadeIn">
               <div className="bg-[#F8F6F0] p-4 rounded border border-[#E8DFD1] mb-4">
-                <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-1">Security Question</span>
+                <span className="text-[10px] uppercase font-bold text-[#805400] block mb-1">Security Question</span>
                 <p className="font-serif text-[#1F2E27] text-sm">{memorialData?.securityQuestion || "No question set."}</p>
               </div>
               <input 
@@ -148,7 +148,7 @@ export default function FamilyTreePage({ dynamicId }) {
           {recoveryMode && recoveredPin && (
             <div className="space-y-6 animate-fadeIn">
               <div className="bg-[#1F2E27] p-6 rounded border border-[#1F2E27]">
-                <span className="text-[10px] uppercase font-bold text-[#A8895C] block mb-2">Nuclear Family PIN</span>
+                <span className="text-[10px] uppercase font-bold text-[#805400] block mb-2">Nuclear Family PIN</span>
                 <p className="font-mono text-3xl tracking-[0.3em] text-white font-bold">{recoveredPin}</p>
               </div>
               <button onClick={() => {setRecoveryMode(false); setRecoveredPin(null);}} className="w-full border border-[#E8DFD1] text-[#1F2E27] py-3 rounded font-bold uppercase tracking-widest text-xs hover:bg-[#F8F6F0] transition-colors">Return to Login</button>
@@ -156,7 +156,7 @@ export default function FamilyTreePage({ dynamicId }) {
           )}
 
           <div className="mt-8 pt-6 border-t border-[#E8DFD1]">
-            <Link to={`/memorial/${dynamicId || ''}`} className="text-xs font-bold text-[#A8895C] uppercase tracking-wider hover:text-[#1F2E27]">
+            <Link to={`/memorial/${dynamicId || ''}`} className="text-xs font-bold text-[#805400] uppercase tracking-wider hover:text-[#1F2E27]">
               Return to Public Hub
             </Link>
           </div>
@@ -171,13 +171,13 @@ export default function FamilyTreePage({ dynamicId }) {
         
         <Link 
           to={`/memorial/${dynamicId || ''}`}
-          className="inline-flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold mb-8 transition-colors"
         >
           <ArrowLeft size={16} /> Return to Dashboard
         </Link>
 
         <section className="mb-12 text-center">
-          <TreeDeciduous size={48} className="mx-auto mb-4 text-[#A8895C]" />
+          <TreeDeciduous size={48} className="mx-auto mb-4 text-[#805400]" />
           <p className="text-sm tracking-[0.28em] uppercase text-emerald-700 font-bold mb-3">Nuclear Family Verified</p>
           <h1 className="text-5xl md:text-6xl font-serif font-semibold text-[#1F2E27] mb-4">Family Connections</h1>
           <p className="text-lg text-[#3D3530] max-w-2xl mx-auto">
@@ -193,7 +193,7 @@ export default function FamilyTreePage({ dynamicId }) {
             </div>
           ) : (
             <div className="absolute z-10 flex items-center justify-center overflow-hidden rounded-full bg-[#1A1A18]" style={{ top: '11.3%', left: '50%', transform: 'translateX(-50%)', width: '40.4%', aspectRatio: '1/1' }}>
-              <User size={64} className="text-[#A8895C] opacity-20" />
+              <User size={64} className="text-[#805400] opacity-20" />
             </div>
           )}
         </div>
@@ -213,7 +213,7 @@ export default function FamilyTreePage({ dynamicId }) {
         {familyMembers.length === 0 ? (
           <div className="text-center py-16 bg-white border border-dashed border-[#E8DFD1] rounded-2xl mb-12">
             <TreeDeciduous size={48} className="mx-auto mb-4 text-[#E8DFD1]" />
-            <h3 className="text-xl font-serif text-[#1F2E27] mb-2">The Tree is Waiting</h3>
+            <h2 className="text-xl font-serif text-[#1F2E27] mb-2">The Tree is Waiting</h2>
             <p className="text-[#8F847C] max-w-md mx-auto">Be the first to add your name, relationship, and a dedicating verse to the family tree.</p>
           </div>
         ) : (
@@ -223,11 +223,11 @@ export default function FamilyTreePage({ dynamicId }) {
                 <CardBody className="p-8">
                   <div className="flex items-start gap-6">
                     <div className="w-20 h-20 rounded-full bg-[#F8F6F0] border-2 border-[#E8DFD1] flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
-                      {member.photo !== null ? <img src={member.photo} className="w-full h-full object-cover" alt={member.name} /> : <User size={32} className="text-[#A8895C] opacity-40" />}
+                      {member.photo !== null ? <img src={member.photo} className="w-full h-full object-cover" alt={member.name} /> : <User size={32} className="text-[#805400] opacity-40" />}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-serif font-bold text-[#1F2E27] mb-1">{member.name}</h3>
-                      <p className="text-xs text-[#A8895C] font-bold tracking-widest uppercase mb-4">{member.relationship}</p>
+                      <p className="text-xs text-[#805400] font-bold tracking-widest uppercase mb-4">{member.relationship}</p>
                       {member.quote !== "" && (
                         <div className="relative bg-[#F8F6F0] p-4 rounded-lg border-l-4 border-[#A8895C]">
                           <Quote size={16} className="text-[#E8DFD1] absolute top-3 right-3" />
@@ -254,12 +254,12 @@ export default function FamilyTreePage({ dynamicId }) {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-[#E8DFD1]">
             <div className="bg-[#1F2E27] p-5 flex justify-between items-center text-white border-b-4 border-[#A8895C]">
               <h3 className="font-serif text-xl tracking-wide">Add Your Connection</h3>
-              <button onClick={() => setIsModalOpen(false)} className="hover:text-[#A8895C] transition-colors p-1"><X size={24} /></button>
+              <button onClick={() => setIsModalOpen(false)} className="hover:text-[#805400] transition-colors p-1"><X size={24} /></button>
             </div>
             <form onSubmit={handleSaveConnection} className="p-6 space-y-6">
               <div className="flex justify-center">
                 <div className="relative w-24 h-24 rounded-full bg-[#F8F6F0] border-2 border-[#E8DFD1] flex items-center justify-center overflow-hidden shadow-inner group">
-                  {newMember.photo !== null ? <img src={newMember.photo} className="w-full h-full object-cover" alt="Preview" /> : <User size={32} className="text-[#A8895C] opacity-40" />}
+                  {newMember.photo !== null ? <img src={newMember.photo} className="w-full h-full object-cover" alt="Preview" /> : <User size={32} className="text-[#805400] opacity-40" />}
                   <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                     <Camera size={20} className="text-white" />
                     <input type="file" accept="image/*" onChange={handleMemberPhotoUpload} className="hidden" />

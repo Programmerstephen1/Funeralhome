@@ -75,7 +75,7 @@ export default function CheckoutPage({ cart: accountCart }) {
   if (!cart || cart.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center bg-[#F8F6F0] px-4 py-16 text-center">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#E8DFD1] bg-white shadow-sm"><ShieldCheck className="text-[#A8895C]" size={32} /></div>
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#E8DFD1] bg-white shadow-sm"><ShieldCheck className="text-[#805400]" size={32} /></div>
         <h2 className="mb-4 text-2xl font-serif text-[#1F2E27]">Your selection is empty</h2>
         <p className="mb-8 max-w-md text-sm leading-relaxed text-[#3D3530]">Browse the catalog and add items to request availability and a complete delivered quote.</p>
         <Link to="/catalog" className="rounded-full bg-[#1F2E27] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#A8895C]">Browse Catalog</Link>
@@ -105,7 +105,7 @@ export default function CheckoutPage({ cart: accountCart }) {
             <section className="rounded-[1.25rem] border border-[#E8DFD1] bg-white p-6 shadow-sm md:p-8">
               <div className="mb-6">
                 <p className="section-eyebrow">Availability request</p>
-                <h1 className="mt-2 flex items-center gap-2 font-serif text-xl text-[#1F2E27]"><Building2 className="text-[#A8895C]" size={20} />Tell us where and when</h1>
+                <h1 className="mt-2 flex items-center gap-2 font-serif text-xl text-[#1F2E27]"><Building2 className="text-[#805400]" size={20} />Tell us where and when</h1>
                 <p className="mt-2 text-sm leading-relaxed text-[#716860]">Your listed item prices remain visible. Delivery depends on distance. We’ll confirm availability and send the full price for your approval before any payment.</p>
               </div>
               <div className="grid grid-cols-1 gap-6">
@@ -159,7 +159,7 @@ export default function CheckoutPage({ cart: accountCart }) {
           </div>
           {error && <div className="mt-5 flex gap-2 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert"><AlertCircle size={18} className="shrink-0" />{error}</div>}
           {!submitted && <button type="button" onClick={requestQuote} disabled={isSubmitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-[#1F2E27] py-4 text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#A8895C] disabled:cursor-wait disabled:opacity-60">{isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Sending…</> : "Request availability & quote"}</button>}
-          <div className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-[#716860]"><Phone size={15} className="text-[#A8895C]" /><span>Questions? <a className="font-semibold underline" href={`tel:${BUSINESS.phoneLink}`}>{BUSINESS.phoneDisplay}</a></span></div>
+          <div className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-[#716860]"><Phone size={15} className="text-[#805400]" /><span>Questions? <a className="font-semibold underline" href={`tel:${BUSINESS.phoneLink}`}>{BUSINESS.phoneDisplay}</a></span></div>
         </aside>
       </div>
     </div>

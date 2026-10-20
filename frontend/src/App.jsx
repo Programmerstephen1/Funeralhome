@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from "./services/config";
+import { getApiBaseUrl, getSiteUrl } from "./services/config";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import React, { useEffect, useMemo, useState, useRef, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
@@ -49,6 +49,8 @@ const SettingsPage = lazy(() => import("./pages/Settingspage"));
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoadingSpinner from "./components/LoadingSpinner";
+import CookieConsent from "./components/CookieConsent";
+import ChatWidget from "./components/chat/ChatWidget";
 
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
@@ -78,6 +80,63 @@ const HashBridge = () => {
       navigate(cleanRoute, { replace: true });
     }
   }, [location, navigate]);
+  return null;
+};
+
+const PageMetadata = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+    const publicPages = {
+      "/": ["Funeral Planning & Memorial Support Across Kenya", "Explore funeral planning, pre-planning, memorial tributes, and caring support from Last Planner Julz Funeral Planning Hub in Kahawa West, serving families across Kenya."],
+      "/plan": ["Plan Ahead with Confidence", "Explore funeral pre-planning, review available packages, and request a consultation with Last Planner Julz."],
+      "/packages": ["Funeral Planning Packages", "Review funeral and memorial packages from Last Planner Julz and request an itemized quote."],
+      "/obituaries": ["Obituaries and Memorials", "Remember loved ones and find public obituary information from Last Planner Julz."],
+      "/catalog": ["Funeral Products and Services", "Browse funeral products, floral tributes, transport, service setups, and media options."],
+      "/privacy": ["Privacy Policy", "Learn how Last Planner Julz handles browser storage, account details, enquiries, and payment information."],
+      "/terms": ["Terms of Use", "Read the terms for using Last Planner Julz funeral planning and memorial services."],
+      "/refunds": ["Refund and Cancellation Policy", "Review cancellation, rescheduling, returns, and refund information for Last Planner Julz."],
+    };
+    const privateRoute = /^\/(admin|bookings|cart|checkout|booking-checkout|thankyou|thank-you|settings|login|register|verify|forgot-password|reset-password|eulogy|memorial|overview|wall|pages|gallery|flowers|candles|family|tree|journal)(?:\/|$)/.test(path);
+    let page = publicPages[path];
+    if (!page && /^\/product\/[^/]+$/.test(path)) page = ["Funeral Product Details", "View product details and availability from Last Planner Julz."];
+    if (!page && /^\/(?:catalog|section)\/[^/]+$/.test(path)) page = ["Funeral Product Category", "Browse funeral and memorial products from Last Planner Julz."];
+    const isNotFound = !page && !privateRoute;
+    page = page || (isNotFound
+      ? ["Page Not Found", "The requested page could not be found. Browse funeral planning services and memorial products from Last Planner Julz."]
+      : ["Account and Memorial Services", "Manage your account, planning requests, or memorial workspace."]);
+    const [title, description] = page;
+    const canonicalUrl = `${getSiteUrl()}${path}`;
+    document.title = `${title} | Last Planner Julz`;
+    const setMeta = (selector, attribute, key, value) => {
+      let element = document.head.querySelector(selector);
+      if (!element) {
+        element = document.createElement('meta');
+        document.head.appendChild(element);
+      }
+      element.setAttribute(attribute, key);
+      element.setAttribute('content', value);
+    };
+    setMeta('meta[name="description"]', 'name', 'description', description);
+    setMeta('meta[property="og:title"]', 'property', 'og:title', document.title);
+    setMeta('meta[property="og:description"]', 'property', 'og:description', description);
+    setMeta('meta[property="og:type"]', 'property', 'og:type', 'website');
+    setMeta('meta[property="og:url"]', 'property', 'og:url', canonicalUrl);
+    setMeta('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
+    setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', document.title);
+    setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
+    setMeta('meta[name="robots"]', 'name', 'robots', privateRoute || isNotFound ? 'noindex,nofollow' : 'index,follow');
+
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
+  }, [pathname]);
+
   return null;
 };
 
@@ -265,30 +324,6 @@ function AppContent() {
     return () => window.removeEventListener("storage", syncLoginState);
   }, [userEmail]);
 
-  useEffect(() => {
-    const routeTitles = {
-      "/": ["Funeral Planning & Memorial Support Across Kenya", "Explore funeral planning, pre-planning, memorial tributes, and caring support from Last Planner Julz Funeral Planning Hub, based in Kahawa West and serving Kenya countrywide."],
-      "/plan": ["Plan Ahead with Confidence", "Explore the pre-planning process, review available packages, and request a consultation with Last Planner Julz."],
-      "/packages": ["Funeral Planning Packages", "Review available funeral and memorial packages from Last Planner Julz."],
-      "/catalog": ["Funeral Products & Services", "Browse funeral products, floral tributes, transport, service setups, and media options."],
-      "/memorial": ["Memorial Hub", "Create or access a digital memorial space for remembrance and family tributes."],
-      "/login": ["Sign In", "Sign in to manage your memorial arrangements and account."],
-      "/register": ["Create an Account", "Create an account to manage memorials and coordinate services."],
-      "/cart": ["Your Planning Cart", "Review funeral and memorial products added to your planning cart."],
-    };
-    const [title, description] = routeTitles[location.pathname] || (location.pathname.startsWith("/product/")
-      ? ["Product Details", "Review product details and pricing from Last Planner Julz."]
-      : location.pathname.startsWith("/catalog/")
-        ? ["Browse Funeral Products", "Browse funeral and memorial products from Last Planner Julz."]
-        : ["Last Planner Julz", "Funeral planning, memorial products, and family support from Kahawa West across Kenya."]);
-    document.title = `${title} | Last Planner Julz`;
-    const descriptionMeta = document.querySelector('meta[name="description"]');
-    if (descriptionMeta) descriptionMeta.setAttribute("content", description);
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute("content", `${title} | Last Planner Julz`);
-    const ogDescription = document.querySelector('meta[property="og:description"]');
-    if (ogDescription) ogDescription.setAttribute("content", description);
-  }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -401,7 +436,7 @@ function AppContent() {
           <div className="flex w-full items-center justify-between md:w-auto">
             <Link to="/" onClick={closeMobileNav} className="flex items-baseline gap-2 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A8895C] sm:gap-3">
               <span className="text-[0.9rem] font-serif font-semibold tracking-[0.14em] text-[#1F2E27] sm:text-[0.95rem] sm:tracking-[0.18em]">Last Planner julz</span>
-              <span className="text-[0.62rem] tracking-[0.2em] uppercase text-[#A8895C] sm:text-[0.7rem] sm:tracking-[0.28em]">Funeral Home</span>
+              <span className="text-[0.62rem] tracking-[0.2em] uppercase text-[#805400] sm:text-[0.7rem] sm:tracking-[0.28em]">Funeral Home</span>
             </Link>
             <button type="button" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-[#D8CFBC] text-[#1F2E27] md:hidden" aria-label={isMobileNavOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={isMobileNavOpen} aria-controls="main-navigation-links" onClick={() => setIsMobileNavOpen((open) => !open)}>
               {isMobileNavOpen ? <X size={20} /> : <Menu size={20} />}
@@ -422,7 +457,7 @@ function AppContent() {
             )}
 
             <div className="ml-0 flex min-h-11 items-center gap-4 border-l border-[#D8CFBC] pl-3 md:ml-2 md:pl-4">
-              <Link to="/cart" onClick={closeMobileNav} aria-label={`Planning cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ", empty"}`} className="relative rounded-sm text-[#A8895C] transition-colors hover:text-[#1F2E27]">
+              <Link to="/cart" onClick={closeMobileNav} aria-label={`Planning cart${cartCount ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ", empty"}`} className="relative rounded-sm text-[#805400] transition-colors hover:text-[#1F2E27]">
                 <ShoppingCart size={20} />
                 {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-[#1F2E27] text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}
               </Link>
@@ -437,7 +472,7 @@ function AppContent() {
                   >
                     <div className="w-8 h-8 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-transparent focus-within:ring-[#1F2E27] overflow-hidden">
                       {displayNavPic && !imgError ? (
-                        <img src={displayNavPic} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                        <img src={displayNavPic} alt="Account profile photo" className="w-full h-full object-cover" onError={() => setImgError(true)} />
                       ) : (
                         userEmail ? userEmail[0].toUpperCase() : "U"
                       )}
@@ -451,7 +486,7 @@ function AppContent() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-[#EA4335] flex items-center justify-center text-white text-lg font-bold overflow-hidden">
                             {displayNavPic && !imgError ? (
-                              <img src={displayNavPic} alt="Profile" className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                              <img src={displayNavPic} alt="Account profile photo" className="w-full h-full object-cover" onError={() => setImgError(true)} />
                             ) : (
                               userEmail ? userEmail[0].toUpperCase() : "U"
                             )}
@@ -533,6 +568,7 @@ function AppContent() {
 
       <main id="main-content" tabIndex="-1" className="focus:outline-none">
         <FloatingContactWidget />
+        <ChatWidget />
         {memorialRouteMatch && memorialRouteMatch[1] !== "demo" && (
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm leading-relaxed text-amber-950" role="note">
             This memorial workspace saves activity in this browser only. It does not sync to relatives’ devices or have server backups; avoid entering sensitive details.
@@ -551,7 +587,8 @@ function AppContent() {
           <Route path="/cart" element={<CartPage {...sharedProps} />} />
           <Route path="/checkout" element={<CheckoutPage {...sharedProps} />} />
           <Route path="/booking-checkout" element={<BookingCheckoutPage {...sharedProps} />} />
-          <Route path="/thankyou" element={<ThankYouPage {...sharedProps} />} />
+          <Route path="/thank-you" element={<ThankYouPage {...sharedProps} />} />
+          <Route path="/thankyou" element={<Navigate to="/thank-you" replace />} />
           <Route path="/bookings" element={<ProtectedRoute userEmail={userEmail}><BookingsPage {...sharedProps} /></ProtectedRoute>} />
           {isAdmin && <Route path="/admin" element={<AdminDashboardPage />} />}
           <Route path="/memorial" element={<MemorialOverviewPage {...sharedProps} />} />
@@ -580,6 +617,7 @@ function AppContent() {
         </Routes>
         </Suspense>
       </main>
+      <CookieConsent />
     </div>
   );
 }
@@ -589,6 +627,7 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <Router>
+        <PageMetadata />
         <AppContent />
       </Router>
     </GoogleOAuthProvider>

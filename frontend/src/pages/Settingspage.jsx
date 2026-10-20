@@ -248,7 +248,7 @@ export default function SettingsPage() {
   // Determine what image source to display in the UI
   const displaySrc = localPreview || (profile.profile_picture ? getImageUrl(profile.profile_picture) : null);
 
-  if (loading) return <div className="min-h-screen bg-[#F8F6F0] p-12 text-center text-[#716860] font-bold uppercase tracking-widest text-sm">Loading data...</div>;
+  if (loading) return <div className="min-h-screen bg-[#F8F6F0] p-12 text-center text-[#716860] font-bold uppercase tracking-widest text-sm"><h1 className="sr-only">Account settings</h1>Loading data...</div>;
 
   return (
     <div className="min-h-screen bg-[#F8F6F0] py-12 px-4 sm:px-6 relative">
@@ -266,7 +266,7 @@ export default function SettingsPage() {
         <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl animate-fadeSlideUp">
             <div className="p-4 border-b border-[#E8DFD1] flex justify-between items-center bg-[#F8F6F0]">
-              <h3 className="font-serif text-[#1F2E27] font-bold text-lg">Crop Profile Photo</h3>
+              <h2 className="font-serif text-[#1F2E27] font-bold text-lg">Crop Profile Photo</h2>
               <button onClick={() => setImageToCrop(null)} className="text-[#716860] hover:text-[#1F2E27]"><X size={20}/></button>
             </div>
             
@@ -306,6 +306,7 @@ export default function SettingsPage() {
       )}
 
       <div className="max-w-2xl mx-auto">
+        <h1 className="sr-only">Account settings</h1>
         
         {message.text && (
           <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 font-bold text-sm shadow-sm animate-fadeSlideUp ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
@@ -319,7 +320,7 @@ export default function SettingsPage() {
           <div className="bg-white border border-[#E8DFD1] rounded-2xl p-8 shadow-sm animate-fadeSlideUp">
             
             <div className="flex items-center gap-3 mb-8">
-              <User className="text-[#A8895C]" size={24} />
+              <User className="text-[#805400]" size={24} />
               <h2 className="text-2xl font-serif text-[#1F2E27] font-bold">Profile Details</h2>
             </div>
 
@@ -333,12 +334,12 @@ export default function SettingsPage() {
                 {displaySrc && !imgError ? (
                   <img 
                     src={displaySrc} 
-                    alt="Profile" 
+                    alt="Account profile photo"
                     className="w-full h-full object-cover" 
                     onError={() => setImgError(true)} 
                   />
                 ) : (
-                  <span className="text-3xl font-bold text-[#A8895C] uppercase">{profile.first_name?.[0] || profile.email?.[0] || 'U'}</span>
+                  <span className="text-3xl font-bold text-[#805400] uppercase">{profile.first_name?.[0] || profile.email?.[0] || 'U'}</span>
                 )}
               </div>
               <div>
@@ -387,7 +388,7 @@ export default function SettingsPage() {
             
             <div className="bg-white border border-[#E8DFD1] rounded-2xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-8">
-                <Shield className="text-[#A8895C]" size={24} />
+                <Shield className="text-[#805400]" size={24} />
                 <h2 className="text-2xl font-serif text-[#1F2E27] font-bold">Sign-In & Security</h2>
               </div>
               

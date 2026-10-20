@@ -19,6 +19,14 @@ const sections = [
     content: 'Cart contents, some booking drafts, and memorial workspaces such as tribute content, journal entries, and gallery selections are stored in this browser. They are not currently synchronized to an account or backed up by the website, and clearing browser storage or using another device can make them unavailable. Avoid entering information into these features that you need the operator to retain or protect.',
   },
   {
+    title: 'AI chat assistance',
+    content: 'If you use Julz Assistant, the message and a short conversation history are sent to the AI provider configured for the website so it can prepare a reply. The website does not save chat transcripts to its database; the conversation remains in browser memory until you leave or reload the page. Basic filters redact likely email addresses, phone numbers, payment numbers, and credential values before transmission, but they may not catch every sensitive detail. The AI provider may handle requests under its own privacy and retention terms. Do not enter passwords, one-time codes, PINs, payment details, or private memorial information in chat.',
+  },
+  {
+    title: 'Cookies and browser preferences',
+    content: 'The site stores a cookie preference in local browser storage so your choice is remembered. Essential browser storage is used for site functionality. Optional analytics are not currently configured. You can reopen Cookie settings from the page corner to change your choice. Clearing local browser storage also clears this preference.',
+  },
+  {
     title: 'Payments and other services',
     content: 'M-Pesa payment requests are handled through Safaricom Daraja. A transaction record includes payment amount, phone number, email, status, and payment references so the payment can be matched to its result. Location search suggestions are requested from OpenStreetMap Nominatim. Sign-in may use Google when configured. Hosting, database, and email providers may process information in the locations where their systems operate.',
   },

@@ -9,28 +9,36 @@ import os
 import hmac
 import uuid
 import io
-import time
+import json
+from decimal import Decimal, InvalidOperation
+from functools import wraps
 import qrcode
-from collections import defaultdict
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from functools import wraps
 from flask import Blueprint, jsonify, request, current_app, send_file
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from PIL import Image, ImageOps, UnidentifiedImageError
+from werkzeug.security import generate_password_hash
 
-from .models import db, FuneralService, User, AuthChallenge, UploadedFile, Eulogy, Consultation, Product, ProductImage, ProductSpecification, ProductReview, Order, OrderItem, PaymentTransaction, Memorial, JournalEntry, GalleryImage, MemorialCandle, FamilyTreeMember
+from .models import db, FuneralService, User, AuthChallenge, UploadedFile, Eulogy, Consultation, Product, ProductImage, ProductSpecification, ProductReview, Order, OrderItem, PaymentTransaction, MpesaCallbackEvent, Memorial, JournalEntry, GalleryImage, MemorialCandle, FamilyTreeMember
 from .mpesa import generate_stk_push_payload
+from . import limiter
+from .storage import put_image, delete_object
+from .services.chat_service import (
+    MAX_MESSAGE_CHARS,
+    ChatServiceError,
+    generate_chat_reply,
+    is_chat_configured,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 api = Blueprint("api", __name__)
-RATE_LIMIT_STORE = defaultdict(list)
 
 
 def send_mail_message(msg, mail_instance=None):
@@ -167,20 +175,7 @@ def _email_delivery_configured():
 # --- SECURITY MIDDLEWARE ---
 
 def rate_limit(max_requests=5, window_seconds=60):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            client_key = request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown')
-            now = time.time()
-            rate_key = f"{fn.__name__}:{client_key}"
-            history = RATE_LIMIT_STORE[rate_key]
-            history[:] = [ts for ts in history if now - ts < window_seconds]
-            if len(history) >= max_requests:
-                return jsonify({"message": "Too many attempts. Please wait a moment and try again."}), 429
-            history.append(now)
-            return fn(*args, **kwargs)
-        return wrapper
-    return decorator
+    return limiter.limit(f"{max_requests} per {window_seconds} seconds")
 
 def require_safaricom_ip(f):
     @wraps(f)
@@ -696,15 +691,20 @@ def reset_password():
 @api.route("/api/memorials", methods=["POST"])
 def create_memorial():
     payload = request.get_json() or {}
+    general_pin = payload.get("pin")
+    nuclear_pin = payload.get("familyTreePin")
+    security_answer = payload.get("securityAnswer", "")
+    if not all(isinstance(value, str) and value.strip() for value in (general_pin, nuclear_pin, security_answer)):
+        return jsonify({"error": "Memorial PINs and a security answer are required."}), 400
     new_memorial = Memorial(
         id=payload.get("id"),
         name=payload.get("name"),
-        general_pin=payload.get("pin"),
-        nuclear_pin=payload.get("familyTreePin"),
+        general_pin_hash=generate_password_hash(general_pin.strip()),
+        nuclear_pin_hash=generate_password_hash(nuclear_pin.strip()),
         donation_number=payload.get("donationNumber"),
         portrait_url=payload.get("portrait"),
         security_question=payload.get("securityQuestion"),
-        security_answer=payload.get("securityAnswer", "").lower().strip()
+        security_answer_hash=generate_password_hash(security_answer.strip().lower())
     )
     db.session.add(new_memorial)
     db.session.commit()
@@ -773,7 +773,7 @@ def download_eulogy_pdf(eulogy_id):
         return jsonify({"error": "Eulogy record not found"}), 404
 
     try:
-        domain = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        domain = os.getenv('FRONTEND_URL', 'http://localhost:4173')
         memorial_url = f"{domain}/memorial/{eulogy.id}"
 
         pdf_bytes = generate_eulogy_pdf(eulogy, memorial_url)
@@ -806,6 +806,7 @@ def get_product_detail(product_id):
     return jsonify(product.to_dict()), 200
 
 @api.route("/api/upload", methods=["POST"])
+@rate_limit(max_requests=10, window_seconds=60)
 @jwt_required()
 def upload_file():
     if 'file' not in request.files:
@@ -815,9 +816,20 @@ def upload_file():
         return jsonify({"error": "No selected file"}), 400
 
     try:
+        max_upload_bytes = current_app.config.get('MAX_UPLOAD_BYTES', 8 * 1024 * 1024)
+        file.stream.seek(0, os.SEEK_END)
+        file_size = file.stream.tell()
+        file.stream.seek(0)
+        if file_size > max_upload_bytes:
+            max_size_mb = max_upload_bytes // (1024 * 1024)
+            return jsonify({"error": f"Image must be {max_size_mb} MB or smaller."}), 413
+
         image = Image.open(file.stream)
         if image.format not in {"JPEG", "PNG", "WEBP"}:
             return jsonify({"error": "Upload a JPEG, PNG, or WebP image."}), 400
+        max_pixels = current_app.config.get('MAX_UPLOAD_PIXELS', 25_000_000)
+        if image.width * image.height > max_pixels:
+            return jsonify({"error": "Image dimensions are too large. Please choose a smaller image."}), 413
         image = ImageOps.exif_transpose(image)
         image.thumbnail((3000, 3000))
         if image.mode not in {"RGB", "RGBA"}:
@@ -827,21 +839,32 @@ def upload_file():
             background.paste(image, mask=image.getchannel("A"))
             image = background
         filename = f"{uuid.uuid4().hex}.jpg"
-        upload_folder = os.path.join(current_app.root_path, "static", "uploads")
-        os.makedirs(upload_folder, exist_ok=True)
-        image.save(os.path.join(upload_folder, filename), format="JPEG", quality=85, optimize=True)
-        uploaded_file = UploadedFile(user_id=int(get_jwt_identity()), filename=filename)
+        output = io.BytesIO()
+        image.save(output, format="JPEG", quality=85, optimize=True)
+        payload_bytes = output.getvalue()
+        put_image(filename, payload_bytes)
+        uploaded_file = UploadedFile(user_id=int(get_jwt_identity()), filename=filename, byte_size=len(payload_bytes))
         db.session.add(uploaded_file)
         try:
             db.session.commit()
         except Exception:
             db.session.rollback()
-            os.remove(os.path.join(upload_folder, filename))
+            try:
+                delete_object(filename)
+            except Exception:
+                logger.exception("Orphaned private upload requires cleanup")
             logger.exception("Uploaded image metadata could not be saved")
             return jsonify({"error": "The image could not be saved. Please try again."}), 500
         return jsonify({"image_url": f"/static/uploads/{filename}"}), 200
+    except RuntimeError as exc:
+        logger.error("Private object storage is unavailable: %s", exc)
+        return jsonify({"error": "Image uploads are temporarily unavailable."}), 503
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
         return jsonify({"error": "That file could not be read as a valid image. Please choose a JPEG, PNG, or WebP."}), 400
+    except Exception:
+        db.session.rollback()
+        logger.exception("Private image upload failed")
+        return jsonify({"error": "Image storage is temporarily unavailable."}), 503
 
 @api.route("/api/products/<int:product_id>/reviews", methods=["POST"])
 @jwt_required()
@@ -894,7 +917,7 @@ def admin_stats():
     return jsonify({
         "total_users": total_users,
         "total_orders": total_orders,
-        "total_revenue": revenue,
+        "total_revenue": float(revenue),
         "pending_payments": pending_payments
     }), 200
 
@@ -909,6 +932,31 @@ def admin_orders():
 def admin_payments():
     payments = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(50).all()
     return jsonify([p.to_dict() for p in payments]), 200
+
+
+@api.route("/api/admin/payment-reconciliation", methods=["GET"])
+@admin_required
+def admin_payment_reconciliation():
+    cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+    events = MpesaCallbackEvent.query.filter(MpesaCallbackEvent.error.isnot(None)).order_by(
+        MpesaCallbackEvent.received_at.desc()
+    ).limit(100).all()
+    stale = PaymentTransaction.query.filter(
+        PaymentTransaction.status.in_(["initiated", "pending"]),
+        PaymentTransaction.created_at < cutoff,
+    ).order_by(PaymentTransaction.created_at.asc()).limit(100).all()
+    return jsonify({
+        "callback_exceptions": [
+            {
+                "checkout_request_id": event.checkout_request_id,
+                "result_code": event.result_code,
+                "reason": event.error,
+                "received_at": event.received_at.isoformat(),
+            }
+            for event in events
+        ],
+        "stale_transactions": [transaction.to_dict() for transaction in stale],
+    }), 200
 
 @api.route("/api/admin/products", methods=["POST"])
 @admin_required
@@ -1011,9 +1059,42 @@ def health_check():
     return jsonify({"status": "ok", "database": "ok"}), 200
 
 
+@api.route("/api/chat/status", methods=["GET"])
+def chat_status():
+    """Expose only whether the chatbot is configured; never return secrets."""
+    return jsonify({"available": is_chat_configured()}), 200
+
+
+@api.route("/api/chat", methods=["POST"])
+@rate_limit(max_requests=10, window_seconds=60)
+def chat():
+    if request.content_length and request.content_length > 16_384:
+        return jsonify({"message": "That message is too large. Please shorten it and try again."}), 413
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"message": "Send your message as JSON."}), 400
+
+    message = payload.get("message")
+    if not isinstance(message, str):
+        return jsonify({"message": "Please enter a question about the website."}), 400
+    if len(message) > MAX_MESSAGE_CHARS:
+        return jsonify({"message": f"Please keep your message under {MAX_MESSAGE_CHARS} characters."}), 400
+    if not message.strip():
+        return jsonify({"message": "Please enter a question about the website."}), 400
+
+    try:
+        reply = generate_chat_reply(message, payload.get("history", []))
+    except ChatServiceError as exc:
+        return jsonify({"message": exc.message}), exc.status_code
+
+    return jsonify({"reply": reply}), 200
+
+
 # --- M-PESA PAYMENTS ROUTES ---
 
 @api.route("/api/payments/stkpush", methods=["POST"])
+@rate_limit(max_requests=5, window_seconds=60)
 @jwt_required()
 def stk_push():
     payload = request.get_json() or {}
@@ -1082,108 +1163,103 @@ def payment_status(checkout_id):
 
 @api.route("/api/payments/callback", methods=["POST"])
 def mpesa_callback():
-    from flask_mail import Message
-    from . import mail
-
-    callback_token = os.getenv("MPESA_CALLBACK_TOKEN", "")
+    """Authenticate, deduplicate, reconcile and atomically apply callbacks."""
+    callback_token = current_app.config.get("MPESA_CALLBACK_TOKEN", "")
     supplied_token = request.args.get("token", "")
     if not callback_token or not hmac.compare_digest(supplied_token, callback_token):
         return jsonify({"ResultCode": 1, "ResultDesc": "Unauthorized callback"}), 403
+    payload = request.get_json(silent=True)
+    callback = (payload or {}).get("Body", {}).get("stkCallback", {})
+    checkout_id, result_code = callback.get("CheckoutRequestID"), callback.get("ResultCode")
+    if not isinstance(checkout_id, str) or not checkout_id or type(result_code) is not int:
+        return jsonify({"ResultCode": 1, "ResultDesc": "Invalid callback payload"}), 400
 
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    payload_hash = hashlib.sha256(canonical).hexdigest()
+    prior = MpesaCallbackEvent.query.filter_by(checkout_request_id=checkout_id).with_for_update().first()
+    if prior:
+        if prior.payload_sha256 != payload_hash:
+            logger.error("Conflicting M-Pesa callback replay for %s", checkout_id)
+            return jsonify({"ResultCode": 0, "ResultDesc": "Callback recorded; reconciliation required"}), 200
+        return jsonify({"ResultCode": 0, "ResultDesc": "Duplicate callback acknowledged"}), 200
+
+    metadata = {
+        item.get("Name"): item.get("Value")
+        for item in (callback.get("CallbackMetadata", {}) or {}).get("Item", [])
+        if isinstance(item, dict) and item.get("Name")
+    }
+    tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).with_for_update().first()
+    eulogy = Eulogy.query.filter_by(checkout_request_id=checkout_id).with_for_update().first()
+    event = MpesaCallbackEvent(checkout_request_id=checkout_id, payload_sha256=payload_hash, result_code=result_code)
+    db.session.add(event)
     try:
-        data = request.get_json()
-        customer_email = None
-
-        callback_data = data.get("Body", {}).get("stkCallback", {})
-        result_code = callback_data.get("ResultCode")
-
-        checkout_id = callback_data.get("CheckoutRequestID")
-        tx = None
-
-        if checkout_id:
-            tx = PaymentTransaction.query.filter_by(checkout_request_id=checkout_id).first()
-            if tx:
-                if not customer_email and tx.email:
-                    customer_email = tx.email
-                tx.status = 'completed' if result_code == 0 else 'failed'
-                db.session.commit()
-
-        eulogy = None
-        if checkout_id:
-            eulogy = Eulogy.query.filter_by(checkout_request_id=checkout_id).first()
-
-        if result_code == 0:
-            metadata = callback_data.get("CallbackMetadata", {}).get("Item", [])
-            receipt_no = next((item["Value"] for item in metadata if item["Name"] == "MpesaReceiptNumber"), "N/A")
-            amount_paid = next((item["Value"] for item in metadata if item["Name"] == "Amount"), "N/A")
-
-            if eulogy:
-                eulogy.payment_status = 'paid'
-                eulogy.mpesa_receipt = receipt_no
-                db.session.commit()
-
-                domain = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-                memorial_url = f"{domain}/memorial/{eulogy.id}"
-
-                send_eulogy_email(eulogy, memorial_url, mail)
-
-            if customer_email:
-                try:
-                    msg = Message(
-                        subject="Your Payment Receipt - Last Planner Julz Funeral Planning Hub",
-                        sender=("Last Planner Julz Funeral Planning Hub", current_app.config.get('MAIL_USERNAME')),
-                        recipients=[customer_email]
-                    )
-                    msg.html = f"""
-                    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; border: 1px solid #E8DFD1; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03);">
-                        <div style="background-color: #1F2E27; padding: 25px; text-align: center;">
-                            <h1 style="color: #A8895C; margin: 0; font-family: Georgia, serif; font-size: 24px; letter-spacing: 1px;">Last Planner Julz Funeral Planning Hub</h1>
-                            <p style="color: #F8F6F0; margin: 4px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px;">Order Confirmed</p>
-                        </div>
-                        <div style="padding: 35px 25px; background-color: #FFFFFF; color: #3D3530;">
-                            <h2 style="margin-top: 0; font-family: Georgia, serif; font-size: 18px; color: #1F2E27;">Thank You For Your Order</h2>
-                            <p style="font-size: 14px; line-height: 1.5; color: #555555;">We have successfully cleared your payment through M-Pesa. Your transaction details have been logged securely into our accounting hub.</p>
-                            <div style="background-color: #F8F6F0; border-left: 4px solid #A8895C; padding: 15px; margin: 25px 0; border-radius: 0 4px 4px 0;">
-                                <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="padding: 4px 0; color: #716860;"><strong>M-Pesa Receipt:</strong></td>
-                                        <td style="padding: 4px 0; font-family: monospace; font-size: 14px; color: #1F2E27; text-align: right;"><strong>{receipt_no}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 4px 0; color: #716860;"><strong>Amount Paid:</strong></td>
-                                        <td style="padding: 4px 0; color: #1F2E27; text-align: right;">KSH {amount_paid}.00</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 4px 0; color: #716860;"><strong>Payment Status:</strong></td>
-                                        <td style="padding: 4px 0; color: green; text-align: right; font-weight: 500;">Settled (Live)</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <p style="font-size: 13px; color: #8F847C; margin-bottom: 0;">Our administrative operators will reach out to organize coordination arrangements shortly.</p>
-                        </div>
-                        <div style="background-color: #EFEAE0; padding: 15px; text-align: center; font-size: 11px; color: #8F744D;">
-                            <p style="margin: 0;">Last Planner Julz Funeral Planning Hub • Kenya</p>
-                        </div>
-                    </div>
-                    """
-                    send_mail_message(msg, mail)
-                except Exception as mail_err:
-                    logger.error(f"[MAIL ERROR] Automated receipt transmission faulted: {mail_err}")
-
+        if tx is None and eulogy is None:
+            event.error = "unknown_checkout_request_id"
+        elif result_code == 0:
+            try:
+                paid_amount = Decimal(str(metadata["Amount"]))
+                receipt = str(metadata["MpesaReceiptNumber"]).strip()
+            except (KeyError, InvalidOperation, ValueError):
+                paid_amount, receipt = None, ""
+            expected = Decimal(str(tx.amount)) if tx and tx.amount is not None else None
+            receipt_used = bool(
+                receipt and (
+                    PaymentTransaction.query.filter(
+                        PaymentTransaction.mpesa_receipt == receipt,
+                        PaymentTransaction.id != tx.id if tx else True,
+                    ).first()
+                    or Eulogy.query.filter(Eulogy.mpesa_receipt == receipt, Eulogy.checkout_request_id != checkout_id).first()
+                )
+            )
+            if tx is None or not receipt or paid_amount is None or expected is None or paid_amount != expected or receipt_used:
+                event.error = "amount_or_receipt_reconciliation_failed"
+                if tx:
+                    tx.status = "reconciliation_required"
+            else:
+                if tx:
+                    tx.status = "completed"
+                    tx.mpesa_receipt = receipt
+                    tx.callback_received_at = datetime.datetime.utcnow()
+                if eulogy:
+                    eulogy.payment_status = "paid"
+                    eulogy.mpesa_receipt = receipt
         else:
-            if eulogy:
-                eulogy.payment_status = 'failed'
-                db.session.commit()
-            logger.info(f"Payment failed/cancelled. ResultCode: {result_code}")
+            if tx and tx.status not in {"completed", "reconciliation_required"}:
+                tx.status = "failed"
+            if eulogy and eulogy.payment_status != "paid":
+                eulogy.payment_status = "failed"
+        event.processed_at = datetime.datetime.utcnow()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        logger.exception("M-Pesa callback could not be applied; provider may retry")
+        return jsonify({"ResultCode": 1, "ResultDesc": "Callback could not be safely applied"}), 500
 
-        return jsonify({"ResultCode": 0, "ResultDesc": "Callback processed successfully"}), 200
-
-    except Exception as e:
-        logger.exception("Callback processing failed")
-        return jsonify({"ResultCode": 1, "ResultDesc": "Callback processing failed", "error": str(e)}), 500
+    if event.error:
+        logger.error("M-Pesa reconciliation required: checkout=%s reason=%s", checkout_id, event.error)
+        return jsonify({"ResultCode": 0, "ResultDesc": "Callback recorded for reconciliation"}), 200
+    if result_code == 0 and eulogy:
+        from . import mail
+        domain = os.getenv("FRONTEND_URL", "http://localhost:4173")
+        send_eulogy_email(eulogy, f"{domain}/memorial/{eulogy.id}", mail)
+    if result_code == 0 and tx and tx.email:
+        try:
+            from flask_mail import Message
+            from . import mail
+            msg = Message(
+                subject="Your Payment Receipt - Last Planner Julz Funeral Planning Hub",
+                sender=("Last Planner Julz Funeral Planning Hub", current_app.config.get("MAIL_USERNAME")),
+                recipients=[tx.email],
+            )
+            msg.body = f"Payment received. M-Pesa receipt: {metadata.get('MpesaReceiptNumber')}. Amount: KES {metadata.get('Amount')}."
+            send_mail_message(msg, mail)
+        except Exception:
+            logger.exception("Receipt email failed after payment was recorded")
+    return jsonify({"ResultCode": 0, "ResultDesc": "Callback processed successfully"}), 200
 
 
 @api.route('/api/consultations', methods=['POST'])
+@rate_limit(max_requests=5, window_seconds=60)
 def request_consultation():
     from flask_mail import Message
     from . import mail
@@ -1373,19 +1449,15 @@ def delete_user_account():
 
     if profile_picture and profile_picture.startswith("/static/uploads/"):
         uploaded_filenames.append(os.path.basename(profile_picture))
-    uploads_dir = os.path.realpath(os.path.join(current_app.root_path, "static", "uploads"))
     for filename in set(uploaded_filenames):
-        picture_path = os.path.realpath(os.path.join(uploads_dir, filename))
-        if os.path.commonpath([uploads_dir, picture_path]) == uploads_dir and os.path.isfile(picture_path):
-            try:
-                os.remove(picture_path)
-            except OSError:
-                logger.warning("Deleted account upload could not be removed from disk.")
+        try:
+            delete_object(filename)
+        except Exception:
+            # Keep this key in an operational cleanup queue/log rather than
+            # failing account deletion after its database transaction commits.
+            logger.exception("Deleted account object could not be removed: %s", filename)
 
     return jsonify({"message": "Account profile, linked orders, reviews, eulogies, and consultation requests were deleted. Payment totals and status records remain with email and phone removed."}), 200
 
 def register_routes(app):
-    from flask_cors import CORS
-    allowed_origins = app.config.get("CORS_ALLOWED_ORIGINS", ["*"])
-    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
     app.register_blueprint(api)

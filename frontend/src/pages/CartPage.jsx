@@ -45,9 +45,9 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
       <div className="min-h-[70vh] bg-[#F8F6F0] px-4 py-16">
         <div className="site-container mx-auto flex max-w-3xl flex-col items-center justify-center rounded-[1.75rem] border border-[#E8DFD1] bg-white px-6 py-16 text-center shadow-sm md:px-12">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#E8DFD1] bg-[#F8F6F0] shadow-sm">
-            <ShoppingBag size={64} className="text-[#A8895C]" />
+            <ShoppingBag size={64} className="text-[#805400]" />
           </div>
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#A8895C]">Your planning cart</p>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#805400]">Your planning cart</p>
           <h2 className="mb-4 text-3xl font-serif text-[#1F2E27]">Your booking cart is ready for your next selection</h2>
           <p className="mb-8 max-w-xl text-base leading-relaxed text-[#3D3530]">Browse our curated memorial catalog to add caskets, wreaths, transport, and service setups to your arrangement with clarity and confidence.</p>
           <div className="flex flex-wrap justify-center gap-3">
@@ -69,18 +69,18 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
         
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-serif text-[#1F2E27]">Your Booking Summary</h1>
-          <a href="#catalog" className="flex items-center gap-2 text-sm text-[#A8895C] hover:text-[#1F2E27] uppercase tracking-wider font-semibold transition-colors">
+          <a href="#catalog" className="flex items-center gap-2 text-sm text-[#805400] hover:text-[#1F2E27] uppercase tracking-wider font-semibold transition-colors">
             <ArrowLeft size={16} /> Continue Browsing
           </a>
         </div>
 
         <div className="mb-6 rounded-[1.25rem] border border-[#E8DFD1] bg-white p-5 shadow-sm md:p-6">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <div className="rounded-full bg-[#F8F6F0] p-2 text-[#A8895C]">
+            <div className="rounded-full bg-[#F8F6F0] p-2 text-[#805400]">
               <Sparkles size={16} />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#A8895C]">Planning support</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#805400]">Planning support</p>
               <p className="text-sm text-[#3D3530]">Select the arrangements you want to move forward and continue with confidence.</p>
             </div>
           </div>
@@ -137,8 +137,8 @@ export default function CartPage({ cart, updateQuantity, removeFromCart }) {
 
                 {/* Details */}
                 <div className="flex-grow">
-                  <p className="text-xs tracking-widest uppercase text-[#A8895C] mb-1">{item.categoryId?.replace("_", " ")}</p>
-                  <h3 className="text-lg font-serif text-[#1F2E27] mb-2">{item.title}</h3>
+                  <p className="text-xs tracking-widest uppercase text-[#805400] mb-1">{item.categoryId?.replace("_", " ")}</p>
+                  <h2 className="text-lg font-serif text-[#1F2E27] mb-2">{item.title}</h2>
                   <p className="text-sm text-[#3D3530] line-clamp-2 max-w-md">{item.desc}</p>
                 </div>
 

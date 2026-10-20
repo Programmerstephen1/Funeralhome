@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 :root {
   color-scheme: light;
@@ -8,6 +7,7 @@
   --color-ink: #1F2E27;
   --color-body: #3D3530;
   --color-brass: #A8895C;
+  --color-brass-text: #805400;
   --color-hairline: #D8CFBC;
   --color-paper-dark: #EFEAE0;
   --radius: 0.35rem;
@@ -53,9 +53,11 @@ a {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid rgba(168, 137, 92, 0.35);
-  outline-offset: 2px;
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #7c4a03;
+  outline-offset: 3px;
 }
 
 img {
